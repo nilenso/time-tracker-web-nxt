@@ -6,3 +6,10 @@
  :initialize-db
  (fn  [_ _]
    db/default-db))
+
+(re-frame/reg-event-db
+ :add-timer
+ (fn [db [_ timer-id]]
+   (assoc-in db [:timers (keyword (str "timer" timer-id))]
+             {:id      timer-id
+              :elapsed 0})))
