@@ -7,7 +7,10 @@
    "Add a Timer"])
 
 (defn timer [[k {:keys [id elapsed state]}] ]
-  [:p "Timer " id " has been running for " elapsed " seconds as " state])
+  [:div 
+   [:p "Timer " id " has been running for " elapsed " seconds as " state]
+   [:button {:on-click #(re-frame/dispatch [:start-timer id])} "Start Timer"]
+   [:button {:on-click #(re-frame/dispatch [:stop-timer id])} "Stop Timer"]])
 
 (defn timers [ts]
   [:ul
