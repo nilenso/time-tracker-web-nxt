@@ -1,7 +1,6 @@
 (ns time-tracker-web-nxt.events
   (:require [re-frame.core :as re-frame]
             [time-tracker-web-nxt.db :as db]))
-
 (defn- timer-key
   [timer-id]
   (keyword (str "timer" timer-id)))

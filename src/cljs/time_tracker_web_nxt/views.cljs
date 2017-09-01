@@ -9,8 +9,11 @@
 (defn timer [[k {:keys [id elapsed state]}] ]
   [:div 
    [:p "Timer " id " has been running for " elapsed " seconds as " state]
-   [:button {:on-click #(re-frame/dispatch [:start-timer id])} "Start Timer"]
-   [:button {:on-click #(re-frame/dispatch [:stop-timer id])} "Stop Timer"]])
+   (condp = state
+     :paused [:button {:on-click #(re-frame/dispatch [:start-timer id])} "Start Timer"]
+     :running [:button {:on-click #(re-frame/dispatch [:stop-timer id])} "Stop Timer"]
+     nil)
+   ])
 
 (defn timers [ts]
   [:ul
