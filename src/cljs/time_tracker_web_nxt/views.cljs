@@ -6,8 +6,8 @@
    {:type "input" :on-click #(re-frame/dispatch [:add-timer (rand-int 30)])}
    "Add a Timer"])
 
-(defn timer [[k {:keys [id elapsed]}] ]
-  [:p "Timer " id " has been running for " elapsed " seconds"])
+(defn timer [[k {:keys [id elapsed state]}] ]
+  [:p "Timer " id " has been running for " elapsed " seconds as " state])
 
 (defn timers [ts]
   [:ul
