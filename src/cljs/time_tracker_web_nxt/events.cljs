@@ -2,6 +2,10 @@
   (:require [re-frame.core :as re-frame]
             [time-tracker-web-nxt.db :as db]))
 
+(defn- timer-key
+  [timer-id]
+  (keyword (str "timer" timer-id)))
+
 (re-frame/reg-event-db
  :initialize-db
  (fn  [_ _]
@@ -10,7 +14,7 @@
 (re-frame/reg-event-fx
  :add-timer
  (fn [{:keys [db] :as cofx} [_ timer-id]]
-   {:db (assoc-in db [:timers (keyword (str "timer" timer-id))]
+   {:db (assoc-in db [:timers (timer-key timer-id)]
                   {:id      timer-id
                    :elapsed 0
                    :state :paused})
@@ -20,22 +24,22 @@
  :inc-timer-dur
  (fn [db [_ timer-id]]
    (if (= :running
-          (get-in db [:timers (keyword (str "timer" timer-id)) :state]))
-     (update-in db [:timers (keyword (str "timer" timer-id)) :elapsed]
+          (get-in db [:timers (timer-key timer-id) :state]))
+     (update-in db [:timers (timer-key timer-id) :elapsed]
                 inc)
      db)))
 
 (re-frame/reg-event-fx
  :start-timer
  (fn [{:keys [db] :as cofx} [_ timer-id]]
-   {:db (assoc-in db [:timers (keyword (str "timer" timer-id)) :state]
+   {:db (assoc-in db [:timers (timer-key timer-id) :state]
                   :running)
     :set-clock timer-id}))
 
 (re-frame/reg-event-db
  :add-interval
  (fn [db [_ timer-id interval-id]]
-   (assoc-in db [:intervals (keyword (str "timer" timer-id))] interval-id)))
+   (assoc-in db [:intervals (timer-key timer-id)] interval-id)))
 
 (re-frame/reg-fx
  :set-clock
@@ -51,10 +55,11 @@
 (re-frame/reg-event-fx
  :stop-timer
  (fn [{:keys [db] :as cofx} [_ timer-id]]
-   (let [interval-id ((keyword (str "timer" timer-id)) (:intervals db))]
+   (let [tk (timer-key timer-id)
+         interval-id (tk (:intervals db))]
      {:db (->
            db
-           (assoc-in [:timers (keyword (str "timer" timer-id)) :state]
+           (assoc-in [:timers tk :state]
                      :paused)
-           (update-in [:intervals] dissoc (keyword (str "timer" timer-id))))
+           (update-in [:intervals] dissoc tk))
       :clear-clock interval-id})))
