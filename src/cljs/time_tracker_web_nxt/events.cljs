@@ -12,13 +12,14 @@
 
 (re-frame/reg-event-fx
  :add-timer
- (fn [{:keys [db] :as cofx} [_]]
+ (fn [{:keys [db] :as cofx} [_ timer-note]]
    (let [timer-id (->  db :last-timer inc)]
      {:db (-> db
               (assoc-in [:timers (timer-key timer-id)]
                         {:id      timer-id
                          :elapsed 0
-                         :state :paused})
+                         :state :paused
+                         :note timer-note})
               (assoc :last-timer timer-id))
       :dispatch [:start-timer timer-id]})))
 

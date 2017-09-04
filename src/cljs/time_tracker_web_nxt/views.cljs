@@ -1,12 +1,17 @@
 (ns time-tracker-web-nxt.views
   (:require [re-frame.core :as re-frame]
+            [reagent.core :as reagent]
             [goog.string :as gs]
             [goog.string.format]))
 
 (defn add-timer []
-  [:button
-   {:type "input" :on-click #(re-frame/dispatch [:add-timer])}
-   "Add a Timer"])
+  (let [timer-note (reagent/atom nil)]
+    [:div 
+     [:textarea {:placeholder "Add notes"
+                 :on-change #(reset! timer-note (-> % .-target .-value))}]
+     [:button
+      {:type "input" :on-click #(re-frame/dispatch [:add-timer @timer-note])}
+      "Add a Timer"]]))
 
 (defn time-display [elapsed-seconds]
   (let [minutes (-> (quot elapsed-seconds 60)
@@ -15,13 +20,14 @@
         seconds (mod elapsed-seconds 60)]
     (gs/format "%02d:%02d:%02d" hours minutes seconds)))
 
-(defn timer [{:keys [id elapsed state]}]
+(defn timer [{:keys [id elapsed state note]}]
   [:div 
-   [:p "Timer " id " has been running for " (time-display elapsed) " seconds as " state]
-   (condp = state
-     :paused [:button {:on-click #(re-frame/dispatch [:start-timer id])} "Start Timer"]
-     :running [:button {:on-click #(re-frame/dispatch [:stop-timer id])} "Stop Timer"]
-     nil)
+   [:p "Timer " id " has been running for " (time-display elapsed) " seconds as " state
+    " with notes " note
+    (condp = state
+      :paused [:button {:on-click #(re-frame/dispatch [:start-timer id])} "Start Timer"]
+      :running [:button {:on-click #(re-frame/dispatch [:stop-timer id])} "Stop Timer"]
+      nil)] 
    ])
 
 (defn timers [ts]
