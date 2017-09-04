@@ -13,8 +13,7 @@
 (re-frame/reg-event-fx
  :add-timer
  (fn [{:keys [db] :as cofx} [_ timer-project timer-note]]
-   (let [timer-id (->  db :last-timer inc)]
-     (prn timer-project)
+   (let [timer-id (->  db :last-timer inc)] 
      {:db (-> db
               (assoc-in [:timers (timer-key timer-id)]
                         {:id      timer-id
@@ -68,3 +67,15 @@
                      :paused)
            (update-in [:intervals] dissoc tk))
       :clear-clock interval-id})))
+
+(re-frame/reg-event-db
+ :update-timer
+ (fn [db [_ id {:keys [elapsed-hh elapsed-mm elapsed-ss notes] :as new}]]
+   (let [tkey (timer-key id)
+         elapsed (+ (* 60 60  elapsed-hh) (* 60  elapsed-mm) elapsed-ss)
+         new (assoc new :elapsed elapsed)
+         ori (-> db :timers tkey (select-keys [:note :elapsed]))
+         new-map (merge ori new)]
+     (-> db
+         (assoc-in [:timers tkey :elapsed] (:elapsed new-map))
+         (assoc-in [:timers tkey :note] (:note new-map))))))
