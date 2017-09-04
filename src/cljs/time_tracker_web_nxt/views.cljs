@@ -1,16 +1,23 @@
 (ns time-tracker-web-nxt.views
-  (:require [re-frame.core :as re-frame]
-            [reagent.core :as reagent]
+  (:require [re-frame.core :as re-frame] 
             [goog.string :as gs]
             [goog.string.format]))
 
-(defn add-timer []
-  (let [timer-note (reagent/atom nil)]
-    [:div 
+(defn add-timer [projects]
+  (let [timer-note (atom nil)
+        [_ default-task] (first projects)
+        timer-project (atom (:task default-task))] 
+    [:div
+     (into  [:select {:placeholder "Add Project"
+                      :default-value (:task default-task)
+                      :on-change #(reset! timer-project
+                                          (-> % .-target .-value))}]
+            (for [[_ task] projects]
+              [:option (:task task)]))
      [:textarea {:placeholder "Add notes"
                  :on-change #(reset! timer-note (-> % .-target .-value))}]
      [:button
-      {:type "input" :on-click #(re-frame/dispatch [:add-timer @timer-note])}
+      {:type "input" :on-click #(re-frame/dispatch [:add-timer @timer-project @timer-note])}
       "Add a Timer"]]))
 
 (defn time-display [elapsed-seconds]
@@ -20,9 +27,10 @@
         seconds (mod elapsed-seconds 60)]
     (gs/format "%02d:%02d:%02d" hours minutes seconds)))
 
-(defn timer [{:keys [id elapsed state note]}]
+(defn timer [{:keys [id elapsed state project note]}]
   [:div 
-   [:p "Timer " id " has been running for " (time-display elapsed) " seconds as " state
+   [:p "Timer " id " for project " project
+    " has been running for " (time-display elapsed) " seconds as " state
     " with notes " note
     (condp = state
       :paused [:button {:on-click #(re-frame/dispatch [:start-timer id])} "Start Timer"]
@@ -42,9 +50,10 @@
 
 (defn main-panel []
   (let [name (re-frame/subscribe [:name])
-        ts (re-frame/subscribe [:timers])] 
+        ts (re-frame/subscribe [:timers])
+        projects (re-frame/subscribe [:projects])] 
     (fn []
       [:div
        [:div "Hello from " @name]
-       [add-timer]
+       [add-timer @projects]
        [timers @ts]])))

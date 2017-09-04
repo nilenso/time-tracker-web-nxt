@@ -11,3 +11,8 @@
  :timers
  (fn [db]
    (:timers db)))
+
+(re-frame/reg-sub
+ :projects
+ (fn [db]
+   (:projects db)))
