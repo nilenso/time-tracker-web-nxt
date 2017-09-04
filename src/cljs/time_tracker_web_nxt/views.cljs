@@ -5,7 +5,7 @@
 
 (defn add-timer []
   [:button
-   {:type "input" :on-click #(re-frame/dispatch [:add-timer (rand-int 30)])}
+   {:type "input" :on-click #(re-frame/dispatch [:add-timer])}
    "Add a Timer"])
 
 (defn time-display [elapsed-seconds]
@@ -15,7 +15,7 @@
         seconds (mod elapsed-seconds 60)]
     (gs/format "%02d:%02d:%02d" hours minutes seconds)))
 
-(defn timer [[k {:keys [id elapsed state]}] ]
+(defn timer [{:keys [id elapsed state]}]
   [:div 
    [:p "Timer " id " has been running for " (time-display elapsed) " seconds as " state]
    (condp = state
@@ -25,14 +25,18 @@
    ])
 
 (defn timers [ts]
-  [:ul
-   (for [t ts]
-     ^{:key t}
-     [:li [timer t]])])
+  (let [sorted-ts (->> ts
+                       vals
+                       (sort-by :id)
+                       reverse)]
+    [:ul
+     (for [t sorted-ts]     
+       ^{:key (:id t)}
+       [:li [timer t]])]))
 
 (defn main-panel []
   (let [name (re-frame/subscribe [:name])
-        ts (re-frame/subscribe [:timers])]
+        ts (re-frame/subscribe [:timers])] 
     (fn []
       [:div
        [:div "Hello from " @name]
