@@ -42,10 +42,14 @@
    " has been running for " (time-display elapsed) " seconds as " state
    " with notes " note
    (condp = state
-     :paused [:button {:on-click #(re-frame/dispatch [:start-timer id])} "Start Timer"]
-     :running [:button {:on-click #(re-frame/dispatch [:stop-timer id])} "Stop Timer"]
-     nil)
-   [:button {:on-click #(reset! edit-timer? true)} "Edit Timer"]])
+     :paused
+     [:div 
+      [:button {:on-click #(re-frame/dispatch [:start-timer id])} "Start Timer"]
+      [:button {:on-click #(reset! edit-timer? true)} "Edit Timer"]]
+     :running
+     [:div
+      [:button {:on-click #(re-frame/dispatch [:stop-timer id])} "Stop Timer"]]
+     nil)])
 
 (defn timer-display-editable [id elapsed-hh elapsed-mm elapsed-ss
                               project state note edit-timer?]
