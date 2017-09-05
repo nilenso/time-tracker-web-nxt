@@ -21,12 +21,10 @@
       {:type "input" :on-click #(re-frame/dispatch [:add-timer @timer-project @timer-note])}
       "Add a Timer"]]))
 
-
 (defn split-time [elapsed-seconds]
-  (let [minutes (-> (quot elapsed-seconds 60)
-                    (mod 60))
-        hours (quot minutes 60)
-        seconds (mod elapsed-seconds 60)]
+  (let [hours (quot elapsed-seconds (* 60 60))
+        minutes (- (quot elapsed-seconds 60) (* hours 60)) 
+        seconds (- elapsed-seconds (* hours 60 60) (* minutes 60))]
     {:hh hours :mm minutes :ss seconds}))
 
 (defn time-display [elapsed-seconds]
