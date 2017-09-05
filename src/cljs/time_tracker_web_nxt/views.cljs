@@ -27,17 +27,13 @@
         seconds (- elapsed-seconds (* hours 60 60) (* minutes 60))]
     {:hh hours :mm minutes :ss seconds}))
 
-(defn time-display [elapsed-seconds]
-  (let [minutes (-> (quot elapsed-seconds 60)
-                    (mod 60))
-        hours (quot minutes 60)
-        seconds (mod elapsed-seconds 60)]
-    (gs/format "%02d:%02d:%02d" hours minutes seconds)
-    #_celapsed-seconds))
+(defn time-display [elapsed-hh elapsed-mm elapsed-ss]
+  (gs/format "%02d:%02d:%02d" elapsed-hh elapsed-mm elapsed-ss))
 
-(defn timer-display [id elapsed project state note edit-timer?]
+(defn timer-display [id elapsed-hh elapsed-mm elapsed-ss project state note edit-timer?]
   [:div "Timer " id " for project " project
-   " has been running for " (time-display elapsed) " seconds as " state
+   " has been running for " (time-display elapsed-hh elapsed-mm elapsed-ss)
+   " seconds as " state
    " with notes " note
    (condp = state
      :paused
@@ -80,17 +76,19 @@
        [:textarea {:value (:note @changes)
                    :on-change #(swap! changes assoc :note (-> % .-target .-value))}]
        [:button {:on-click #(reset! edit-timer? false)} "Cancel"]
-       [:button {:on-click #(do (reset! edit-timer? false)
-                                (re-frame/dispatch [:update-timer id @changes]))} "Update"]])))
+       [:button {:on-click #(do 
+                              (reset! edit-timer? false)
+                              (re-frame/dispatch [:update-timer id @changes]))} "Update"]])))
 
 (defn timer [{:keys [id elapsed state project note]}]
   (let [edit-timer? (reagent/atom false)]
     (fn [{:keys [id elapsed state project note]}]
-      (let [elapsed-map (split-time elapsed)]
+      (let [elapsed-map (split-time elapsed)] 
         (if @edit-timer?
           [timer-display-editable id (:hh elapsed-map) (:mm elapsed-map) (:ss elapsed-map)
            project state note edit-timer?]
-          [timer-display id elapsed project state note edit-timer?])))))
+          [timer-display id (:hh elapsed-map) (:mm elapsed-map) (:ss elapsed-map)
+           project state note edit-timer?])))))
 
 (defn timers [ts]
   (let [sorted-ts (->> ts
