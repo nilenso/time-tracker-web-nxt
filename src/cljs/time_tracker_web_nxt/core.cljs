@@ -6,7 +6,6 @@
             [time-tracker-web-nxt.views :as views]
             [time-tracker-web-nxt.config :as config]))
 
-
 (defn dev-setup []
   (when config/debug?
     (enable-console-print!)
@@ -14,7 +13,7 @@
 
 (defn mount-root []
   (re-frame/clear-subscription-cache!)
-  (reagent/render [views/main-panel]
+  (reagent/render [views/app]
                   (.getElementById js/document "app")))
 
 (defn ^:export init []
