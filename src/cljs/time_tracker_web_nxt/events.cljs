@@ -6,3 +6,13 @@
  :initialize-db
  (fn  [_ _]
    db/default-db))
+
+(re-frame/reg-event-db
+ :log-in
+ (fn [db [_ user]]
+   (assoc db :user user)))
+
+(re-frame/reg-event-db
+ :log-out
+ (fn [db [_ user]]
+   (assoc db :user nil)))
