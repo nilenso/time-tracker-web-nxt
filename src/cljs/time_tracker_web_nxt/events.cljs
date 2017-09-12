@@ -13,7 +13,7 @@
 (re-frame/reg-event-fx
  :add-timer
  (fn [{:keys [db] :as cofx} [_ timer-project timer-note]]
-   (let [timer-id (->  db :last-timer inc)] 
+   (let [timer-id (->  db :last-timer inc)]
      {:db (-> db
               (assoc-in [:timers (timer-key timer-id)]
                         {:id      timer-id
@@ -79,3 +79,13 @@
      (-> db
          (assoc-in [:timers tkey :elapsed] (:elapsed new-map))
          (assoc-in [:timers tkey :note] (:note new-map))))))
+
+(re-frame/reg-event-db
+ :log-in
+ (fn [db [_ user]]
+   (assoc db :user user)))
+
+(re-frame/reg-event-db
+ :log-out
+ (fn [db [_ user]]
+   (assoc db :user nil)))

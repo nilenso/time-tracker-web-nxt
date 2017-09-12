@@ -1,13 +1,15 @@
 (ns time-tracker-web-nxt.views
-  (:require [re-frame.core :as re-frame]
-            [reagent.core :as reagent]
-            [goog.string :as gs]
-            [goog.string.format]))
+  (:require
+   [goog.string :as gs]
+   [goog.string.format]
+   [re-frame.core :as re-frame]
+   [reagent.core :as reagent]
+   [time-tracker-web-nxt.auth :as auth]))
 
 (defn add-timer [projects]
   (let [timer-note (atom nil)
         [_ default-task] (first projects)
-        timer-project (atom (:task default-task))] 
+        timer-project (atom (:task default-task))]
     [:div
      (into  [:select {:placeholder "Add Project"
                       :default-value (:task default-task)
@@ -23,7 +25,7 @@
 
 (defn split-time [elapsed-seconds]
   (let [hours (quot elapsed-seconds (* 60 60))
-        minutes (- (quot elapsed-seconds 60) (* hours 60)) 
+        minutes (- (quot elapsed-seconds 60) (* hours 60))
         seconds (- elapsed-seconds (* hours 60 60) (* minutes 60))]
     {:hh hours :mm minutes :ss seconds}))
 
@@ -31,14 +33,14 @@
   (gs/format "%02d:%02d:%02d" elapsed-hh elapsed-mm elapsed-ss))
 
 (defn timer-display
-  [{:keys [id elapsed project state note edit-timer?]}] 
+  [{:keys [id elapsed project state note edit-timer?]}]
   [:div "Timer " id " for project " project
    " has been running for " (display-time (:hh elapsed) (:mm elapsed) (:ss elapsed))
    " seconds as " state
    " with notes " note
    (condp = state
      :paused
-     [:div 
+     [:div
       [:button {:on-click #(re-frame/dispatch [:start-timer id])} "Start Timer"]
       [:button {:on-click #(reset! edit-timer? true)} "Edit Timer"]]
      :running
@@ -47,7 +49,7 @@
      nil)])
 
 (defn timer-display-editable
-  [{:keys [elapsed note]}] 
+  [{:keys [elapsed note]}]
   (let [changes (reagent/atom {:note note
                                :elapsed-hh (:hh elapsed)
                                :elapsed-mm (:mm elapsed)
@@ -66,11 +68,11 @@
        [:input {:value (:elapsed-mm @changes)
                 :on-change (dur-change-handler-w-key :elapsed-mm)}]
        [:input {:value (:elapsed-ss @changes)
-                :on-change (dur-change-handler-w-key :elapsed-ss)}] 
+                :on-change (dur-change-handler-w-key :elapsed-ss)}]
        [:textarea {:value (:note @changes)
                    :on-change #(swap! changes assoc :note (-> % .-target .-value))}]
        [:button {:on-click #(reset! edit-timer? false)} "Cancel"]
-       [:button {:on-click #(do 
+       [:button {:on-click #(do
                               (reset! edit-timer? false)
                               (re-frame/dispatch [:update-timer id @changes]))} "Update"]])))
 
@@ -79,7 +81,7 @@
     (fn [{:keys [id elapsed state project note]}]
       (let [elapsed-map (split-time elapsed)
             timer-options {:id id :elapsed elapsed-map :project project :state state
-                           :note note :edit-timer? edit-timer?}] 
+                           :note note :edit-timer? edit-timer?}]
         (if @edit-timer?
           [timer-display-editable timer-options]
           [timer-display timer-options])))))
@@ -90,16 +92,41 @@
                        (sort-by :id)
                        reverse)]
     [:ul
-     (for [t sorted-ts]     
+     (for [t sorted-ts]
        ^{:key (:id t)}
        [:li [timer t]])]))
 
 (defn main-panel []
-  (let [name (re-frame/subscribe [:name])
+  (let [app-name (re-frame/subscribe [:app-name])
+        user     (re-frame/subscribe [:user])
         ts (re-frame/subscribe [:timers])
-        projects (re-frame/subscribe [:projects])] 
+        projects (re-frame/subscribe [:projects])]
     (fn []
       [:div
-       [:div "Hello from " @name]
+       [:div "Hi " (:name  @user) "!" " " "Welcome to " @app-name]
        [add-timer @projects]
        [timers @ts]])))
+
+(defn app []
+  [:div
+   (let [user @auth/user]
+     (if-not (:signed-in? user)
+       [:a
+        {:href "#" :on-click (fn [_] (do
+                                      (.signIn (auth/auth-instance))
+                                      (re-frame/dispatch [:log-in user])))}
+        "Sign in with Google"]
+       [:div
+        [:p "Hello "
+         [:strong (:name user)]
+         [:br]
+         [:img {:src (:image-url user)}]]
+        [:div
+         [:a
+          {:href "#" :on-click (fn [_] (do
+                                        (.signOut (auth/auth-instance))
+                                        (re-frame/dispatch [:log-out user])))}
+          "Sign Out"]
+         [:br]
+         [:br]
+         [main-panel]]]))])

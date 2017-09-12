@@ -3,9 +3,9 @@
   (:require [re-frame.core :as re-frame]))
 
 (re-frame/reg-sub
- :name
+ :app-name
  (fn [db]
-   (:name db)))
+   (:app-name db)))
 
 (re-frame/reg-sub
  :timers
@@ -16,3 +16,8 @@
  :projects
  (fn [db]
    (:projects db)))
+
+(re-frame/reg-sub
+ :user
+ (fn [db]
+   (:user db)))
