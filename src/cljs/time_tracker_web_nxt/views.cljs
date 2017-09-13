@@ -109,23 +109,24 @@
 
 (defn app []
   [:div
-   (let [user @auth/user]
-     (if-not (:signed-in? user)
+   (let [user auth/user]
+     (if-not (:signed-in? @user)
        [:a
-        {:href "#" :on-click (fn [_] (do
-                                      (.signIn (auth/auth-instance))
-                                      (re-frame/dispatch [:log-in user])))}
+        {:href "#" :on-click (fn [_] (.then
+                                     (.signIn (auth/auth-instance))
+                                     #(do (auth/change-user %)
+                                          (re-frame/dispatch [:log-in @user]))))}
         "Sign in with Google"]
        [:div
         [:p "Hello "
-         [:strong (:name user)]
+         [:strong (:name @user)]
          [:br]
-         [:img {:src (:image-url user)}]]
+         [:img {:src (:image-url @user)}]]
         [:div
          [:a
           {:href "#" :on-click (fn [_] (do
                                         (.signOut (auth/auth-instance))
-                                        (re-frame/dispatch [:log-out user])))}
+                                        (re-frame/dispatch [:log-out @user])))}
           "Sign Out"]
          [:br]
          [:br]

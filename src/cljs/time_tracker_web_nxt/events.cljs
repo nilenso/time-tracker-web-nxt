@@ -1,6 +1,14 @@
 (ns time-tracker-web-nxt.events
-  (:require [re-frame.core :as re-frame]
-            [time-tracker-web-nxt.db :as db]))
+  (:require-macros
+   [cljs.core.async.macros :refer [go]])
+  (:require
+   [cljs.core.async :as async :refer [chan put! <! close! alts! take!]]
+   [re-frame.core :as re-frame]
+   [time-tracker-web-nxt.db :as db]
+   [time-tracker-web-nxt.env-vars :as env]
+   [wscljs.client :as ws]
+   [wscljs.format :as fmt]))
+
 (defn- timer-key
   [timer-id]
   (keyword (str "timer" timer-id)))
@@ -80,12 +88,35 @@
          (assoc-in [:timers tkey :elapsed] (:elapsed new-map))
          (assoc-in [:timers tkey :note] (:note new-map))))))
 
-(re-frame/reg-event-db
+(re-frame/reg-event-fx
  :log-in
- (fn [db [_ user]]
-   (assoc db :user user)))
+ (fn [{:keys [db] :as cofx} [_ user]]
+   (do (prn "login " user)
+       {:db (assoc db :user user)
+        :dispatch [:create-conn (:token user)]})))
 
 (re-frame/reg-event-db
  :log-out
  (fn [db [_ user]]
    (assoc db :user nil)))
+
+(re-frame/reg-event-db
+ :create-conn
+ (fn [db [_ goog-auth-id]]
+   (do
+     ;; TODO: Have a bounded buffer?
+     (let [response-chan (chan)
+           handlers {:on-message #(do (prn "Received => " (.-data %))
+                                      (put! response-chan (fmt/read fmt/json (.-data %))))}
+           conn (ws/create (:conn-url env/env) handlers)]
+
+       (go
+         (let [data (<! response-chan)]
+           (if (= "ready" (:type data))
+             (do
+               (ws/send conn (clj->js {:command "authenticate" :token goog-auth-id}))
+               (if (= "success" (:auth-status (<! response-chan)))
+                 (assoc db :conn [response-chan conn])
+                 (throw (ex-info "Authentication Failed" {}))))
+             ;; TODO: Retry server connection
+             (throw (ex-info "Server not ready" {})))))))))

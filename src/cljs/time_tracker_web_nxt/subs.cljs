@@ -21,3 +21,8 @@
  :user
  (fn [db]
    (:user db)))
+
+(re-frame/reg-sub
+ :conn
+ (fn [db]
+   (:conn db)))
