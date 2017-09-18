@@ -8,15 +8,16 @@
 
 (defn add-timer [projects]
   (let [timer-note (atom nil)
-        [_ default-task] (first projects)
-        timer-project (atom (:task default-task))]
+        default-project (first projects)
+        timer-project (atom (:name default-project))]
     [:div
      [:select {:placeholder "Add Project"
-               :default-value (:task default-task)
+               :default-value (:name default-project)
                :on-change #(reset! timer-project
                                    (-> % .-target .-value))}
-      (for [{:keys [task]} (vals projects)]
-        [:option task])]
+      (for [{:keys [id name]} projects]
+        ^{:key id}
+        [:option name])]
      [:textarea {:placeholder "Add notes"
                  :on-change #(reset! timer-note (-> % .-target .-value))}]
      [:button

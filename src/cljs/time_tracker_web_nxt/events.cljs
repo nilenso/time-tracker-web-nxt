@@ -98,7 +98,8 @@
  (fn [{:keys [db] :as cofx} [_ user]]
    (let [user-profile (auth/user-profile user)]
      {:db          (assoc db :user user-profile)
-      :create-conn (:token user-profile)})))
+      :create-conn (:token user-profile)
+      :dispatch    [:list-all-projects (:token user-profile)]})))
 
 (re-frame/reg-event-db
  :log-out
@@ -124,8 +125,27 @@
            (throw (ex-info "Server not ready" {}))))))))
 
 
+;; ========== API ============
 
 (re-frame/reg-event-db
  :add-db
  (fn [db [_ k v]]
    (assoc db k v)))
+
+(re-frame/reg-event-db
+ :http-failure
+ (fn [_ [_ error]]
+   (prn error)))
+
+;; Possible Solution: https://github.com/JulianBirch/cljs-ajax/issues/93
+(re-frame/reg-event-fx
+ :list-all-projects
+ (fn [cofx [_ auth-token]]
+   {:http-xhrio {:method :get
+                 :uri "/api/projects/"
+                 :timeout 8000
+                 :response-format (ajax/json-response-format {:keywords? true})
+                 :headers {"Authorization" (str "Bearer " auth-token)
+                           "Access-Control-Allow-Origin" "*"}
+                 :on-success [:add-db :projects]
+                 :on-failure [:http-failure]}}))
