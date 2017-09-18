@@ -108,26 +108,25 @@
        [timers @ts]])))
 
 (defn app []
-  [:div
-   (let [user auth/user]
-     (if-not (:signed-in? @user)
-       [:a
-        {:href "#" :on-click (fn [_] (-> (.signIn (auth/auth-instance))
-                                        (.then
-                                         #(do (auth/change-user %)
-                                              (re-frame/dispatch [:log-in @user])))))}
-        "Sign in with Google"]
+  (let [user (re-frame/subscribe [:user])]
+    (if-not (:signed-in? @user)
+      [:a
+       {:href "#" :on-click (fn [_] (-> (.signIn (auth/auth-instance))
+                                       (.then
+                                        #(re-frame/dispatch [:log-in %]))))}
+       "Sign in with Google"]
+      [:div
+       [:p "Hello "
+        [:strong (:name @user)]
+        [:br]
+        [:img {:src (:image-url @user)}]]
        [:div
-        [:p "Hello "
-         [:strong (:name @user)]
-         [:br]
-         [:img {:src (:image-url @user)}]]
-        [:div
-         [:a
-          {:href "#" :on-click (fn [_]
-                                 (.signOut (auth/auth-instance))
-                                 (re-frame/dispatch [:log-out @user]))}
-          "Sign Out"]
-         [:br]
-         [:br]
-         [main-panel]]]))])
+        [:a
+         {:href "#" :on-click (fn [_]
+                                (-> (.signOut (auth/auth-instance))
+                                    (.then
+                                     #(re-frame/dispatch [:log-out]))))}
+         "Sign Out"]
+        [:br]
+        [:br]
+        [main-panel]]])))

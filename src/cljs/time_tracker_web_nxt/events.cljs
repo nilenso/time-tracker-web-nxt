@@ -6,8 +6,11 @@
    [re-frame.core :as re-frame]
    [time-tracker-web-nxt.db :as db]
    [time-tracker-web-nxt.env-vars :as env]
+   [time-tracker-web-nxt.auth :as auth]
    [wscljs.client :as ws]
-   [wscljs.format :as fmt]))
+   [wscljs.format :as fmt]
+   [day8.re-frame.http-fx]
+   [ajax.core :as ajax]))
 
 (defn- timer-key
   [timer-id]
@@ -93,32 +96,36 @@
 (re-frame/reg-event-fx
  :log-in
  (fn [{:keys [db] :as cofx} [_ user]]
-   {:db (assoc db :user user)
-    :dispatch-n [[:create-conn (:token user)]
-                 [:list-all-projects (:token user)]]}))
+   (let [user-profile (auth/user-profile user)]
+     {:db          (assoc db :user user-profile)
+      :create-conn (:token user-profile)})))
 
 (re-frame/reg-event-db
  :log-out
  (fn [db [_ user]]
    (assoc db :user nil)))
 
-(re-frame/reg-event-db
+(re-frame/reg-fx
  :create-conn
- (fn [db [_ goog-auth-id]]
+ (fn [goog-auth-id]
    (let [response-chan (chan)
          handlers {:on-message #(do (prn "Received => " (.-data %))
                                     (put! response-chan (fmt/read fmt/json (.-data %))))}
          conn (ws/create (:conn-url env/env) handlers)]
-
      (go
        (let [data (<! response-chan)]
          (if (= "ready" (:type data))
            (do
              (ws/send conn (clj->js {:command "authenticate" :token goog-auth-id}))
              (if (= "success" (:auth-status (<! response-chan)))
-               (assoc db :conn [response-chan conn])
+               (re-frame/dispatch [:add-db :conn [response-chan conn]])
                (throw (ex-info "Authentication Failed" {}))))
            ;; TODO: Retry server connection
            (throw (ex-info "Server not ready" {}))))))))
 
 
+
+(re-frame/reg-event-db
+ :add-db
+ (fn [db [_ k v]]
+   (assoc db k v)))
