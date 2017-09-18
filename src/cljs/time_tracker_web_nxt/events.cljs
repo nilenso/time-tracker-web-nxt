@@ -78,9 +78,11 @@
 
 (re-frame/reg-event-db
  :update-timer
- (fn [db [_ id {:keys [elapsed-hh elapsed-mm elapsed-ss notes] :as new}]]
+ (fn [db [_ id {:keys [elapsed-hh elapsed-mm elapsed-ss note] :as new}]]
    (let [tkey (timer-key id)
-         elapsed (+ (* 60 60  elapsed-hh) (* 60  elapsed-mm) elapsed-ss)
+         elapsed (+ (* 60 60 elapsed-hh)
+                    (* 60 elapsed-mm)
+                    elapsed-ss)
          new (assoc new :elapsed elapsed)
          ori (-> db :timers tkey (select-keys [:note :elapsed]))
          new-map (merge ori new)]
@@ -91,9 +93,9 @@
 (re-frame/reg-event-fx
  :log-in
  (fn [{:keys [db] :as cofx} [_ user]]
-   (do (prn "login " user)
-       {:db (assoc db :user user)
-        :dispatch [:create-conn (:token user)]})))
+   {:db (assoc db :user user)
+    :dispatch-n [[:create-conn (:token user)]
+                 [:list-all-projects (:token user)]]}))
 
 (re-frame/reg-event-db
  :log-out
@@ -103,20 +105,20 @@
 (re-frame/reg-event-db
  :create-conn
  (fn [db [_ goog-auth-id]]
-   (do
-     ;; TODO: Have a bounded buffer?
-     (let [response-chan (chan)
-           handlers {:on-message #(do (prn "Received => " (.-data %))
-                                      (put! response-chan (fmt/read fmt/json (.-data %))))}
-           conn (ws/create (:conn-url env/env) handlers)]
+   (let [response-chan (chan)
+         handlers {:on-message #(do (prn "Received => " (.-data %))
+                                    (put! response-chan (fmt/read fmt/json (.-data %))))}
+         conn (ws/create (:conn-url env/env) handlers)]
 
-       (go
-         (let [data (<! response-chan)]
-           (if (= "ready" (:type data))
-             (do
-               (ws/send conn (clj->js {:command "authenticate" :token goog-auth-id}))
-               (if (= "success" (:auth-status (<! response-chan)))
-                 (assoc db :conn [response-chan conn])
-                 (throw (ex-info "Authentication Failed" {}))))
-             ;; TODO: Retry server connection
-             (throw (ex-info "Server not ready" {})))))))))
+     (go
+       (let [data (<! response-chan)]
+         (if (= "ready" (:type data))
+           (do
+             (ws/send conn (clj->js {:command "authenticate" :token goog-auth-id}))
+             (if (= "success" (:auth-status (<! response-chan)))
+               (assoc db :conn [response-chan conn])
+               (throw (ex-info "Authentication Failed" {}))))
+           ;; TODO: Retry server connection
+           (throw (ex-info "Server not ready" {}))))))))
+
+

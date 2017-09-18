@@ -30,10 +30,11 @@
              :token      (get-auth-token)
              :signed-in? (.isSignedIn u)})))
 
-(defonce _ (go
-             (<! (load-gapi-auth2))
-             (.init js/gapi.auth2
-                    (clj->js {"client_id" (:client-id env/env)
-                              "scope"     (:scope env/env)}))
-             (let [current-user (.-currentUser (auth-instance))]
-               (.listen current-user change-user))))
+(defn init! []
+  (go
+    (<! (load-gapi-auth2))
+    (.init js/gapi.auth2
+           (clj->js {"client_id" (:client-id env/env)
+                     "scope"     (:scope env/env)}))
+    (let [current-user (.-currentUser (auth-instance))]
+      (.listen current-user change-user))))

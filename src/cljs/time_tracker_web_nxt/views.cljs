@@ -11,12 +11,12 @@
         [_ default-task] (first projects)
         timer-project (atom (:task default-task))]
     [:div
-     (into  [:select {:placeholder "Add Project"
-                      :default-value (:task default-task)
-                      :on-change #(reset! timer-project
-                                          (-> % .-target .-value))}]
-            (for [[_ task] projects]
-              [:option (:task task)]))
+     [:select {:placeholder "Add Project"
+               :default-value (:task default-task)
+               :on-change #(reset! timer-project
+                                   (-> % .-target .-value))}
+      (for [{:keys [task]} (vals projects)]
+        [:option task])]
      [:textarea {:placeholder "Add notes"
                  :on-change #(reset! timer-note (-> % .-target .-value))}]
      [:button
@@ -38,7 +38,7 @@
    " has been running for " (display-time (:hh elapsed) (:mm elapsed) (:ss elapsed))
    " seconds as " state
    " with notes " note
-   (condp = state
+   (case state
      :paused
      [:div
       [:button {:on-click #(re-frame/dispatch [:start-timer id])} "Start Timer"]
@@ -112,10 +112,10 @@
    (let [user auth/user]
      (if-not (:signed-in? @user)
        [:a
-        {:href "#" :on-click (fn [_] (.then
-                                     (.signIn (auth/auth-instance))
-                                     #(do (auth/change-user %)
-                                          (re-frame/dispatch [:log-in @user]))))}
+        {:href "#" :on-click (fn [_] (-> (.signIn (auth/auth-instance))
+                                        (.then
+                                         #(do (auth/change-user %)
+                                              (re-frame/dispatch [:log-in @user])))))}
         "Sign in with Google"]
        [:div
         [:p "Hello "
@@ -124,9 +124,9 @@
          [:img {:src (:image-url @user)}]]
         [:div
          [:a
-          {:href "#" :on-click (fn [_] (do
-                                        (.signOut (auth/auth-instance))
-                                        (re-frame/dispatch [:log-out @user])))}
+          {:href "#" :on-click (fn [_]
+                                 (.signOut (auth/auth-instance))
+                                 (re-frame/dispatch [:log-out @user]))}
           "Sign Out"]
          [:br]
          [:br]
