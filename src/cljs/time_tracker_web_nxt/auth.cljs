@@ -5,8 +5,7 @@
    [cljs.core.async :refer [put! chan <! >! buffer]]
    [cljs.reader :refer [read read-string]]
    [reagent.core :as reagent]
-   [time-tracker-web-nxt.env-vars :as env]
-   ))
+   [time-tracker-web-nxt.env-vars :as env]))
 
 (def user (reagent/atom {}))
 
@@ -21,19 +20,20 @@
 (defn get-auth-token []
   (-> (auth-instance) .-currentUser .get .getAuthResponse .-id_token))
 
-(defn change-user
+(defn user-profile
   [u]
   (let [profile (.getBasicProfile u)]
-    (reset! user
-            {:name       (if profile (.getName profile) nil)
-             :image-url  (if profile (.getImageUrl profile) nil)
-             :token      (get-auth-token)
-             :signed-in? (.isSignedIn u)})))
+    {:name       (if profile (.getName profile) nil)
+     :image-url  (if profile (.getImageUrl profile) nil)
+     :token      (get-auth-token)
+     :signed-in? (.isSignedIn u)}))
 
-(defonce _ (go
-             (<! (load-gapi-auth2))
-             (.init js/gapi.auth2
-                    (clj->js {"client_id" (:client-id env/env)
-                              "scope"     (:scope env/env)}))
-             (let [current-user (.-currentUser (auth-instance))]
-               (.listen current-user change-user))))
+(defn init! []
+  (let [c (chan)]
+    ;; TODO: Add timeout
+    (.load js/gapi "auth2" (fn [] (-> (.init js/gapi.auth2
+                                            (clj->js {"client_id" (:client-id env/env)
+                                                      "scope"     (:scope env/env)}))
+                                     (.then #(go (>! c true))
+                                            #(go (>! c false))))))
+    c))

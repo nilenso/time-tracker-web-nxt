@@ -1,0 +1,7 @@
+(in-ns 'time-tracker-web-nxt.wsclient)
+(start)
+data
+(reload-all)
+(use 'time-tracker-web-nxt.wsclient :reload-all)
+:quit
+(quit)

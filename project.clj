@@ -2,7 +2,9 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.9.908"]
                  [reagent "0.7.0"]
-                 [re-frame "0.10.1"]]
+                 [re-frame "0.10.1"]
+                 [day8.re-frame/http-fx "0.1.4"]
+                 [nilenso/wscljs "0.1.0"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]]
 
@@ -22,7 +24,8 @@
   {:dev
    {:dependencies [[binaryage/devtools "0.9.4"]
                    [figwheel-sidecar "0.5.13"]
-                   [com.cemerick/piggieback "0.2.2"]]
+                   [com.cemerick/piggieback "0.2.2"]
+                   [re-frisk "0.5.0"]]
 
     :plugins      [[lein-figwheel "0.5.13"]
                    [lein-doo "0.1.7"]]
@@ -41,7 +44,8 @@
                     :output-dir           "resources/public/js/compiled/out"
                     :asset-path           "js/compiled/out"
                     :source-map-timestamp true
-                    :preloads             [devtools.preload]
+                    :preloads             [devtools.preload
+                                           re-frisk.preload]
                     :external-config      {:devtools/config {:features-to-install :all}}}}
 
     {:id           "min"
