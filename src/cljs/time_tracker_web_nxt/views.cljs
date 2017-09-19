@@ -108,26 +108,38 @@
        [add-timer @projects]
        [timers @ts]])))
 
+(defn login []
+  [:a
+   {:href "#"
+    :on-click (fn [_] (-> (.signIn (auth/auth-instance))
+                         (.then
+                          #(re-frame/dispatch [:log-in %]))))}
+   "Sign in with Google"])
+
+(defn logout []
+  [:a {:href "#"
+       :on-click (fn [_] (-> (.signOut (auth/auth-instance))
+                            (.then
+                             #(re-frame/dispatch [:log-out]))))}
+   "Sign Out"])
+
+(defn profile [user]
+  [:p "Hello "
+    [:strong (:name user)]
+    [:br]
+    [:img {:src (:image-url user)}]])
+
+(defn dashboard [user]
+  [:div
+   [profile user]
+   [:div
+    [logout]
+    [:br]
+    [:br]
+    [main-panel]]])
+
 (defn app []
   (let [user (re-frame/subscribe [:user])]
     (if-not (:signed-in? @user)
-      [:a
-       {:href "#" :on-click (fn [_] (-> (.signIn (auth/auth-instance))
-                                       (.then
-                                        #(re-frame/dispatch [:log-in %]))))}
-       "Sign in with Google"]
-      [:div
-       [:p "Hello "
-        [:strong (:name @user)]
-        [:br]
-        [:img {:src (:image-url @user)}]]
-       [:div
-        [:a
-         {:href "#" :on-click (fn [_]
-                                (-> (.signOut (auth/auth-instance))
-                                    (.then
-                                     #(re-frame/dispatch [:log-out]))))}
-         "Sign Out"]
-        [:br]
-        [:br]
-        [main-panel]]])))
+      [login]
+      [dashboard @user])))
