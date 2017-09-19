@@ -9,15 +9,16 @@
 (defn add-timer [projects]
   (let [timer-note (atom nil)
         default-project (first projects)
-        timer-project (atom (:name default-project))]
+        timer-project (atom default-project)]
     [:div
      [:select {:placeholder "Add Project"
                :default-value (:name default-project)
                :on-change #(reset! timer-project
-                                   (-> % .-target .-value))}
+                                   {:id (-> % .-target .-value)
+                                    :name (-> % .-target .-label)})}
       (for [{:keys [id name]} projects]
         ^{:key id}
-        [:option name])]
+        [:option {:value id} name])]
      [:textarea {:placeholder "Add notes"
                  :on-change #(reset! timer-note (-> % .-target .-value))}]
      [:button
@@ -35,7 +36,7 @@
 
 (defn timer-display
   [{:keys [id elapsed project state note edit-timer?]}]
-  [:div "Timer " id " for project " project
+  [:div "Timer " id " for project " (:name project)
    " has been running for " (display-time (:hh elapsed) (:mm elapsed) (:ss elapsed))
    " seconds as " state
    " with notes " note
@@ -113,8 +114,8 @@
    {:href "#"
     :on-click (fn [_] (-> (.signIn (auth/auth-instance))
                          (.then
-                          #(re-frame/dispatch [:log-in %]))))}
-   "Sign in with Google"])
+                          #(re-frame/dispatch [:log-in %]))))
+    } "Sign in with Google"])
 
 (defn logout []
   [:a {:href "#"

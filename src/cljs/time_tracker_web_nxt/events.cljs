@@ -2,7 +2,7 @@
   (:require-macros
    [cljs.core.async.macros :refer [go]])
   (:require
-   [cljs.core.async :as async :refer [chan put! <! close! alts! take!]]
+   [cljs.core.async :as async :refer [chan put! <! close! alts! take! timeout]]
    [re-frame.core :as re-frame]
    [time-tracker-web-nxt.db :as db]
    [time-tracker-web-nxt.env-vars :as env]
@@ -24,7 +24,8 @@
 (re-frame/reg-event-fx
  :add-timer
  (fn [{:keys [db] :as cofx} [_ timer-project timer-note]]
-   (let [timer-id (->  db :last-timer inc)]
+   (let [timer-id (->  db :last-timer inc)
+         [_ socket] (:conn db)]
      {:db (-> db
               (assoc-in [:timers (timer-key timer-id)]
                         {:id      timer-id
@@ -33,6 +34,10 @@
                          :project timer-project
                          :note timer-note})
               (assoc :last-timer timer-id))
+      :ws-send [{:command "create-and-start-timer"
+                 :project-id (js/parseInt (:id timer-project))
+                 :created-time (.getTime (js/Date.))
+                 :notes timer-note} socket]
       :dispatch [:start-timer timer-id]})))
 
 (re-frame/reg-event-db
@@ -117,14 +122,26 @@
        (let [data (<! response-chan)]
          (if (= "ready" (:type data))
            (do
-             (ws/send conn (clj->js {:command "authenticate" :token goog-auth-id}))
+             (ws/send conn (clj->js {:command "authenticate" :token goog-auth-id}) fmt/json)
              (if (= "success" (:auth-status (<! response-chan)))
-               (re-frame/dispatch [:add-db :conn [response-chan conn]])
+               (re-frame/dispatch [:save-connection [response-chan conn]])
                (throw (ex-info "Authentication Failed" {}))))
            ;; TODO: Retry server connection
            (throw (ex-info "Server not ready" {}))))))))
 
+(re-frame/reg-event-fx
+ :save-connection
+ (fn [{:keys [db] :as cofx} [_ sock]]
+   {:dispatch [:add-db :conn sock]
+    :heartbeat sock}))
 
+(re-frame/reg-fx
+ :heartbeat
+ (fn [[_ sock]]
+   (go
+     (while (= :open (ws/status sock))
+       (<! (timeout 10000))
+       (ws/send sock (clj->js {:command "ping"}) fmt/json)))))
 ;; ========== API ============
 
 (re-frame/reg-event-db
@@ -149,3 +166,10 @@
                            "Access-Control-Allow-Origin" "*"}
                  :on-success [:add-db :projects]
                  :on-failure [:http-failure]}}))
+
+;; ====== Websocket ==========
+
+(re-frame/reg-fx
+ :ws-send
+ (fn [[data socket]]
+   (ws/send socket (clj->js data) fmt/json)))
