@@ -117,7 +117,7 @@
        (let [data (<! response-chan)]
          (if (= "ready" (:type data))
            (do
-             (ws/send conn (clj->js {:command "authenticate" :token goog-auth-id}))
+             (ws/send conn (clj->js {:command "authenticate" :token goog-auth-id}) fmt/json)
              (if (= "success" (:auth-status (<! response-chan)))
                (re-frame/dispatch [:add-db :conn [response-chan conn]])
                (throw (ex-info "Authentication Failed" {}))))

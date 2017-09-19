@@ -4,7 +4,7 @@
                  [reagent "0.7.0"]
                  [re-frame "0.10.1"]
                  [day8.re-frame/http-fx "0.1.4"]
-                 [nilenso/wscljs "0.1.0"]]
+                 [nilenso/wscljs "0.1.1"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]]
 
