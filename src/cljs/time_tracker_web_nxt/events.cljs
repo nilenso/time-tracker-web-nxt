@@ -10,7 +10,9 @@
    [wscljs.client :as ws]
    [wscljs.format :as fmt]
    [day8.re-frame.http-fx]
-   [ajax.core :as ajax]))
+   [ajax.core :as ajax]
+   [cljs-time.core :as t-core]
+   [cljs-time.coerce :as t-coerce]))
 
 (defn- timer-key
   [timer-id]
@@ -24,21 +26,11 @@
 (re-frame/reg-event-fx
  :add-timer
  (fn [{:keys [db] :as cofx} [_ timer-project timer-note]]
-   (let [timer-id (->  db :last-timer inc)
-         [_ socket] (:conn db)]
-     {:db (-> db
-              (assoc-in [:timers (timer-key timer-id)]
-                        {:id      timer-id
-                         :elapsed 0
-                         :state :paused
-                         :project timer-project
-                         :note timer-note})
-              (assoc :last-timer timer-id))
-      :ws-send [{:command "create-and-start-timer"
+   (let [[_ socket] (:conn db)]
+     {:ws-send [{:command "create-and-start-timer"
                  :project-id (js/parseInt (:id timer-project))
-                 :created-time (.getTime (js/Date.))
-                 :notes timer-note} socket]
-      :dispatch [:start-timer timer-id]})))
+                 :created-time (t-coerce/to-epoch (t-core/now))
+                 :notes timer-note} socket]})))
 
 (re-frame/reg-event-db
  :inc-timer-dur
@@ -104,19 +96,44 @@
    (let [user-profile (auth/user-profile user)]
      {:db          (assoc db :user user-profile)
       :create-conn (:token user-profile)
-      :dispatch    [:list-all-projects (:token user-profile)]})))
+      :dispatch-n  [[:list-all-projects (:token user-profile)]
+                    [:list-all-timers (:token user-profile)]]})))
 
 (re-frame/reg-event-db
  :log-out
  (fn [db [_ user]]
    (assoc db :user nil)))
 
+
+
+(defn message-handler [{:keys [type] :as data}]
+  (if (= "create" type)
+    (do 
+      (prn "Create Message => " data)
+      (re-frame/dispatch [:add-timer-to-db (dissoc data :type)]))
+    (if (= "update" type)
+      (prn "Update Message => " data )
+      (prn "Received => " data))))
+
+(defn timer-state
+  [{:keys [duration] :as timer}]
+  (if (= 0 duration) :running :paused))
+
+(re-frame/reg-event-fx
+ :add-timer-to-db
+ (fn [{:keys [db] :as cofx} [_ timer]]
+   (let [timer-id (:id timer)]
+     {:db (-> db
+              (assoc-in [:timers timer-id]
+                        (assoc timer :state (timer-state timer))))})))
+
 (re-frame/reg-fx
  :create-conn
  (fn [goog-auth-id]
    (let [response-chan (chan)
-         handlers {:on-message #(do (prn "Received => " (.-data %))
-                                    (put! response-chan (fmt/read fmt/json (.-data %))))}
+         handlers {:on-message #(do 
+                                  (message-handler (fmt/read fmt/json (.-data %)))
+                                  (put! response-chan (fmt/read fmt/json (.-data %))))}
          conn (ws/create (:conn-url env/env) handlers)]
      (go
        (let [data (<! response-chan)]
@@ -150,6 +167,13 @@
    (assoc db k v)))
 
 (re-frame/reg-event-db
+ :add-timers-to-db
+ (fn [db [_ timers]]
+   (let [state #(timer-state %)
+         timers-map (reduce #(assoc %1 (:id %2) (assoc %2 :state (state %2))) {} timers)]
+     (assoc db :timers timers-map))))
+
+(re-frame/reg-event-db
  :http-failure
  (fn [_ [_ error]]
    (prn error)))
@@ -166,6 +190,24 @@
                            "Access-Control-Allow-Origin" "*"}
                  :on-success [:add-db :projects]
                  :on-failure [:http-failure]}}))
+
+(re-frame/reg-event-fx
+ :list-all-timers
+ (fn [cofx [_ auth-token]]
+   (let [today-epoch    (t-coerce/to-epoch (t-core/today-at-midnight))
+         tomorrow-epoch (-> (t-core/today-at-midnight)
+                            (t-core/plus (t-core/days 1))
+                            t-coerce/to-epoch)]
+     {:http-xhrio {:method          :get
+                   :uri             "/api/timers/"
+                   :params          {:start 0
+                                     :end   tomorrow-epoch}
+                   :timeout         8000
+                   :response-format (ajax/json-response-format {:keywords? true})
+                   :headers         {"Authorization"               (str "Bearer " auth-token)
+                                     "Access-Control-Allow-Origin" "*"}
+                   :on-success      [:add-timers-to-db]
+                   :on-failure      [:http-failure]}})))
 
 ;; ====== Websocket ==========
 

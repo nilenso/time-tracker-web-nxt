@@ -78,12 +78,12 @@
                               (reset! edit-timer? false)
                               (re-frame/dispatch [:update-timer id @changes]))} "Update"]])))
 
-(defn timer [{:keys [id elapsed state project note]}]
+(defn timer [{:keys [id duration project notes]}]
   (let [edit-timer? (reagent/atom false)]
-    (fn [{:keys [id elapsed state project note]}]
-      (let [elapsed-map (split-time elapsed)
+    (fn [{:keys [id duration state project notes]}]
+      (let [elapsed-map (split-time duration)
             timer-options {:id id :elapsed elapsed-map :project project :state state
-                           :note note :edit-timer? edit-timer?}]
+                           :note notes :edit-timer? edit-timer?}]
         (if @edit-timer?
           [timer-display-editable timer-options]
           [timer-display timer-options])))))
