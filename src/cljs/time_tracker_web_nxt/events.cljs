@@ -66,13 +66,18 @@
 
 (re-frame/reg-event-fx
  :stop-timer
- (fn [{:keys [db] :as cofx} [_ timer-id]]
-   (let [interval-id (get (:intervals db) timer-id)
+ (fn [{:keys [db] :as cofx} [_ {:keys [id duration]}]]
+   (let [timer-id id
+         interval-id (get (:intervals db) timer-id)
          [_ socket] (:conn db)]
      {:db (->
            db
            (assoc-in [:timers timer-id :state]
                      :paused)
+           (assoc-in [:timers timer-id :duration]
+                     duration)
+           (assoc-in [:timers timer-id :elpased]
+                     duration)
            (update-in [:intervals] dissoc timer-id))
       :clear-clock interval-id
       :ws-send [{:command "stop-timer"
@@ -119,7 +124,7 @@
         (if (> duration 0)
           (do
             (prn "Stopping timer: " id) 
-            (re-frame/dispatch [:stop-timer id]))
+            (re-frame/dispatch [:stop-timer data]))
           ))
       (prn "Default: " data))))
 

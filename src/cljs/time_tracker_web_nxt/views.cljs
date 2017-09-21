@@ -35,7 +35,7 @@
   (gs/format "%02d:%02d:%02d" elapsed-hh elapsed-mm elapsed-ss))
 
 (defn timer-display
-  [{:keys [id elapsed project state note edit-timer?]}]
+  [{:keys [id elapsed duration project state note edit-timer?] :as timer}]
   [:div "Timer " id " for project " (:name project)
    " has been running for " (display-time (:hh elapsed) (:mm elapsed) (:ss elapsed))
    " seconds as " state
@@ -47,7 +47,7 @@
       [:button {:on-click #(reset! edit-timer? true)} "Edit Timer"]]
      :running
      [:div
-      [:button {:on-click #(re-frame/dispatch [:stop-timer id])} "Stop Timer"]]
+      [:button {:on-click #(re-frame/dispatch [:stop-timer timer])} "Stop Timer"]]
      nil)])
 
 (defn timer-display-editable
