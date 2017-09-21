@@ -36,22 +36,22 @@
  :inc-timer-dur
  (fn [db [_ timer-id]]
    (if (= :running
-          (get-in db [:timers (timer-key timer-id) :state]))
-     (update-in db [:timers (timer-key timer-id) :elapsed]
+          (get-in db [:timers timer-id :state]))
+     (update-in db [:timers timer-id :elapsed]
                 inc)
      db)))
 
 (re-frame/reg-event-fx
  :start-timer
  (fn [{:keys [db] :as cofx} [_ timer-id]]
-   {:db (assoc-in db [:timers (timer-key timer-id) :state]
+   {:db (assoc-in db [:timers timer-id :state]
                   :running)
     :set-clock timer-id}))
 
 (re-frame/reg-event-db
  :add-interval
  (fn [db [_ timer-id interval-id]]
-   (assoc-in db [:intervals (timer-key timer-id)] interval-id)))
+   (assoc-in db [:intervals timer-id] interval-id)))
 
 (re-frame/reg-fx
  :set-clock
@@ -105,7 +105,10 @@
 
 (defn message-handler [{:keys [id duration type] :as data}]
   (if (= "create" type)
-    (re-frame/dispatch [:add-timer-to-db (dissoc data :type)])
+    (do
+      (re-frame/dispatch [:add-timer-to-db (dissoc data :type)])
+      (prn "Starting timer: " id)
+      (re-frame/dispatch [:start-timer id]))
     (if (= "update" type)
       (if (> duration 0)
         (do
