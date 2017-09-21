@@ -67,13 +67,12 @@
 (re-frame/reg-event-fx
  :stop-timer
  (fn [{:keys [db] :as cofx} [_ timer-id]]
-   (let [tk (timer-key timer-id)
-         interval-id (tk (:intervals db))]
+   (let [interval-id (get (:intervals db) timer-id)]
      {:db (->
            db
-           (assoc-in [:timers tk :state]
+           (assoc-in [:timers timer-id :state]
                      :paused)
-           (update-in [:intervals] dissoc tk))
+           (update-in [:intervals] dissoc timer-id))
       :clear-clock interval-id})))
 
 (re-frame/reg-event-db
@@ -104,16 +103,15 @@
  (fn [db [_ user]]
    (assoc db :user nil)))
 
-
-
-(defn message-handler [{:keys [type] :as data}]
+(defn message-handler [{:keys [id duration type] :as data}]
   (if (= "create" type)
-    (do 
-      (prn "Create Message => " data)
-      (re-frame/dispatch [:add-timer-to-db (dissoc data :type)]))
+    (re-frame/dispatch [:add-timer-to-db (dissoc data :type)])
     (if (= "update" type)
-      (prn "Update Message => " data )
-      (prn "Received => " data))))
+      (if (> duration 0)
+        (do
+          (prn "Stopping timer: " id) 
+          (re-frame/dispatch [:stop-timer id]))
+        ))))
 
 (defn timer-state
   [{:keys [duration] :as timer}]
