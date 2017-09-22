@@ -35,7 +35,7 @@
   (gs/format "%02d:%02d:%02d" elapsed-hh elapsed-mm elapsed-ss))
 
 (defn timer-display
-  [{:keys [id elapsed project state note edit-timer?]}]
+  [{:keys [id elapsed duration project state note edit-timer?] :as timer}]
   [:div "Timer " id " for project " (:name project)
    " has been running for " (display-time (:hh elapsed) (:mm elapsed) (:ss elapsed))
    " seconds as " state
@@ -47,7 +47,7 @@
       [:button {:on-click #(reset! edit-timer? true)} "Edit Timer"]]
      :running
      [:div
-      [:button {:on-click #(re-frame/dispatch [:stop-timer id])} "Stop Timer"]]
+      [:button {:on-click #(re-frame/dispatch [:stop-timer timer])} "Stop Timer"]]
      nil)])
 
 (defn timer-display-editable
@@ -78,12 +78,18 @@
                               (reset! edit-timer? false)
                               (re-frame/dispatch [:update-timer id @changes]))} "Update"]])))
 
-(defn timer [{:keys [id elapsed state project note]}]
+(defn timer [{:keys [id elapsed project-id notes]}]
   (let [edit-timer? (reagent/atom false)]
-    (fn [{:keys [id elapsed state project note]}]
+    (fn [{:keys [id elapsed state project notes]}]
       (let [elapsed-map (split-time elapsed)
-            timer-options {:id id :elapsed elapsed-map :project project :state state
-                           :note note :edit-timer? edit-timer?}]
+            all-projects @(re-frame/subscribe [:projects])
+            get-project-by-id (fn [project-id projects]
+                                (some #(when (= project-id (:id %)) %) projects))
+            timer-options {:id id :elapsed elapsed-map
+                           :project {:id project-id
+                                     :name (:name (get-project-by-id project-id all-projects))}
+                           :state state
+                           :note notes :edit-timer? edit-timer?}]
         (if @edit-timer?
           [timer-display-editable timer-options]
           [timer-display timer-options])))))
