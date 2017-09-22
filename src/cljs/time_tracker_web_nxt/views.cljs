@@ -43,7 +43,7 @@
    (case state
      :paused
      [:div
-      [:button {:on-click #(re-frame/dispatch [:start-timer id])} "Start Timer"]
+      [:button {:on-click #(re-frame/dispatch [:resume-timer id])} "Start Timer"]
       [:button {:on-click #(reset! edit-timer? true)} "Edit Timer"]]
      :running
      [:div

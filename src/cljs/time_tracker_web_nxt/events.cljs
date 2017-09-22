@@ -48,6 +48,16 @@
                   :running)
     :set-clock timer-id}))
 
+(re-frame/reg-event-fx
+ :resume-timer
+ (fn [{:keys [db] :as cofx} [_ timer-id]]
+   (let [[_ socket] (:conn db)] 
+     {:db (assoc-in db [:timers timer-id :state]
+                    :running)
+      :set-clock timer-id
+      :ws-send [{:command "start-timer"
+                 :timer-id timer-id} socket]})))
+
 (re-frame/reg-event-db
  :add-interval
  (fn [db [_ timer-id interval-id]]
@@ -111,7 +121,7 @@
  (fn [db [_ user]]
    (assoc db :user nil)))
 
-(defn message-handler [{:keys [id duration type] :as data}]
+(defn message-handler [{:keys [id started-time duration type] :as data}]
   (if (= "create" type)
     (do
       (prn "Create: " data)
@@ -121,7 +131,7 @@
     (if (= "update" type)
       (do
         (prn "Update: " data)
-        (if (> duration 0)
+        (if (and (nil? started-time) (> duration 0))
           (do
             (prn "Stopping timer: " id) 
             (re-frame/dispatch [:stop-timer data]))
