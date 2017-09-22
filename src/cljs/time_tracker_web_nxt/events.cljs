@@ -76,7 +76,7 @@
                      :paused)
            (assoc-in [:timers timer-id :duration]
                      duration)
-           (assoc-in [:timers timer-id :elpased]
+           (assoc-in [:timers timer-id :elapsed]
                      duration)
            (update-in [:intervals] dissoc timer-id))
       :clear-clock interval-id
