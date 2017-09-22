@@ -37,8 +37,9 @@
 (defn timer-display
   [{:keys [id elapsed project state notes edit-timer?] :as timer}]
   [:div "Timer " id " for project " (:name project)
-   " has been running for " (display-time (:hh elapsed) (:mm elapsed) (:ss elapsed))
-   " seconds as " state
+   (if (= state :running) " has been running for " " has been paused after ")
+   (display-time (:hh elapsed) (:mm elapsed) (:ss elapsed))
+   " seconds"
    " with notes " notes
    (case state
      :paused
@@ -64,7 +65,7 @@
         dur-change-handler-w-key #(partial dur-change-handler %)]
     (fn [{:keys [id project edit-timer?]}]
       [:div "Timer " id " for project " (:name project)
-       " has been running for "
+       " has been paused after "
        [:input {:value (:elapsed-hh @changes)
                 :on-change (dur-change-handler-w-key :elapsed-hh)}]
        [:input {:value (:elapsed-mm @changes)
