@@ -14,10 +14,6 @@
    [cljs-time.core :as t-core]
    [cljs-time.coerce :as t-coerce]))
 
-(defn- timer-key
-  [timer-id]
-  (keyword (str "timer" timer-id)))
-
 (re-frame/reg-event-db
  :initialize-db
  (fn  [_ _]

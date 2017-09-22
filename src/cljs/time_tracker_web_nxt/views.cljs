@@ -90,7 +90,6 @@
                                      :name (:name (get-project-by-id project-id all-projects))}
                            :state state
                            :notes notes :edit-timer? edit-timer?}]
-        (prn "Timer Opts: " timer-options)
         (if @edit-timer?
           [timer-display-editable timer-options]
           [timer-display timer-options])))))
