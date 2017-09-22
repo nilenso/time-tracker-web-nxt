@@ -88,19 +88,23 @@
       :ws-send [{:command "stop-timer"
                  :timer-id timer-id} socket]})))
 
-(re-frame/reg-event-db
+(re-frame/reg-event-fx
  :update-timer
- (fn [db [_ id {:keys [elapsed-hh elapsed-mm elapsed-ss note] :as new}]]
-   (let [tkey (timer-key id)
-         elapsed (+ (* 60 60 elapsed-hh)
+ (fn [{:keys [db] :as cofx} [_ timer-id {:keys [elapsed-hh elapsed-mm elapsed-ss notes] :as new}]]
+   (let [elapsed (+ (* 60 60 elapsed-hh)
                     (* 60 elapsed-mm)
                     elapsed-ss)
          new (assoc new :elapsed elapsed)
-         ori (-> db :timers tkey (select-keys [:note :elapsed]))
-         new-map (merge ori new)]
-     (-> db
-         (assoc-in [:timers tkey :elapsed] (:elapsed new-map))
-         (assoc-in [:timers tkey :note] (:note new-map))))))
+         ori (-> db :timers (get timer-id) (select-keys [:notes :elapsed]))
+         new-map (merge ori new)
+         [_ socket] (:conn db)]
+     {:db (-> db
+              (assoc-in [:timers timer-id :elapsed] (:elapsed new-map))
+              (assoc-in [:timers timer-id :notes] (:notes new-map)))
+      :ws-send [{:command "update-timer"
+                 :timer-id timer-id
+                 :duration elapsed 
+                 :notes notes} socket]})))
 
 (re-frame/reg-event-fx
  :log-in
@@ -188,7 +192,10 @@
  :add-timers-to-db
  (fn [db [_ timers]]
    (let [state #(timer-state %)
-         timers-map (reduce #(assoc %1 (:id %2) (assoc %2 :state (state %2))) {} timers)]
+         timers-map (reduce #(assoc %1 (:id %2)
+                                    (-> %2 
+                                        (assoc :state (state %2))
+                                        (assoc :elapsed (:duration %2)))) {} timers)]
      (assoc db :timers timers-map))))
 
 (re-frame/reg-event-db
