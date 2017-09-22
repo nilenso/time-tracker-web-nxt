@@ -35,7 +35,7 @@
   (gs/format "%02d:%02d:%02d" elapsed-hh elapsed-mm elapsed-ss))
 
 (defn timer-display
-  [{:keys [id elapsed duration project state notes edit-timer?] :as timer}]
+  [{:keys [id elapsed project state notes edit-timer?] :as timer}]
   [:div "Timer " id " for project " (:name project)
    " has been running for " (display-time (:hh elapsed) (:mm elapsed) (:ss elapsed))
    " seconds as " state
