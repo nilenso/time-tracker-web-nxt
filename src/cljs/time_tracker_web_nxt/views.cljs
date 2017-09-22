@@ -35,11 +35,11 @@
   (gs/format "%02d:%02d:%02d" elapsed-hh elapsed-mm elapsed-ss))
 
 (defn timer-display
-  [{:keys [id elapsed duration project state note edit-timer?] :as timer}]
+  [{:keys [id elapsed duration project state notes edit-timer?] :as timer}]
   [:div "Timer " id " for project " (:name project)
    " has been running for " (display-time (:hh elapsed) (:mm elapsed) (:ss elapsed))
    " seconds as " state
-   " with notes " note
+   " with notes " notes
    (case state
      :paused
      [:div
@@ -51,8 +51,8 @@
      nil)])
 
 (defn timer-display-editable
-  [{:keys [elapsed note]}]
-  (let [changes (reagent/atom {:note note
+  [{:keys [elapsed notes]}]
+  (let [changes (reagent/atom {:notes notes
                                :elapsed-hh (:hh elapsed)
                                :elapsed-mm (:mm elapsed)
                                :elapsed-ss (:ss elapsed)})
@@ -63,7 +63,7 @@
                                                                (js/parseInt elap-val)))))
         dur-change-handler-w-key #(partial dur-change-handler %)]
     (fn [{:keys [id project edit-timer?]}]
-      [:div "Timer " id " for project " project
+      [:div "Timer " id " for project " (:name project)
        " has been running for "
        [:input {:value (:elapsed-hh @changes)
                 :on-change (dur-change-handler-w-key :elapsed-hh)}]
@@ -71,8 +71,8 @@
                 :on-change (dur-change-handler-w-key :elapsed-mm)}]
        [:input {:value (:elapsed-ss @changes)
                 :on-change (dur-change-handler-w-key :elapsed-ss)}]
-       [:textarea {:value (:note @changes)
-                   :on-change #(swap! changes assoc :note (-> % .-target .-value))}]
+       [:textarea {:value (:notes @changes)
+                   :on-change #(swap! changes assoc :notes (-> % .-target .-value))}]
        [:button {:on-click #(reset! edit-timer? false)} "Cancel"]
        [:button {:on-click #(do
                               (reset! edit-timer? false)
@@ -89,7 +89,8 @@
                            :project {:id project-id
                                      :name (:name (get-project-by-id project-id all-projects))}
                            :state state
-                           :note notes :edit-timer? edit-timer?}]
+                           :notes notes :edit-timer? edit-timer?}]
+        (prn "Timer Opts: " timer-options)
         (if @edit-timer?
           [timer-display-editable timer-options]
           [timer-display timer-options])))))
