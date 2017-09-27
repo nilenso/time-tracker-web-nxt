@@ -70,4 +70,26 @@ legend {
     color: #777;
 }
 
-/* #B5DFF1 for body bkg */
+table {
+    width: 100%;
+}
+
+th {
+    border: none;
+}
+
+td {
+    height: 3em;
+    border: none;
+    border-left: none;
+    border-right: none;
+}
+
+.time-col {
+    text-align: center;
+}
+
+.time-display {
+    font-size: 1.3em;
+    font-weight: bold
+}

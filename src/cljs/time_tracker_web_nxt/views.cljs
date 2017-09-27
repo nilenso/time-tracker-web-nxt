@@ -43,19 +43,19 @@
 
 (defn timer-display
   [{:keys [id elapsed project state notes edit-timer?] :as timer}]
-  [:div id " ___ " (:name project)
-   " ___ "(display-time (:hh elapsed) (:mm elapsed) (:ss elapsed))
-   " s"
-   " ___ " notes
-   (case state
-     :paused
-     [:span
-      [:button.button-xsmall.pure-button {:style {:margin-right 10} :on-click #(re-frame/dispatch [:resume-timer id])} "Start"]
-      [:button.button-xsmall.pure-button {:on-click #(reset! edit-timer? true)} "Edit"]]
-     :running
-     [:span
-      [:button.pure-button {:on-click #(re-frame/dispatch [:stop-timer timer])} "Stop"]]
-     nil)])
+  [:tr
+   [:td [:span {:style {:font-size "1.1em"}} (:name project)]]
+   [:td.time-col [:span.time-display (display-time (:hh elapsed) (:mm elapsed) (:ss elapsed))]]
+   [:td (case state
+          :paused
+          [:span
+           [:button.button-small.pure-button {:style {:margin-right 10} :on-click #(re-frame/dispatch [:resume-timer id])} "Start"]
+           [:button.button-small.pure-button {:on-click #(reset! edit-timer? true)} "Edit"]]
+          :running
+          [:span
+           [:button.pure-button {:on-click #(re-frame/dispatch [:stop-timer timer])} "Stop"]]
+          nil)]
+   ])
 
 (defn timer-display-editable
   [{:keys [elapsed notes]}]
@@ -102,14 +102,17 @@
           [timer-display timer-options])))))
 
 (defn timers [ts]
-  (let [sorted-ts (->> ts
-                       vals
-                       (sort-by :id)
-                       reverse)]
-    [:ul
-     (for [t sorted-ts]
-       ^{:key (:id t)}
-       [:li [timer t]])]))
+  (let [sorted-ts (->> ts vals (sort-by :id) reverse)]
+    [:table.pure-table {:style {:border "none"}}
+     [:colgroup
+      [:col {:style {:width "60%"}}]
+      [:col {:style {:width "20%"}}]
+      [:col {:style {:width "20%"}}]
+      ]
+     [:tbody
+      (for [t sorted-ts]
+        ^{:key (:id t)}
+        [timer t])]]))
 
 (defn datepicker []
   ;; Note: This seems more like a hacked-together solution. Should look
