@@ -5,7 +5,8 @@
                  [re-frame "0.10.1"]
                  [day8.re-frame/http-fx "0.1.4"]
                  [nilenso/wscljs "0.1.1"]
-                 [com.andrewmcveigh/cljs-time "0.5.0"]]
+                 [com.andrewmcveigh/cljs-time "0.5.0"]
+                 [com.taoensso/timbre "4.10.0"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]]
 

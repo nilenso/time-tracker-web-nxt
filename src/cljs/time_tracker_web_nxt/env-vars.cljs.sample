@@ -2,4 +2,6 @@
 
 (def env
   {:client-id ""
-   :scope "profile email"})
+   :scope "profile email"
+   :conn-url ""
+   :log-level ""})
