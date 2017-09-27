@@ -26,3 +26,8 @@
  :conn
  (fn [db]
    (:conn db)))
+
+(re-frame/reg-sub
+ :timer-date
+ (fn [db]
+   (:timer-date db)))

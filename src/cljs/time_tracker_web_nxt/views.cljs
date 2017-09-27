@@ -1,9 +1,11 @@
 (ns time-tracker-web-nxt.views
   (:require
+   [cljs-pikaday.reagent :as pikaday]
    [goog.string :as gs]
    [goog.string.format]
    [re-frame.core :as re-frame]
    [reagent.core :as reagent]
+   [reagent.ratom :as ratom]
    [time-tracker-web-nxt.auth :as auth]))
 
 (defn add-timer [projects]
@@ -105,6 +107,15 @@
        ^{:key (:id t)}
        [:li [timer t]])]))
 
+(defn datepicker []
+  ;; Note: This seems more like a hacked-together solution. Should look
+  ;; for a better implementation.
+  (let [date-atom (reagent/atom (js/Date.))]
+    [pikaday/date-selector {:date-atom date-atom
+                            :pikaday-attrs {:on-select
+                                            #(do (reset! date-atom %)
+                                                 (re-frame/dispatch [:timer-date-changed :timer-date @date-atom]))}}]))
+
 (defn main-panel []
   (let [app-name (re-frame/subscribe [:app-name])
         user     (re-frame/subscribe [:user])
@@ -112,7 +123,9 @@
         projects (re-frame/subscribe [:projects])]
     (fn []
       [:div
-       [:div "Hi " (:name  @user) "!" " " "Welcome to " @app-name]
+       [:br]
+       [datepicker]
+       [:br]
        [add-timer @projects]
        [timers @ts]])))
 
