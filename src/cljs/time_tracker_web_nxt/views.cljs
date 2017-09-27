@@ -12,19 +12,24 @@
   (let [timer-note (atom nil)
         default-project (first projects)
         timer-project (atom default-project)]
-    [:div
-     [:select {:placeholder "Add Project"
-               :default-value (:name default-project)
-               :on-change #(reset! timer-project
-                                   {:id (-> % .-target .-value)
-                                    :name (-> % .-target .-label)})}
-      (for [{:keys [id name]} projects]
-        ^{:key id}
-        [:option {:value id} name])]
-     [:textarea {:placeholder "Add notes"
-                 :on-change #(reset! timer-note (-> % .-target .-value))}]
-     [:button
-      {:type "input" :on-click #(re-frame/dispatch [:add-timer @timer-project @timer-note])}
+    [:div {:style {:padding-bottom "30px"}}
+     [:div
+      [:select {:placeholder "Add Project"
+                :style {:margin-bottom "1em"}
+                :default-value (:name default-project)
+                :on-change #(reset! timer-project
+                                    {:id (-> % .-target .-value)
+                                     :name (-> % .-target .-label)})}
+       (for [{:keys [id name]} projects]
+         ^{:key id}
+         [:option {:value id} name])]]
+     [:div [:textarea {:placeholder "Add notes"
+                       :style {:margin-bottom "1em"}
+                       :on-change #(reset! timer-note (-> % .-target .-value))}]]
+     [:button.pure-button.pure-button-primary
+      {:type "input"
+       :style {:background-color "#EB5424"}
+       :on-click #(re-frame/dispatch [:add-timer @timer-project @timer-note])}
       "Add a Timer"]]))
 
 (defn split-time [elapsed-seconds]
@@ -38,19 +43,18 @@
 
 (defn timer-display
   [{:keys [id elapsed project state notes edit-timer?] :as timer}]
-  [:div "Timer " id " for project " (:name project)
-   (if (= state :running) " has been running for " " has been paused after ")
-   (display-time (:hh elapsed) (:mm elapsed) (:ss elapsed))
-   " seconds"
-   " with notes " notes
+  [:div id " ___ " (:name project)
+   " ___ "(display-time (:hh elapsed) (:mm elapsed) (:ss elapsed))
+   " s"
+   " ___ " notes
    (case state
      :paused
-     [:div
-      [:button {:on-click #(re-frame/dispatch [:resume-timer id])} "Start Timer"]
-      [:button {:on-click #(reset! edit-timer? true)} "Edit Timer"]]
+     [:span
+      [:button.button-xsmall.pure-button {:style {:margin-right 10} :on-click #(re-frame/dispatch [:resume-timer id])} "Start"]
+      [:button.button-xsmall.pure-button {:on-click #(reset! edit-timer? true)} "Edit"]]
      :running
-     [:div
-      [:button {:on-click #(re-frame/dispatch [:stop-timer timer])} "Stop Timer"]]
+     [:span
+      [:button.pure-button {:on-click #(re-frame/dispatch [:stop-timer timer])} "Stop"]]
      nil)])
 
 (defn timer-display-editable
@@ -114,7 +118,8 @@
     [pikaday/date-selector {:date-atom date-atom
                             :pikaday-attrs {:on-select
                                             #(do (reset! date-atom %)
-                                                 (re-frame/dispatch [:timer-date-changed :timer-date @date-atom]))}}]))
+                                                 (re-frame/dispatch [:timer-date-changed :timer-date @date-atom]))}
+                            :input-attrs {:style {:padding "0.3em" :width "15.2em"}}}]))
 
 (defn main-panel []
   (let [app-name (re-frame/subscribe [:app-name])
@@ -122,42 +127,59 @@
         ts (re-frame/subscribe [:timers])
         projects (re-frame/subscribe [:projects])]
     (fn []
-      [:div
+      [:div.main
        [:br]
-       [datepicker]
+       [:div {:style {:text-align "center"}}
+        [:p
+         {:style {:display "inline-block" :margin-right "1em" :vertical-align "middle"
+                  :font-size "1.2em"}}
+         "Current Date: "]
+        [datepicker]]
        [:br]
        [add-timer @projects]
+       [:legend [:span {:style {:font-size "22px"}} "Timers"]]
        [timers @ts]])))
 
 (defn login []
-  [:a
-   {:href "#"
-    :on-click (fn [_] (-> (.signIn (auth/auth-instance))
-                         (.then
-                          #(re-frame/dispatch [:log-in %]))))
-    } "Sign in with Google"])
+  [:div.splash-screen
+   [:h1 {:style {:font-size "5em"}} "Time Tracker"]
+   [:a.google-sign-in
+    {:href "#"
+     :on-click (fn [_] (-> (.signIn (auth/auth-instance))
+                          (.then
+                           #(re-frame/dispatch [:log-in %]))))
+     } [:img {:src "../images/btn_google_signin_light_normal_web@2x.png"
+              :style {:width "12em"}}]]
+   ])
 
 (defn logout []
-  [:a {:href "#"
-       :on-click (fn [_] (-> (.signOut (auth/auth-instance))
-                            (.then
-                             #(re-frame/dispatch [:log-out]))))}
+  [:a.pure-menu-link {:href "#"
+                      :on-click (fn [_] (-> (.signOut (auth/auth-instance))
+                                           (.then
+                                            #(re-frame/dispatch [:log-out]))))}
    "Sign Out"])
 
 (defn profile [user]
-  [:p "Hello "
-    [:strong (:name user)]
-    [:br]
-    [:img {:src (:image-url user)}]])
+  [:div [:p {:style {:display "inline-block"
+                     :vertical-align "super"
+                     :margin-right "0.5em"}}
+         [:strong (:name user)]]
+   [:img {:src (:image-url user) :width "25px"}]])
+
+(defn header [user]
+  [:div.pure-menu.pure-menu-horizontal
+   {:style {:border-bottom "1px solid #e4e6e8"}}
+   [:a.pure-menu-heading
+    {:href "#"
+     :style {:color "#EB5424"}} "Time Tracker"]
+   [:ul.pure-menu-list
+    [:li.pure-menu-item [profile user]]
+    [:li.pure-menu-item [logout]]]])
 
 (defn dashboard [user]
-  [:div
-   [profile user]
-   [:div
-    [logout]
-    [:br]
-    [:br]
-    [main-panel]]])
+  [:div {:style {:height "100%"}}
+   [header user]
+   [main-panel]])
 
 (defn app []
   (let [user (re-frame/subscribe [:user])]

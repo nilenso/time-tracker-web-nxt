@@ -2,11 +2,13 @@
 <html lang="en">
   <head>
     <meta charset='utf-8'>
-    <script src="https://apis.google.com/js/platform.js"></script>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
     <link rel="stylesheet" type="text/css" href="css/pikaday.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="css/style.css"/>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app" style="height: 100%"></div>
     <script src="js/compiled/app.js"></script>
     <script>time_tracker_web_nxt.core.init();</script>
   </body>

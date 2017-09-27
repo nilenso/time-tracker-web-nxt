@@ -1,0 +1,73 @@
+html {
+    height: 100%;
+}
+
+select {
+    background: url(data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0Ljk1IDEwIj48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2ZmZjt9LmNscy0ye2ZpbGw6IzQ0NDt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPmFycm93czwvdGl0bGU+PHJlY3QgY2xhc3M9ImNscy0xIiB3aWR0aD0iNC45NSIgaGVpZ2h0PSIxMCIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMiIgcG9pbnRzPSIxLjQxIDQuNjcgMi40OCAzLjE4IDMuNTQgNC42NyAxLjQxIDQuNjciLz48cG9seWdvbiBjbGFzcz0iY2xzLTIiIHBvaW50cz0iMy41NCA1LjMzIDIuNDggNi44MiAxLjQxIDUuMzMgMy41NCA1LjMzIi8+PC9zdmc+) no-repeat 95% 50%;
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    appearance: none;
+    /* and then whatever styles you want*/
+    width:400px;
+    overflow:hidden;
+    white-space:pre;
+    text-overflow:ellipsis;
+    border: 1px solid #ccc;
+    padding: 0.3em;
+    height: 2.5em;
+}
+
+body {
+    font-family: "Source Sans Pro";
+    -moz-osx-font-smoothing:  grayscale;
+    -webkit-font-smoothing: antialiased;
+    margin: 0;
+    height: 100%;
+}
+
+.splash-screen {
+    text-align: center;
+    padding-top: 16em;
+}
+
+.button-xsmall {
+    font-size: 70%;
+}
+
+.button-small {
+    font-size: 85%;
+}
+
+legend {
+    display: block;
+    width: 100%;
+    padding: .3em 0;
+    margin-bottom: .3em;
+    color: #333;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.google-sign-in {
+    width: 10em;
+    border: 0;
+}
+
+.custom-wrapper {
+    margin-bottom: 1em;
+    height: 2.1em;
+    overflow: hidden;
+    -webkit-transition: height 0.5s;
+    -moz-transition: height 0.5s;
+    -ms-transition: height 0.5s;
+    transition: height 0.5s;
+}
+
+.main {
+    padding: 2em;
+    height: 100%;
+    background-color: #f9f9f9;
+    /* color: #757575; */
+    color: #777;
+}
+
+/* #B5DFF1 for body bkg */
