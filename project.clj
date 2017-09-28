@@ -43,6 +43,7 @@
      :compiler     {:main                 time-tracker-web-nxt.core
                     :output-to            "resources/public/js/compiled/app.js"
                     :output-dir           "resources/public/js/compiled/out"
+                    :closure-defines {time-tracker-web-nxt.config.debug? true}
                     :asset-path           "js/compiled/out"
                     :source-map-timestamp true
                     :preloads             [devtools.preload
@@ -53,10 +54,9 @@
      :source-paths ["src/cljs"]
      :compiler     {:main            time-tracker-web-nxt.core
                     :output-to       "resources/public/js/compiled/app.js"
-                    :optimizations   :advanced
-                    :closure-defines {goog.DEBUG false}
-                    :pretty-print    false
-                    :externs         ["resources/private/js/platform.js"]}}
+                    :optimizations   :whitespace
+                    :closure-defines {time-tracker-web-nxt.config.debug? false}
+                    :pretty-print    false}}
 
     {:id           "test"
      :source-paths ["src/cljs" "test/cljs"]
