@@ -6,6 +6,7 @@
    [cljs.reader :refer [read read-string]]
    [reagent.core :as reagent]
    [time-tracker-web-nxt.env-vars :as env]))
+   [goog.object :as object]))
 
 (def user (reagent/atom {}))
 
@@ -15,7 +16,7 @@
     c))
 
 (defn auth-instance []
-  (.getAuthInstance js/gapi.auth2))
+  (.getAuthInstance (object/get js/gapi "auth2")))
 
 (defn get-auth-token []
   (-> (auth-instance) .-currentUser .get .getAuthResponse .-id_token))
@@ -31,7 +32,7 @@
 (defn init! []
   (let [c (chan)]
     ;; TODO: Add timeout
-    (.load js/gapi "auth2" (fn [] (-> (.init js/gapi.auth2
+    (.load js/gapi "auth2" (fn [] (-> (.init (object/get js/gapi "auth2")
                                             (clj->js {"client_id" (:client-id env/env)
                                                       "scope"     (:scope env/env)}))
                                      (.then #(go (>! c true))
