@@ -1,7 +1,0 @@
-(ns time-tracker-web-nxt.env-vars)
-
-(def env
-  {:client-id ""
-   :scope "profile email"
-   :conn-url ""
-   :log-level ""})

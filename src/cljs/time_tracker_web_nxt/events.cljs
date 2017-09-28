@@ -5,7 +5,7 @@
    [cljs.core.async :as async :refer [chan put! <! close! alts! take! timeout]]
    [re-frame.core :as re-frame]
    [time-tracker-web-nxt.db :as db]
-   [time-tracker-web-nxt.env-vars :as env]
+   [time-tracker-web-nxt.config :as config]
    [time-tracker-web-nxt.auth :as auth]
    [wscljs.client :as ws]
    [wscljs.format :as fmt]
@@ -155,7 +155,7 @@
          handlers {:on-message #(do 
                                   (message-handler (fmt/read fmt/json (.-data %)))
                                   (put! response-chan (fmt/read fmt/json (.-data %))))}
-         conn (ws/create (:conn-url env/env) handlers)]
+         conn (ws/create (:conn-url config/env) handlers)]
      (go
        (let [data (<! response-chan)]
          (if (= "ready" (:type data))
