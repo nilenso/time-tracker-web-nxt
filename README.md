@@ -1,51 +1,69 @@
 # time-tracker-web-nxt
 
-A [re-frame](https://github.com/Day8/re-frame) application designed to ... track time.
+A time tracker application brought to you by ClojureScript with all the goodness
+of [re-frame](https://github.com/Day8/re-frame).
+
+This is the front-end to https://github.com/nilenso/time-tracker.
+
+## Installation
+
+### Dependencies
+
+Run `lein deps` to install the project dependencies.
+
+### Configuration
+
+You can add new configuration to/modify existing configuration in `config.cljs`.
 
 ## Development Mode
 
-### Start Cider from Emacs:
+### Setup Emacs:
 
 Put this in your Emacs config file:
 
 ```
-(setq cider-cljs-lein-repl
-	"(do (require 'figwheel-sidecar.repl-api)
-         (figwheel-sidecar.repl-api/start-figwheel!)
-         (figwheel-sidecar.repl-api/cljs-repl))")
+(defun cider-figwheel-repl ()
+  (interactive)
+  (save-some-buffers)
+  (with-current-buffer (cider-current-repl-buffer)
+    (goto-char (point-max))
+    (insert "(require 'figwheel-sidecar.repl-api)
+             (figwheel-sidecar.repl-api/start-figwheel!) ; idempotent
+             (figwheel-sidecar.repl-api/cljs-repl)")
+    (cider-repl-return)))
 ```
 
-Navigate to a clojurescript file and start a figwheel REPL with `cider-jack-in-clojurescript` or (`C-c M-J`)
+Start a Clojure repl from your project with `cider-jack-in` or (`C-c M-j`). Once
+ready, start a figwheel repl with `M-x cider-figwheel-repl`.
 
 ### Run application:
 
 ```
-lein clean
-lein figwheel dev
+lein do clean, figwheel dev
 ```
 
 Figwheel will automatically push cljs changes to the browser.
 
 Wait a bit, then browse to [http://localhost:3449](http://localhost:3449).
 
-### Run tests:
+## Testing
 
 ```
-lein clean
-lein doo once (This use PhantomJS as a default target))
-or
-keep the tests running with
-lein doo
+lein do clean, doo once (This uses PhantomJS as the default target))
 ```
 
 The above command assumes that you have [phantomjs](https://www.npmjs.com/package/phantomjs) installed. However, please note that [doo](https://github.com/bensu/doo) can be configured to run cljs.test in many other JS environments (chrome, ie, safari, opera, slimer, node, rhino, or nashorn).
 
-## Production Build
+## Deployment
 
-
-To compile clojurescript to javascript:
+After changing the configuration in `config.cljs` accordingly, run the below script do a production build and deploy the artifacts:
 
 ```
-lein clean
-lein cljsbuild once min
+./scripts/deploy.sh
 ```
+
+## License
+
+Copyright © 2017 Nilenso Software LLP
+
+Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.
