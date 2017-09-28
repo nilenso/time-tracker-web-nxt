@@ -31,6 +31,7 @@
                    [lein-doo "0.1.7"]]
     }}
 
+  :aliases {"prod" ["do" "clean" ["cljsbuild" "once" "min"]]}
   :doo {:build "test"
         :alias {:default [:phantom :once]}}
 
