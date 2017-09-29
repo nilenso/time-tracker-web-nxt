@@ -12,7 +12,7 @@
 (defn dev-setup []
   (when config/debug?
     (enable-console-print!)
-    (println "dev mode")))
+    (println "App is in development mode")))
 
 (defn loading []
   (reagent/render [:h2 "Loading"]
