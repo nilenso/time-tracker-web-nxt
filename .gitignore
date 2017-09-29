@@ -8,3 +8,4 @@ out
 .nrepl-port
 env-vars.cljs
 *.DS_Store
+.lein-repl-history

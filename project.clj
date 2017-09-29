@@ -6,7 +6,8 @@
                  [day8.re-frame/http-fx "0.1.4"]
                  [nilenso/wscljs "0.1.1"]
                  [com.andrewmcveigh/cljs-time "0.5.0"]
-                 [cljs-pikaday "0.1.4"]]
+                 [cljs-pikaday "0.1.4"]
+                 [com.taoensso/timbre "4.10.0"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]]
 
@@ -31,6 +32,7 @@
                    [lein-doo "0.1.7"]]
     }}
 
+  :aliases {"prod" ["do" "clean" ["cljsbuild" "once" "min"]]}
   :doo {:build "test"
         :alias {:default [:phantom :once]}}
 
@@ -42,6 +44,7 @@
      :compiler     {:main                 time-tracker-web-nxt.core
                     :output-to            "resources/public/js/compiled/app.js"
                     :output-dir           "resources/public/js/compiled/out"
+                    :closure-defines {time-tracker-web-nxt.config.debug? true}
                     :asset-path           "js/compiled/out"
                     :source-map-timestamp true
                     :preloads             [devtools.preload
@@ -52,10 +55,9 @@
      :source-paths ["src/cljs"]
      :compiler     {:main            time-tracker-web-nxt.core
                     :output-to       "resources/public/js/compiled/app.js"
-                    :optimizations   :advanced
-                    :closure-defines {goog.DEBUG false}
-                    :pretty-print    false
-                    :externs         ["resources/private/js/platform.js"]}}
+                    :optimizations   :whitespace
+                    :closure-defines {time-tracker-web-nxt.config.debug? false}
+                    :pretty-print    false}}
 
     {:id           "test"
      :source-paths ["src/cljs" "test/cljs"]

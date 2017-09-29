@@ -5,14 +5,17 @@
    [cljs.core.async :as async :refer [chan put! <! close! alts! take! timeout]]
    [re-frame.core :as re-frame]
    [time-tracker-web-nxt.db :as db]
-   [time-tracker-web-nxt.env-vars :as env]
+   [time-tracker-web-nxt.config :as config]
    [time-tracker-web-nxt.auth :as auth]
    [wscljs.client :as ws]
    [wscljs.format :as fmt]
    [day8.re-frame.http-fx]
    [ajax.core :as ajax]
    [cljs-time.core :as t-core]
-   [cljs-time.coerce :as t-coerce]))
+   [cljs-time.coerce :as t-coerce]
+   [taoensso.timbre :as timbre :refer-macros [log  trace  debug  info  warn  error  fatal  report
+                                              logf tracef debugf infof warnf errorf fatalf reportf
+                                              spy get-env]]))
 
 (re-frame/reg-event-db
  :initialize-db
@@ -119,19 +122,18 @@
 (defn message-handler [{:keys [id started-time duration type] :as data}]
   (if (= "create" type)
     (do
-      (prn "Create: " data)
+      (info "Create: " data)
       (re-frame/dispatch [:add-timer-to-db (dissoc data :type)])
-      (prn "Starting timer: " id)
+      (debug "Starting timer: " id)
       (re-frame/dispatch [:start-timer id]))
     (if (= "update" type)
       (do
-        (prn "Update: " data)
+        (info "Update: " data)
         (if (and (nil? started-time) (> duration 0))
           (do
-            (prn "Stopping timer: " id)
-            (re-frame/dispatch [:stop-timer data]))
-          ))
-      (prn "Default: " data))))
+            (debug "Stopping timer: " id)
+            (re-frame/dispatch [:stop-timer data]))))
+      (debug "Default: " data))))
 
 (defn timer-state
   [{:keys [duration] :as timer}]
@@ -159,7 +161,7 @@
          handlers {:on-message #(do
                                   (message-handler (fmt/read fmt/json (.-data %)))
                                   (put! response-chan (fmt/read fmt/json (.-data %))))}
-         conn (ws/create (:conn-url env/env) handlers)]
+         conn (ws/create (:conn-url config/env) handlers)]
      (go
        (let [data (<! response-chan)]
          (if (= "ready" (:type data))
@@ -204,8 +206,8 @@
 
 (re-frame/reg-event-db
  :http-failure
- (fn [_ [_ error]]
-   (prn error)))
+ (fn [_ [_ e]]
+   (error e)))
 
 ;; Possible Solution: https://github.com/JulianBirch/cljs-ajax/issues/93
 (re-frame/reg-event-fx
