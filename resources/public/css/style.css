@@ -38,6 +38,12 @@ body {
     font-size: 85%;
 }
 
+.ttbutton {
+    background-color: #eb5424;
+    color: #fff;
+    text-transform: uppercase;
+}
+
 legend {
     display: block;
     width: 100%;

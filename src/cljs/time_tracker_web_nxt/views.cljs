@@ -26,11 +26,10 @@
      [:div [:textarea {:placeholder "Add notes"
                        :style {:margin-bottom "1em"}
                        :on-change #(reset! timer-note (-> % .-target .-value))}]]
-     [:button.pure-button.pure-button-primary
+     [:button.pure-button.pure-button-primary.ttbutton
       {:type "input"
-       :style {:background-color "#EB5424"}
        :on-click #(re-frame/dispatch [:add-timer @timer-project @timer-note])}
-      "Add a Timer"]]))
+      "Add Timer"]]))
 
 (defn split-time [elapsed-seconds]
   (let [hours (quot elapsed-seconds (* 60 60))
@@ -49,11 +48,11 @@
    [:td (case state
           :paused
           [:span
-           [:button.button-small.pure-button {:style {:margin-right 10} :on-click #(re-frame/dispatch [:resume-timer id])} "Start"]
-           [:button.button-small.pure-button {:on-click #(reset! edit-timer? true)} "Edit"]]
+           [:button.button-small.pure-button.ttbutton {:style {:margin-right 10} :on-click #(re-frame/dispatch [:resume-timer id])} "Start"]
+           [:button.button-small.pure-button.ttbutton {:on-click #(reset! edit-timer? true)} "Edit"]]
           :running
           [:span
-           [:button.pure-button {:on-click #(re-frame/dispatch [:stop-timer timer])} "Stop"]]
+           [:button.button-small.pure-button.ttbutton {:on-click #(re-frame/dispatch [:stop-timer timer])} "Stop"]]
           nil)]
    ])
 
@@ -102,17 +101,19 @@
           [timer-display timer-options])))))
 
 (defn timers [ts]
-  (let [sorted-ts (->> ts vals (sort-by :id) reverse)]
-    [:table.pure-table {:style {:border "none"}}
-     [:colgroup
-      [:col {:style {:width "60%"}}]
-      [:col {:style {:width "20%"}}]
-      [:col {:style {:width "20%"}}]
-      ]
-     [:tbody
-      (for [t sorted-ts]
-        ^{:key (:id t)}
-        [timer t])]]))
+  (if (empty? ts)
+    [:i "No timers for today"]
+    (let [sorted-ts (->> ts vals (sort-by :id) reverse)]
+      [:table.pure-table.pure-table-horizontal {:style {:border "none"}}
+       [:colgroup
+        [:col {:style {:width "60%"}}]
+        [:col {:style {:width "20%"}}]
+        [:col {:style {:width "20%"}}]
+        ]
+       [:tbody
+        (for [t sorted-ts]
+          ^{:key (:id t)}
+          [timer t])]])))
 
 (defn datepicker []
   ;; Note: This seems more like a hacked-together solution. Should look
@@ -140,8 +141,9 @@
         [datepicker]]
        [:br]
        [add-timer @projects]
-       [:legend [:span {:style {:font-size "22px"}} "Timers"]]
-       [timers @ts]])))
+       [:div
+        [:h2 "Timers"]
+        [timers @ts]]])))
 
 (defn login []
   [:div.splash-screen
