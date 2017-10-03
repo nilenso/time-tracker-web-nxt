@@ -1,29 +1,48 @@
 (ns time-tracker-web-nxt.views
   (:require
+   [cljs-pikaday.reagent :as pikaday]
    [goog.string :as gs]
    [goog.string.format]
    [re-frame.core :as re-frame]
    [reagent.core :as reagent]
+   [reagent.ratom :as ratom]
    [time-tracker-web-nxt.auth :as auth]))
 
-(defn add-timer [projects]
+(defn project-dropdown [projects selected]
+  [:div
+   [:select {:placeholder "Add Project"
+             :style {:margin-bottom "1em" :padding-left "0.5em" :width "100%"}
+             :default-value (:name (first projects))
+             :on-change #(reset! selected
+                                 {:id (-> % .-target .-value)
+                                  :name (-> % .-target .-label)})}
+    (for [{:keys [id name]} projects]
+      ^{:key id}
+      [:option {:value id} name])]])
+
+(defn add-timer-widget [projects]
   (let [timer-note (atom nil)
         default-project (first projects)
-        timer-project (atom default-project)]
-    [:div
-     [:select {:placeholder "Add Project"
-               :default-value (:name default-project)
-               :on-change #(reset! timer-project
-                                   {:id (-> % .-target .-value)
-                                    :name (-> % .-target .-label)})}
-      (for [{:keys [id name]} projects]
-        ^{:key id}
-        [:option {:value id} name])]
-     [:textarea {:placeholder "Add notes"
-                 :on-change #(reset! timer-note (-> % .-target .-value))}]
-     [:button
-      {:type "input" :on-click #(re-frame/dispatch [:add-timer @timer-project @timer-note])}
-      "Add a Timer"]]))
+        timer-project (atom default-project)
+        show? (re-frame/subscribe [:show-add-timer-widget?])]
+    [:div {:style (if @show?
+                    {:margin-bottom "2em"}
+                    {:display "none"})}
+     [project-dropdown projects timer-project]
+     [:div [:textarea {:placeholder "Add notes"
+                       :style {:margin-bottom "1em" :padding-left "0.5em" :width "99%"}
+                       :on-change #(reset! timer-note (-> % .-target .-value))}]]
+     [:div [:button.pure-button
+            {:type "input"
+             :style {:text-transform "uppercase" :margin-right "1em"}
+             :on-click #(re-frame/dispatch [:show-add-timer-widget false])}
+            "Cancel"]
+      [:button.pure-button.pure-button-primary.ttbutton
+       {:type "input"
+        :on-click #(do
+                     (re-frame/dispatch [:show-add-timer-widget false])
+                     (re-frame/dispatch [:add-timer @timer-project @timer-note]))}
+       "Start Timer"]]]))
 
 (defn split-time [elapsed-seconds]
   (let [hours (quot elapsed-seconds (* 60 60))
@@ -31,25 +50,38 @@
         seconds (- elapsed-seconds (* hours 60 60) (* minutes 60))]
     {:hh hours :mm minutes :ss seconds}))
 
-(defn display-time [elapsed-hh elapsed-mm elapsed-ss]
+(defn format-time [elapsed-hh elapsed-mm elapsed-ss]
   (gs/format "%02d:%02d:%02d" elapsed-hh elapsed-mm elapsed-ss))
+
+(defn format-project-name [p]
+  (.join (.split p "|") " | "))
 
 (defn timer-display
   [{:keys [id elapsed project state notes edit-timer?] :as timer}]
-  [:div "Timer " id " for project " (:name project)
-   (if (= state :running) " has been running for " " has been paused after ")
-   (display-time (:hh elapsed) (:mm elapsed) (:ss elapsed))
-   " seconds"
-   " with notes " notes
-   (case state
-     :paused
-     [:div
-      [:button {:on-click #(re-frame/dispatch [:resume-timer id])} "Start Timer"]
-      [:button {:on-click #(reset! edit-timer? true)} "Edit Timer"]]
-     :running
-     [:div
-      [:button {:on-click #(re-frame/dispatch [:stop-timer timer])} "Stop Timer"]]
-     nil)])
+  [:tr
+   [:td {:style {:border "none"}}
+    [:span {:style {:font-size "1.1em"}} (format-project-name (:name project))]]
+   [:td.time-col {:style {:border "none"}}
+    [:span.time-display (format-time (:hh elapsed) (:mm elapsed) (:ss elapsed))]]
+   [:td {:style {:border "none"}}
+    (case state
+      :paused
+      [:span
+       [:button.button-small.pure-button.ttbutton
+        {:style {:margin-right 10} :on-click #(re-frame/dispatch [:resume-timer id])}
+        "Start"]
+       [:button.button-small.pure-button.ttbutton
+        {:on-click #(reset! edit-timer? true)}
+        "Edit"]]
+
+      :running
+      [:span
+       [:button.button-small.pure-button.ttbutton
+        {:on-click #(re-frame/dispatch [:stop-timer timer])}
+        "Stop"]]
+
+      nil)]
+   ])
 
 (defn timer-display-editable
   [{:keys [elapsed notes]}]
@@ -96,14 +128,29 @@
           [timer-display timer-options])))))
 
 (defn timers [ts]
-  (let [sorted-ts (->> ts
-                       vals
-                       (sort-by :id)
-                       reverse)]
-    [:ul
-     (for [t sorted-ts]
-       ^{:key (:id t)}
-       [:li [timer t]])]))
+  (if (empty? ts)
+    [:i "No timers for today"]
+    (let [sorted-ts (->> ts vals (sort-by :id) reverse)]
+      [:table.pure-table.pure-table-horizontal {:style {:border "none"}}
+       [:colgroup
+        [:col {:style {:width "60%"}}]
+        [:col {:style {:width "20%"}}]
+        [:col {:style {:width "20%"}}]
+        ]
+       [:tbody
+        (for [t sorted-ts]
+          ^{:key (:id t)}
+          [timer t])]])))
+
+(defn datepicker []
+  ;; Note: This seems more like a hacked-together solution. Should look
+  ;; for a better implementation.
+  (let [date-atom (reagent/atom (js/Date.))]
+    [pikaday/date-selector {:date-atom date-atom
+                            :pikaday-attrs {:on-select
+                                            #(do (reset! date-atom %)
+                                                 (re-frame/dispatch [:timer-date-changed :timer-date @date-atom]))}
+                            :input-attrs {:style {:padding "0.5em" :width "15.2em"}}}]))
 
 (defn main-panel []
   (let [app-name (re-frame/subscribe [:app-name])
@@ -111,40 +158,66 @@
         ts (re-frame/subscribe [:timers])
         projects (re-frame/subscribe [:projects])]
     (fn []
-      [:div
-       [:div "Hi " (:name  @user) "!" " " "Welcome to " @app-name]
-       [add-timer @projects]
-       [timers @ts]])))
+      [:div.main
+       [:br]
+       [:div {:style {:text-align "center"}}
+        [:p
+         {:style {:display "inline-block" :margin-right "1em" :vertical-align "middle"
+                  :font-size "1.2em" :text-transform "uppercase"}}
+         "Current Date: "]
+        [datepicker]
+        [:button.pure-button.ttbutton
+         {:style {:margin-left "1.1em" :vertical-align "baseline"}
+          :on-click #(re-frame/dispatch [:show-add-timer-widget true])}
+         "+"]]
+       [:br]
+       [:div {:id "new-timer-modal"}]
+       [:br]
+       [add-timer-widget @projects]
+       [:div
+        [:h2 "Timers"]
+        [timers @ts]]])))
 
 (defn login []
-  [:a
-   {:href "#"
-    :on-click (fn [_] (-> (.signIn (auth/auth-instance))
-                         (.then
-                          #(re-frame/dispatch [:log-in %]))))
-    } "Sign in with Google"])
+  [:div.splash-screen
+   [:h1 {:style {:font-size "5em"}} "Time Tracker"]
+   [:a.google-sign-in
+    {:href "#"
+     :on-click (fn [_] (-> (.signIn (auth/auth-instance))
+                          (.then
+                           #(re-frame/dispatch [:log-in %]))))
+     } [:img {:src "../images/btn_google_signin_light_normal_web@2x.png"
+              :style {:width "12em"}}]]
+   ])
 
 (defn logout []
-  [:a {:href "#"
-       :on-click (fn [_] (-> (.signOut (auth/auth-instance))
-                            (.then
-                             #(re-frame/dispatch [:log-out]))))}
+  [:a.pure-menu-link {:href "#"
+                      :on-click (fn [_] (-> (.signOut (auth/auth-instance))
+                                           (.then
+                                            #(re-frame/dispatch [:log-out]))))}
    "Sign Out"])
 
 (defn profile [user]
-  [:p "Hello "
-    [:strong (:name user)]
-    [:br]
-    [:img {:src (:image-url user)}]])
+  [:div [:p {:style {:display "inline-block"
+                     :vertical-align "super"
+                     :margin-right "0.5em"}}
+         [:strong (:name user)]]
+   [:img {:src (:image-url user) :width "25px"}]])
+
+(defn header [user]
+  [:div.pure-menu.pure-menu-horizontal
+   {:style {:border-bottom "1px solid #e4e6e8"}}
+   [:a.pure-menu-heading
+    {:href "#"
+     :style {:color "#EB5424"}} "Time Tracker"]
+   [:ul.pure-menu-list
+    [:li.pure-menu-item [profile user]]
+    [:li.pure-menu-item [logout]]]])
 
 (defn dashboard [user]
-  [:div
-   [profile user]
-   [:div
-    [logout]
-    [:br]
-    [:br]
-    [main-panel]]])
+  [:div {:style {:height "100%"}}
+   [header user]
+   [main-panel]])
 
 (defn app []
   (let [user (re-frame/subscribe [:user])]

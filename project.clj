@@ -6,6 +6,7 @@
                  [day8.re-frame/http-fx "0.1.4"]
                  [nilenso/wscljs "0.1.1"]
                  [com.andrewmcveigh/cljs-time "0.5.0"]
+                 [cljs-pikaday "0.1.4"]
                  [com.taoensso/timbre "4.10.0"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]]
@@ -15,7 +16,7 @@
   :clean-targets ^{:protect false} ["resources/public/js/compiled" "target"
                                     "test/js"]
 
-  :figwheel {:css-dirs ["resources/public/css"]
+  :figwheel {:css-dirs   ["resources/public/css"]
              :nrepl-port 7888}
 
   :repl-options {:nrepl-middleware [cemerick.piggieback/wrap-cljs-repl]}
@@ -27,8 +28,8 @@
                    [com.cemerick/piggieback "0.2.2"]
                    [re-frisk "0.5.0"]]
 
-    :plugins      [[lein-figwheel "0.5.13"]
-                   [lein-doo "0.1.7"]]
+    :plugins [[lein-figwheel "0.5.13"]
+              [lein-doo "0.1.7"]]
     }}
 
   :aliases {"prod" ["do" "clean" ["cljsbuild" "once" "min"]]}
@@ -43,7 +44,7 @@
      :compiler     {:main                 time-tracker-web-nxt.core
                     :output-to            "resources/public/js/compiled/app.js"
                     :output-dir           "resources/public/js/compiled/out"
-                    :closure-defines {time-tracker-web-nxt.config.debug? true}
+                    :closure-defines      {time-tracker-web-nxt.config.debug? true}
                     :asset-path           "js/compiled/out"
                     :source-map-timestamp true
                     :preloads             [devtools.preload

@@ -4,4 +4,5 @@
   {:app-name "the future Time Tracker"
    :timers {}
    :intervals {}
-   :projects []})
+   :projects []
+   :show-add-timer-widget? false})

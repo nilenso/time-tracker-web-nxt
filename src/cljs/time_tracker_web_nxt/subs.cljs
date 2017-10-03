@@ -2,27 +2,16 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :as re-frame]))
 
-(re-frame/reg-sub
- :app-name
- (fn [db]
-   (:app-name db)))
+(defn subscribe [db-var]
+  (re-frame/reg-sub
+   db-var
+   (fn [db]
+     (db-var db))))
 
-(re-frame/reg-sub
- :timers
- (fn [db]
-   (:timers db)))
-
-(re-frame/reg-sub
- :projects
- (fn [db]
-   (:projects db)))
-
-(re-frame/reg-sub
- :user
- (fn [db]
-   (:user db)))
-
-(re-frame/reg-sub
- :conn
- (fn [db]
-   (:conn db)))
+(subscribe :app-name)
+(subscribe :timers)
+(subscribe :projects)
+(subscribe :user)
+(subscribe :conn)
+(subscribe :timer-date)
+(subscribe :show-add-timer-widget?)
