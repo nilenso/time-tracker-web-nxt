@@ -14,3 +14,4 @@
 (subscribe :user)
 (subscribe :conn)
 (subscribe :timer-date)
+(subscribe :show-add-timer-widget?)

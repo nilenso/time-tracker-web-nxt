@@ -22,6 +22,11 @@
  (fn  [_ _]
    db/default-db))
 
+(re-frame/reg-event-db
+ :show-add-timer-widget
+ (fn [db [_ state]]
+   (assoc db :show-add-timer-widget? state)))
+
 (re-frame/reg-event-fx
  :add-timer
  (fn [{:keys [db] :as cofx} [_ timer-project timer-note]]

@@ -8,28 +8,41 @@
    [reagent.ratom :as ratom]
    [time-tracker-web-nxt.auth :as auth]))
 
-(defn add-timer [projects]
+(defn project-dropdown [projects selected]
+  [:div
+   [:select {:placeholder "Add Project"
+             :style {:margin-bottom "1em" :padding-left "0.5em" :width "100%"}
+             :default-value (:name (first projects))
+             :on-change #(reset! selected
+                                 {:id (-> % .-target .-value)
+                                  :name (-> % .-target .-label)})}
+    (for [{:keys [id name]} projects]
+      ^{:key id}
+      [:option {:value id} name])]])
+
+(defn add-timer-widget [projects]
   (let [timer-note (atom nil)
         default-project (first projects)
-        timer-project (atom default-project)]
-    [:div {:style {:padding-bottom "30px"}}
-     [:div
-      [:select {:placeholder "Add Project"
-                :style {:margin-bottom "1em"}
-                :default-value (:name default-project)
-                :on-change #(reset! timer-project
-                                    {:id (-> % .-target .-value)
-                                     :name (-> % .-target .-label)})}
-       (for [{:keys [id name]} projects]
-         ^{:key id}
-         [:option {:value id} name])]]
+        timer-project (atom default-project)
+        show? (re-frame/subscribe [:show-add-timer-widget?])]
+    [:div {:style (if @show?
+                    {:margin-bottom "2em"}
+                    {:display "none"})}
+     [project-dropdown projects timer-project]
      [:div [:textarea {:placeholder "Add notes"
-                       :style {:margin-bottom "1em"}
+                       :style {:margin-bottom "1em" :padding-left "0.5em" :width "99%"}
                        :on-change #(reset! timer-note (-> % .-target .-value))}]]
-     [:button.pure-button.pure-button-primary.ttbutton
-      {:type "input"
-       :on-click #(re-frame/dispatch [:add-timer @timer-project @timer-note])}
-      "Add Timer"]]))
+     [:div [:button.pure-button
+            {:type "input"
+             :style {:text-transform "uppercase" :margin-right "1em"}
+             :on-click #(re-frame/dispatch [:show-add-timer-widget false])}
+            "Cancel"]
+      [:button.pure-button.pure-button-primary.ttbutton
+       {:type "input"
+        :on-click #(do
+                     (re-frame/dispatch [:show-add-timer-widget false])
+                     (re-frame/dispatch [:add-timer @timer-project @timer-note]))}
+       "Start Timer"]]]))
 
 (defn split-time [elapsed-seconds]
   (let [hours (quot elapsed-seconds (* 60 60))
@@ -37,23 +50,37 @@
         seconds (- elapsed-seconds (* hours 60 60) (* minutes 60))]
     {:hh hours :mm minutes :ss seconds}))
 
-(defn display-time [elapsed-hh elapsed-mm elapsed-ss]
+(defn format-time [elapsed-hh elapsed-mm elapsed-ss]
   (gs/format "%02d:%02d:%02d" elapsed-hh elapsed-mm elapsed-ss))
+
+(defn format-project-name [p]
+  (.join (.split p "|") " | "))
 
 (defn timer-display
   [{:keys [id elapsed project state notes edit-timer?] :as timer}]
   [:tr
-   [:td [:span {:style {:font-size "1.1em"}} (:name project)]]
-   [:td.time-col [:span.time-display (display-time (:hh elapsed) (:mm elapsed) (:ss elapsed))]]
-   [:td (case state
-          :paused
-          [:span
-           [:button.button-small.pure-button.ttbutton {:style {:margin-right 10} :on-click #(re-frame/dispatch [:resume-timer id])} "Start"]
-           [:button.button-small.pure-button.ttbutton {:on-click #(reset! edit-timer? true)} "Edit"]]
-          :running
-          [:span
-           [:button.button-small.pure-button.ttbutton {:on-click #(re-frame/dispatch [:stop-timer timer])} "Stop"]]
-          nil)]
+   [:td {:style {:border "none"}}
+    [:span {:style {:font-size "1.1em"}} (format-project-name (:name project))]]
+   [:td.time-col {:style {:border "none"}}
+    [:span.time-display (format-time (:hh elapsed) (:mm elapsed) (:ss elapsed))]]
+   [:td {:style {:border "none"}}
+    (case state
+      :paused
+      [:span
+       [:button.button-small.pure-button.ttbutton
+        {:style {:margin-right 10} :on-click #(re-frame/dispatch [:resume-timer id])}
+        "Start"]
+       [:button.button-small.pure-button.ttbutton
+        {:on-click #(reset! edit-timer? true)}
+        "Edit"]]
+
+      :running
+      [:span
+       [:button.button-small.pure-button.ttbutton
+        {:on-click #(re-frame/dispatch [:stop-timer timer])}
+        "Stop"]]
+
+      nil)]
    ])
 
 (defn timer-display-editable
@@ -123,7 +150,7 @@
                             :pikaday-attrs {:on-select
                                             #(do (reset! date-atom %)
                                                  (re-frame/dispatch [:timer-date-changed :timer-date @date-atom]))}
-                            :input-attrs {:style {:padding "0.3em" :width "15.2em"}}}]))
+                            :input-attrs {:style {:padding "0.5em" :width "15.2em"}}}]))
 
 (defn main-panel []
   (let [app-name (re-frame/subscribe [:app-name])
@@ -136,11 +163,17 @@
        [:div {:style {:text-align "center"}}
         [:p
          {:style {:display "inline-block" :margin-right "1em" :vertical-align "middle"
-                  :font-size "1.2em"}}
+                  :font-size "1.2em" :text-transform "uppercase"}}
          "Current Date: "]
-        [datepicker]]
+        [datepicker]
+        [:button.pure-button.ttbutton
+         {:style {:margin-left "1.1em" :vertical-align "baseline"}
+          :on-click #(re-frame/dispatch [:show-add-timer-widget true])}
+         "+"]]
        [:br]
-       [add-timer @projects]
+       [:div {:id "new-timer-modal"}]
+       [:br]
+       [add-timer-widget @projects]
        [:div
         [:h2 "Timers"]
         [timers @ts]]])))
