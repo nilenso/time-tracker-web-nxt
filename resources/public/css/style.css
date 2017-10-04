@@ -195,6 +195,17 @@ body {
 }
 /* NEW TIMER POPUP END */
 
+/* TIMER */
+.timers {
+    margin-top: 60px;
+}
+
+.timers table {
+    border: none;
+    margin-top: 20px;
+}
+/* TIMER END */
+
 .splash-screen {
     text-align: center;
     padding-top: 16em;

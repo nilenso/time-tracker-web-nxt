@@ -126,7 +126,7 @@
   (if (empty? ts)
     [:i "No timers for today"]
     (let [sorted-ts (->> ts vals (sort-by :id) reverse)]
-      [:table.pure-table.pure-table-horizontal {:style {:border "none"}}
+      [:table.pure-table.pure-table-horizontal
        [:colgroup
         [:col {:style {:width "60%"}}]
         [:col {:style {:width "20%"}}]
@@ -163,7 +163,7 @@
          "+"]
         [add-timer-widget @projects]]
 
-       [:div
+       [:div.timers
         [:h2 "Timers"]
         [timers @ts]]])))
 
