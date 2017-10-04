@@ -193,8 +193,8 @@
 (defn logout []
   [:a.link.link-secondary {:href "#"
                            :on-click (fn [_] (-> (.signOut (auth/auth-instance))
-                                                (.then
-                                                 #(re-frame/dispatch [:log-out]))))}
+                                                 (.then
+                                                  #(re-frame/dispatch [:log-out]))))}
    "Sign Out"])
 
 (defn profile [user]
@@ -205,8 +205,12 @@
 (defn header [user]
   [:div.header.pure-menu.pure-menu-horizontal
    [:a#logo.link
-    {:href "#"
-     :style {:color "#EB5424"}} "Time Tracker"]
+    {:href "#"} "Time Tracker"]
+   [:nav.menu
+    [:ul.header-links
+     [:li.header-link.active "Timers"]
+     [:li.header-link "About"]
+     ]]
    [:div.user-profile-and-signout
     [profile user]
     [logout]]])

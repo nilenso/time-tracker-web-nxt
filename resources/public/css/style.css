@@ -56,16 +56,39 @@ body {
     font-size: 1rem;
     line-height: 1.5em;
 
-    padding: 15px;
     border-bottom: 1px solid rgba(0,0,0,.12);
+}
+
+.header #logo {
+    padding: 15px;
+    color: orange;
 }
 
 .header #logo:hover {
     border-bottom: 2px solid orange;
 }
 
+.header .menu {
+    text-align: center;
+}
+
+.header ul.header-links {
+    list-style-type: none;
+}
+
+.header ul.header-links li.header-link {
+    display: inline-flex;
+    padding: 15px 20px;
+}
+
+.header ul.header-links li.header-link.active {
+    color: orange;
+    border-bottom: 2px solid orange;
+}
+
 .header .user-profile-and-signout {
     display: flex;
+    padding: 15px;
 }
 
 .header .user-profile-and-signout .user-profile {
