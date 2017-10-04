@@ -9,7 +9,7 @@
 }
 
 .link.link-primary {
-    color: orange;
+    color: #eb5424;
 }
 
 .link.link-secondary {
@@ -28,18 +28,24 @@
 }
 
 .btn.btn-primary {
-    background-color: orange;
-    color: black;
+    background-color: #eb5424;
+    color: white;
+    text-transform: uppercase;
 }
 
 .btn.btn-secondary {
-    background-color: rgba(0,0,0,.32);
+    background-color: rgba(0,0,0,.20);
     color: black;
+    text-transform: uppercase;
 }
 
 .btn.btn-disabled {
     background-color: rgba(0,0,0,.12);
     color: rgba(0,0,0,.32);
+}
+
+.button-group .btn.btn-primary {
+    margin-left: 15px;
 }
 
 html {
@@ -74,11 +80,7 @@ body {
 
 .header #logo {
     padding: 15px;
-    color: orange;
-}
-
-.header #logo:hover {
-    border-bottom: 2px solid orange;
+    color: #eb5424;
 }
 
 .header .menu {
@@ -87,6 +89,7 @@ body {
 
 .header ul.header-links {
     list-style-type: none;
+    letter-spacing: 0.04em;
 }
 
 .header ul.header-links li.header-link {
@@ -95,8 +98,8 @@ body {
 }
 
 .header ul.header-links li.header-link.active {
-    color: orange;
-    border-bottom: 2px solid orange;
+    color: #eb5424;
+    border-bottom: 2px solid #eb5424;
 }
 
 .header .user-profile-and-signout {
@@ -142,6 +145,8 @@ body {
 .new-timer label{
     font-size: 1rem;
     line-height: 1.5em;
+    color: #4A4A4A;
+    font-weight: bold;
 }
 
 .new-timer input {
@@ -155,7 +160,7 @@ body {
 }
 
 .new-timer .btn.btn-primary {
-    border: 1px solid orange;
+    border: 1px solid #eb5424;
     border-radius: 4px;
 }
 /* NEW TIMER END*/
@@ -192,12 +197,18 @@ body {
 
     border: 1px solid rgba(0,0,0,.12);
     border-radius: 4px;
+    margin-top: 15px;
+    margin-bottom: 15px;
 }
 /* NEW TIMER POPUP END */
 
 /* TIMER */
 .timers {
     margin-top: 60px;
+}
+
+.timers h3 {
+    color: #4A4A4A;
 }
 
 .timers table {
@@ -277,4 +288,8 @@ td {
 .time-display {
     font-size: 1.3em;
     font-weight: bold
+}
+
+.empty-list-placeholder {
+    margin-top: 20px;
 }

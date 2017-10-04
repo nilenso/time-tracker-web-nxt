@@ -37,7 +37,7 @@
         :on-click #(do
                      (re-frame/dispatch [:show-add-timer-widget false])
                      (re-frame/dispatch [:add-timer @timer-project @timer-note]))}
-       "Start Timer"]]]))
+       "Start"]]]))
 
 (defn split-time [elapsed-seconds]
   (let [hours (quot elapsed-seconds (* 60 60))
@@ -62,10 +62,10 @@
     (case state
       :paused
       [:span
-       [:button.button-small.pure-button.ttbutton
+       [:button.btn.btn-primary
         {:style {:margin-right 10} :on-click #(re-frame/dispatch [:resume-timer id])}
         "Start"]
-       [:button.button-small.pure-button.ttbutton
+       [:button.btn.btn-secondary
         {:on-click #(reset! edit-timer? true)}
         "Edit"]]
 
@@ -124,7 +124,7 @@
 
 (defn timers [ts]
   (if (empty? ts)
-    [:i "No timers for today"]
+    [:p.empty-list-placeholder "No timers for today"]
     (let [sorted-ts (->> ts vals (sort-by :id) reverse)]
       [:table.pure-table.pure-table-horizontal
        [:colgroup
@@ -164,7 +164,7 @@
         [add-timer-widget @projects]]
 
        [:div.timers
-        [:h2 "Timers"]
+        [:h3 [:i "Today's Timers"]]
         [timers @ts]]])))
 
 (defn login []
@@ -193,7 +193,7 @@
 
 (defn header [user]
   [:div.header.pure-menu.pure-menu-horizontal
-   [:a#logo.link
+   [:p#logo
     {:href "#"} "Time Tracker"]
    [:nav.menu
     [:ul.header-links
