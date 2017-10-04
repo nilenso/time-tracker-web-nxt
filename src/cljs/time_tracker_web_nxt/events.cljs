@@ -3,6 +3,7 @@
    [cljs.core.async.macros :refer [go]])
   (:require
    [cljs.core.async :as async :refer [chan put! <! close! alts! take! timeout]]
+   [cljs.spec.alpha :as s]
    [re-frame.core :as re-frame]
    [time-tracker-web-nxt.db :as db]
    [time-tracker-web-nxt.config :as config]
@@ -17,6 +18,20 @@
                                               logf tracef debugf infof warnf errorf fatalf reportf
                                               spy get-env]]))
 
+(defn check-and-throw
+  "Throws an exception if `db` doesn't match the Spec `a-spec`."
+  [a-spec db]
+  (when-not (s/valid? a-spec db)
+    (throw (ex-info (str "Spec failed => " (s/explain-str a-spec db)) {}))))
+
+;; This Interceptor runs `check-and-throw` `after` the event handler has finished, checking
+;; the value for `app-db` against a spec.
+;; If the event handler corrupted the value for `app-db` an exception will be
+;; thrown. This helps us detect event handler bugs early.
+;; Because all state is held in `app-db`, we are effectively validating the
+;; ENTIRE state of the application after each event handler runs.  All of it.
+(def db-spec-inpector (re-frame/after (partial check-and-throw :time-tracker-web-nxt.db/db)))
+
 (re-frame/reg-event-db
  :initialize-db
  (fn  [_ _]
@@ -24,6 +39,7 @@
 
 (re-frame/reg-event-db
  :show-add-timer-widget
+ [db-spec-inpector]
  (fn [db [_ state]]
    (assoc db :show-add-timer-widget? state)))
 
@@ -47,12 +63,14 @@
 
 (re-frame/reg-event-fx
  :start-timer
+ [db-spec-inpector]
  (fn [{:keys [db] :as cofx} [_ timer-id]]
    {:db (assoc-in db [:timers timer-id :state] :running)
     :set-clock timer-id}))
 
 (re-frame/reg-event-fx
  :resume-timer
+ [db-spec-inpector]
  (fn [{:keys [db] :as cofx} [_ timer-id]]
    (let [[_ socket] (:conn db)]
      {:db (assoc-in db [:timers timer-id :state] :running)
@@ -62,6 +80,7 @@
 
 (re-frame/reg-event-db
  :add-interval
+ [db-spec-inpector]
  (fn [db [_ timer-id interval-id]]
    (assoc-in db [:intervals timer-id] interval-id)))
 
@@ -78,6 +97,7 @@
 
 (re-frame/reg-event-fx
  :stop-timer
+ [db-spec-inpector]
  (fn [{:keys [db] :as cofx} [_ {:keys [id duration]}]]
    (let [timer-id id
          interval-id (get (:intervals db) timer-id)
@@ -94,6 +114,7 @@
 
 (re-frame/reg-event-fx
  :update-timer
+ [db-spec-inpector]
  (fn [{:keys [db] :as cofx} [_ timer-id {:keys [elapsed-hh elapsed-mm elapsed-ss notes] :as new}]]
    (let [elapsed (+ (* 60 60 elapsed-hh)
                     (* 60 elapsed-mm)
@@ -112,6 +133,7 @@
 
 (re-frame/reg-event-fx
  :log-in
+ [db-spec-inpector]
  (fn [{:keys [db] :as cofx} [_ user]]
    (let [user-profile (auth/user-profile user)]
      {:db          (assoc db :user user-profile)
@@ -121,6 +143,7 @@
 
 (re-frame/reg-event-db
  :log-out
+ [db-spec-inpector]
  (fn [db [_ user]]
    (assoc db :user nil)))
 
@@ -146,6 +169,7 @@
 
 (re-frame/reg-event-fx
  :timer-date-changed
+ [db-spec-inpector]
  (fn [{:keys [db] :as cofx} [_ key date]]
    (let [auth-token (get-in db [:user :token])]
      {:db (assoc db key date)
@@ -153,11 +177,14 @@
 
 (re-frame/reg-event-fx
  :add-timer-to-db
+ [db-spec-inpector]
  (fn [{:keys [db] :as cofx} [_ timer]]
    (let [timer-id (:id timer)]
      {:db (-> db
               (assoc-in [:timers timer-id]
-                        (assoc timer :state (timer-state timer))))})))
+                        (-> timer
+                            (assoc :state (timer-state timer))
+                            (assoc :elapsed 0))))})))
 
 (re-frame/reg-fx
  :create-conn
@@ -196,11 +223,13 @@
 
 (re-frame/reg-event-db
  :add-db
+ [db-spec-inpector]
  (fn [db [_ k v]]
    (assoc db k v)))
 
 (re-frame/reg-event-db
  :add-timers-to-db
+ [db-spec-inpector]
  (fn [db [_ timers]]
    (let [state #(timer-state %)
          timers-map (reduce #(assoc %1 (:id %2)
