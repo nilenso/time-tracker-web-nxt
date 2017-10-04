@@ -49,16 +49,19 @@
   (gs/format "%02d:%02d:%02d" elapsed-hh elapsed-mm elapsed-ss))
 
 (defn format-project-name [p]
-  (.join (.split p "|") " | "))
+  (when-not (empty? p)
+    (.join (.split p "|") " : ")))
 
 (defn timer-display
   [{:keys [id elapsed project state notes edit-timer?] :as timer}]
   [:tr
-   [:td {:style {:border "none"}}
-    [:span {:style {:font-size "1.1em"}} (format-project-name (:name project))]]
-   [:td.time-col {:style {:border "none"}}
+   [:td.timer-column
+    [:span.timer-project (format-project-name (:name project))]
+    [:p.timer-notes notes]
+    ]
+   [:td.time-column {:style {:border "none"}}
     [:span.time-display (format-time (:hh elapsed) (:mm elapsed) (:ss elapsed))]]
-   [:td {:style {:border "none"}}
+   [:td.time-column {:style {:border "none"}}
     (case state
       :paused
       [:span
@@ -71,7 +74,7 @@
 
       :running
       [:span
-       [:button.button-small.pure-button.ttbutton
+       [:button.btn.btn-primary
         {:on-click #(re-frame/dispatch [:stop-timer timer])}
         "Stop"]]
 

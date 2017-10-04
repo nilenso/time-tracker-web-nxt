@@ -293,3 +293,18 @@ td {
 .empty-list-placeholder {
     margin-top: 20px;
 }
+
+td.timer-column {
+    border: none;
+    height: 6em;
+}
+
+.timer-project {
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.timer-notes {
+    font-size: 0.9em;
+    margin-top: 6px;
+}
