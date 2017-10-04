@@ -191,28 +191,25 @@
    ])
 
 (defn logout []
-  [:a.pure-menu-link {:href "#"
-                      :on-click (fn [_] (-> (.signOut (auth/auth-instance))
-                                           (.then
-                                            #(re-frame/dispatch [:log-out]))))}
+  [:a.link.link-secondary {:href "#"
+                           :on-click (fn [_] (-> (.signOut (auth/auth-instance))
+                                                (.then
+                                                 #(re-frame/dispatch [:log-out]))))}
    "Sign Out"])
 
 (defn profile [user]
-  [:div [:p {:style {:display "inline-block"
-                     :vertical-align "super"
-                     :margin-right "0.5em"}}
-         [:strong (:name user)]]
-   [:img {:src (:image-url user) :width "25px"}]])
+  [:div.user-profile
+   [:p.user-name (:name user)]
+   [:img.user-image {:src (:image-url user)}]])
 
 (defn header [user]
-  [:div.pure-menu.pure-menu-horizontal
-   {:style {:border-bottom "1px solid #e4e6e8"}}
-   [:a.pure-menu-heading
+  [:div.header.pure-menu.pure-menu-horizontal
+   [:a#logo.link
     {:href "#"
      :style {:color "#EB5424"}} "Time Tracker"]
-   [:ul.pure-menu-list
-    [:li.pure-menu-item [profile user]]
-    [:li.pure-menu-item [logout]]]])
+   [:div.user-profile-and-signout
+    [profile user]
+    [logout]]])
 
 (defn dashboard [user]
   [:div {:style {:height "100%"}}

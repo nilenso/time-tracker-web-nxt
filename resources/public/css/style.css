@@ -1,3 +1,25 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.link {
+    text-decoration: none;
+}
+
+.link.link-primary {
+    color: orange;
+}
+
+.link.link-secondary {
+    color: rgba(0,0,0,.54);
+}
+
+.link.link-tertiary {
+    color: rgba(0,0,0,0.32);
+}
+
 html {
     height: 100%;
 }
@@ -23,6 +45,49 @@ body {
     -webkit-font-smoothing: antialiased;
     margin: 0;
     height: 100%;
+}
+
+/* HEADER */
+.header {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+    font-size: 1rem;
+    line-height: 1.5em;
+
+    padding: 15px;
+    border-bottom: 1px solid rgba(0,0,0,.12);
+}
+
+.header #logo:hover {
+    border-bottom: 2px solid orange;
+}
+
+.header .user-profile-and-signout {
+    display: flex;
+}
+
+.header .user-profile-and-signout .user-profile {
+    display: flex;
+    margin-right: 1rem;
+}
+
+.header .user-profile-and-signout .user-profile .user-name {
+    margin-right: 5px;
+    font-size: 1rem;
+    line-height: 1.5em;
+}
+
+.header .user-profile-and-signout .user-profile .user-image {
+    height: 24px;
+    width: 24px;
+    border-radius: 50%;
+}
+
+.header .user-profile-and-signout .link-secondary {
+    font-size: 1rem;
+    line-height: 1.5em;
 }
 
 .splash-screen {
