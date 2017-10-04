@@ -20,23 +20,36 @@
     color: rgba(0,0,0,0.32);
 }
 
+.btn {
+    outline: none;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+}
+
+.btn.btn-primary {
+    background-color: orange;
+    color: black;
+}
+
+.btn.btn-secondary {
+    background-color: rgba(0,0,0,.32);
+    color: black;
+}
+
+.btn.btn-disabled {
+    background-color: rgba(0,0,0,.12);
+    color: rgba(0,0,0,.32);
+}
+
 html {
     height: 100%;
 }
 
 select {
-    background: url(data:image/svg+xml;base64,PHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0Ljk1IDEwIj48ZGVmcz48c3R5bGU+LmNscy0xe2ZpbGw6I2ZmZjt9LmNscy0ye2ZpbGw6IzQ0NDt9PC9zdHlsZT48L2RlZnM+PHRpdGxlPmFycm93czwvdGl0bGU+PHJlY3QgY2xhc3M9ImNscy0xIiB3aWR0aD0iNC45NSIgaGVpZ2h0PSIxMCIvPjxwb2x5Z29uIGNsYXNzPSJjbHMtMiIgcG9pbnRzPSIxLjQxIDQuNjcgMi40OCAzLjE4IDMuNTQgNC42NyAxLjQxIDQuNjciLz48cG9seWdvbiBjbGFzcz0iY2xzLTIiIHBvaW50cz0iMy41NCA1LjMzIDIuNDggNi44MiAxLjQxIDUuMzMgMy41NCA1LjMzIi8+PC9zdmc+) no-repeat 95% 50%;
-    -moz-appearance: none;
-    -webkit-appearance: none;
-    appearance: none;
-    /* and then whatever styles you want*/
-    width:400px;
-    overflow:hidden;
-    white-space:pre;
-    text-overflow:ellipsis;
-    border: 1px solid #ccc;
-    padding: 0.3em;
-    height: 2.5em;
+    background: white;
+    height: 35px;
+    border: 1px solid rgba(0,0,0,.12);
 }
 
 body {
@@ -112,6 +125,75 @@ body {
     font-size: 1rem;
     line-height: 1.5em;
 }
+
+/* MAIN */
+.main {
+    display: flex;
+    flex-direction: column;
+}
+/* MAIN END */
+
+/* NEW TIMER */
+.new-timer {
+    position: relative;
+    align-self: center;
+}
+
+.new-timer label{
+    font-size: 1rem;
+    line-height: 1.5em;
+}
+
+.new-timer input {
+    outline: none;
+    border: 1px solid rgba(0,0,0,.12);
+    border-radius: 4px;
+
+    padding: 5px 10px;
+    margin-right: 20px;
+    margin-left: 5px;
+}
+
+.new-timer .btn.btn-primary {
+    border: 1px solid orange;
+    border-radius: 4px;
+}
+/* NEW TIMER END*/
+
+/* NEW TIMER POPUP */
+.new-timer-popup {
+    position: absolute;
+    top: 40px;
+    right: 0;
+
+    background: white;
+    box-shadow: 0 0 16px rgba(0,0,0,.12);
+    border-radius: 4px;
+
+    padding: 30px;
+    text-align: right;
+
+    width: 400px;
+}
+
+.new-timer-popup select.project-dropdown {
+    outline: none;
+    border: 1px solid rgba(0,0,0,.12);
+    border-radius: 4px;
+
+    width: 100%;
+    padding: 10px;
+}
+
+.new-timer-popup textarea.project-notes {
+    width: 100%;
+    min-height: 80px;
+    padding: 10px;
+
+    border: 1px solid rgba(0,0,0,.12);
+    border-radius: 4px;
+}
+/* NEW TIMER POPUP END */
 
 .splash-screen {
     text-align: center;

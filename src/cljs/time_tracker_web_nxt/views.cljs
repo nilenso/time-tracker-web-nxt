@@ -9,35 +9,30 @@
    [time-tracker-web-nxt.auth :as auth]))
 
 (defn project-dropdown [projects selected]
-  [:div
-   [:select {:placeholder "Add Project"
-             :style {:margin-bottom "1em" :padding-left "0.5em" :width "100%"}
-             :default-value (:name (first projects))
-             :on-change #(reset! selected
-                                 {:id (-> % .-target .-value)
-                                  :name (-> % .-target .-label)})}
-    (for [{:keys [id name]} projects]
-      ^{:key id}
-      [:option {:value id} name])]])
+  [:select.project-dropdown {:placeholder "Add Project"
+                             :default-value (:name (first projects))
+                             :on-change #(reset! selected
+                                                 {:id (-> % .-target .-value)
+                                                  :name (-> % .-target .-label)})}
+   (for [{:keys [id name]} projects]
+     ^{:key id}
+     [:option {:value id} name])])
 
 (defn add-timer-widget [projects]
   (let [timer-note (atom nil)
         default-project (first projects)
         timer-project (atom default-project)
         show? (re-frame/subscribe [:show-add-timer-widget?])]
-    [:div {:style (if @show?
-                    {:margin-bottom "2em"}
-                    {:display "none"})}
+    [:div.new-timer-popup {:style (if @show? {} {:display "none"})}
      [project-dropdown projects timer-project]
-     [:div [:textarea {:placeholder "Add notes"
-                       :style {:margin-bottom "1em" :padding-left "0.5em" :width "99%"}
-                       :on-change #(reset! timer-note (-> % .-target .-value))}]]
-     [:div [:button.pure-button
-            {:type "input"
-             :style {:text-transform "uppercase" :margin-right "1em"}
-             :on-click #(re-frame/dispatch [:show-add-timer-widget false])}
-            "Cancel"]
-      [:button.pure-button.pure-button-primary.ttbutton
+     [:textarea.project-notes {:placeholder "Add notes"
+                               :on-change #(reset! timer-note (-> % .-target .-value))}]
+     [:div.button-group
+      [:button.btn.btn-secondary
+       {:type "input"
+        :on-click #(re-frame/dispatch [:show-add-timer-widget false])}
+       "Cancel"]
+      [:button.btn.btn-primary
        {:type "input"
         :on-click #(do
                      (re-frame/dispatch [:show-add-timer-widget false])
@@ -150,7 +145,7 @@
                             :pikaday-attrs {:on-select
                                             #(do (reset! date-atom %)
                                                  (re-frame/dispatch [:timer-date-changed :timer-date @date-atom]))}
-                            :input-attrs {:style {:padding "0.5em" :width "15.2em"}}}]))
+                            }]))
 
 (defn main-panel []
   (let [app-name (re-frame/subscribe [:app-name])
@@ -159,21 +154,15 @@
         projects (re-frame/subscribe [:projects])]
     (fn []
       [:div.main
-       [:br]
-       [:div {:style {:text-align "center"}}
-        [:p
-         {:style {:display "inline-block" :margin-right "1em" :vertical-align "middle"
-                  :font-size "1.2em" :text-transform "uppercase"}}
+       [:div.new-timer
+        [:label
          "Current Date: "]
         [datepicker]
-        [:button.pure-button.ttbutton
-         {:style {:margin-left "1.1em" :vertical-align "baseline"}
-          :on-click #(re-frame/dispatch [:show-add-timer-widget true])}
-         "+"]]
-       [:br]
-       [:div {:id "new-timer-modal"}]
-       [:br]
-       [add-timer-widget @projects]
+        [:button.btn.btn-primary
+         {:on-click #(re-frame/dispatch [:show-add-timer-widget true])}
+         "+"]
+        [add-timer-widget @projects]]
+
        [:div
         [:h2 "Timers"]
         [timers @ts]]])))
