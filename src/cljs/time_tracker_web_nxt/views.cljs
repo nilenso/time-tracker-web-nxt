@@ -19,7 +19,7 @@
      [:option {:value id} name])])
 
 (defn add-timer-widget [projects]
-  (let [timer-note (atom nil)
+  (let [timer-note (atom "")
         default-project (first projects)
         timer-project (atom default-project)
         show? (re-frame/subscribe [:show-add-timer-widget?])]
