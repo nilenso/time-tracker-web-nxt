@@ -4,6 +4,7 @@
   (:require
    [cljs.core.async :as async :refer [chan put! <! close! alts! take! timeout]]
    [cljs.spec.alpha :as s]
+   [hodgepodge.core :refer [local-storage set-item get-item clear!]]
    [re-frame.core :as re-frame]
    [time-tracker-web-nxt.db :as db]
    [time-tracker-web-nxt.config :as config]
@@ -32,19 +33,40 @@
 ;; ENTIRE state of the application after each event handler runs.  All of it.
 (def db-spec-inpector (re-frame/after (partial check-and-throw :time-tracker-web-nxt.db/db)))
 
-(re-frame/reg-event-db
+(defn db->local-store
+  "Persists app db to local storage"
+  [app-db]
+  ;; Remove websocket and response channel
+  (let [new-db (assoc app-db :conn [])]
+    (set-item local-storage "db" (str new-db))))
+
+;; This interceptor persists the re-frame db to local-storage
+(def ->local-store (re-frame.core/after db->local-store))
+
+;; This coeffect is injected into the `initialize-db` event
+;; to add the db state stored in local-storage to the coeffects
+;; of the event handler.
+(re-frame/reg-cofx
+ :local-store-app-db
+ (fn [cofx _]
+   (let [db-ls (-> local-storage (get-item "db") cljs.reader/read-string)]
+     (assoc cofx :local-store-app-db db-ls))))
+
+(re-frame/reg-event-fx
  :initialize-db
- (fn  [_ _]
-   db/default-db))
+ [(re-frame.core/inject-cofx :local-store-app-db)]
+ (fn  [{:keys [db local-store-app-db]} cofx]
+   {:db (or local-store-app-db db/default-db)}))
 
 (re-frame/reg-event-db
  :show-add-timer-widget
- [db-spec-inpector]
+ [db-spec-inpector ->local-store]
  (fn [db [_ state]]
    (assoc db :show-add-timer-widget? state)))
 
 (re-frame/reg-event-fx
  :add-timer
+ [->local-store]
  (fn [{:keys [db] :as cofx} [_ timer-project timer-note]]
    (let [[_ socket] (:conn db)]
      {:ws-send [{:command "create-and-start-timer"
@@ -54,6 +76,7 @@
 
 (re-frame/reg-event-db
  :inc-timer-dur
+ [->local-store]
  (fn [db [_ timer-id]]
    (if (= :running
           (get-in db [:timers timer-id :state]))
@@ -63,14 +86,14 @@
 
 (re-frame/reg-event-fx
  :start-timer
- [db-spec-inpector]
+ [db-spec-inpector ->local-store]
  (fn [{:keys [db] :as cofx} [_ timer-id]]
    {:db (assoc-in db [:timers timer-id :state] :running)
     :set-clock timer-id}))
 
 (re-frame/reg-event-fx
  :resume-timer
- [db-spec-inpector]
+ [->local-store]
  (fn [{:keys [db] :as cofx} [_ timer-id]]
    (let [[_ socket] (:conn db)]
      {:db (assoc-in db [:timers timer-id :state] :running)
@@ -80,7 +103,7 @@
 
 (re-frame/reg-event-db
  :add-interval
- [db-spec-inpector]
+ [db-spec-inpector ->local-store]
  (fn [db [_ timer-id interval-id]]
    (assoc-in db [:intervals timer-id] interval-id)))
 
@@ -97,7 +120,7 @@
 
 (re-frame/reg-event-fx
  :stop-timer
- [db-spec-inpector]
+ [db-spec-inpector ->local-store]
  (fn [{:keys [db] :as cofx} [_ {:keys [id duration]}]]
    (let [timer-id id
          interval-id (get (:intervals db) timer-id)
@@ -114,7 +137,7 @@
 
 (re-frame/reg-event-fx
  :update-timer
- [db-spec-inpector]
+ [db-spec-inpector ->local-store]
  (fn [{:keys [db] :as cofx} [_ timer-id {:keys [elapsed-hh elapsed-mm elapsed-ss notes] :as new}]]
    (let [elapsed (+ (* 60 60 elapsed-hh)
                     (* 60 elapsed-mm)
@@ -133,11 +156,10 @@
 
 (re-frame/reg-event-fx
  :log-in
- [db-spec-inpector]
+ [db-spec-inpector ->local-store]
  (fn [{:keys [db] :as cofx} [_ user]]
    (let [user-profile (auth/user-profile user)]
      {:db          (assoc db :user user-profile)
-      :create-conn (:token user-profile)
       :dispatch-n  [[:list-all-projects (:token user-profile)]
                     [:list-all-timers (:token user-profile) (t-core/today-at-midnight)]]})))
 
@@ -145,6 +167,7 @@
  :log-out
  [db-spec-inpector]
  (fn [db [_ user]]
+   (clear! local-storage)
    (assoc db :user nil)))
 
 (defn message-handler [{:keys [id started-time duration type] :as data}]
@@ -169,22 +192,23 @@
 
 (re-frame/reg-event-fx
  :timer-date-changed
- [db-spec-inpector]
+ [db-spec-inpector ->local-store]
  (fn [{:keys [db] :as cofx} [_ key date]]
    (let [auth-token (get-in db [:user :token])]
      {:db (assoc db key date)
       :dispatch [:list-all-timers auth-token (t-coerce/from-date date)]})))
 
-(re-frame/reg-event-fx
+(re-frame/reg-event-db
  :add-timer-to-db
- [db-spec-inpector]
- (fn [{:keys [db] :as cofx} [_ timer]]
-   (let [timer-id (:id timer)]
-     {:db (-> db
-              (assoc-in [:timers timer-id]
-                        (-> timer
-                            (assoc :state (timer-state timer))
-                            (assoc :elapsed 0))))})))
+ [db-spec-inpector ->local-store]
+ (fn [db [_ timer]]
+   (-> db (assoc-in [:timers (:id timer)]
+                    (assoc timer :state (timer-state timer))))))
+
+(re-frame/reg-event-fx
+ :create-ws-connection
+ (fn [cofx [_ google-auth-token]]
+   {:create-conn google-auth-token}))
 
 (re-frame/reg-fx
  :create-conn
@@ -223,13 +247,13 @@
 
 (re-frame/reg-event-db
  :add-db
- [db-spec-inpector]
+ [db-spec-inpector ->local-store]
  (fn [db [_ k v]]
    (assoc db k v)))
 
 (re-frame/reg-event-db
  :add-timers-to-db
- [db-spec-inpector]
+ [db-spec-inpector ->local-store]
  (fn [db [_ timers]]
    (let [state #(timer-state %)
          timers-map (reduce #(assoc %1 (:id %2)

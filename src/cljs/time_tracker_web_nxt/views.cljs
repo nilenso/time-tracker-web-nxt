@@ -3,6 +3,7 @@
    [cljs-pikaday.reagent :as pikaday]
    [goog.string :as gs]
    [goog.string.format]
+   [hodgepodge.core :refer [get-item local-storage]]
    [re-frame.core :as re-frame]
    [reagent.core :as reagent]
    [reagent.ratom :as ratom]
@@ -184,8 +185,8 @@
 (defn logout []
   [:a.link.link-secondary {:href "#"
                            :on-click (fn [_] (-> (.signOut (auth/auth-instance))
-                                                 (.then
-                                                  #(re-frame/dispatch [:log-out]))))}
+                                                (.then
+                                                 #(re-frame/dispatch [:log-out]))))}
    "Sign Out"])
 
 (defn profile [user]
@@ -207,9 +208,11 @@
     [logout]]])
 
 (defn dashboard [user]
-  [:div {:style {:height "100%"}}
-   [header user]
-   [main-panel]])
+  (do
+    (re-frame/dispatch [:create-ws-connection (:token user)])
+    [:div {:style {:height "100%"}}
+     [header user]
+     [main-panel]]))
 
 (defn app []
   (let [user (re-frame/subscribe [:user])]

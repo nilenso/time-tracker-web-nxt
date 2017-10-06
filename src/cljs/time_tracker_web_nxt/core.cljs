@@ -33,7 +33,6 @@
   ;; Using the sync version of dispatch means that value is in
   ;; place before we go onto the next step.
   (re-frame/dispatch-sync [:initialize-db])
-
   (dev-setup)
   (go (when-let [c (<! (auth/init!))])
       (mount-root))
