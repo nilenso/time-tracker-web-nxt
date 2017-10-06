@@ -133,6 +133,10 @@ body {
 .main {
     display: flex;
     flex-direction: column;
+    padding: 2em;
+    background-color: #f9f9f9;
+    color: #777;
+    height: 100%;
 }
 /* MAIN END */
 
@@ -258,12 +262,6 @@ legend {
     -moz-transition: height 0.5s;
     -ms-transition: height 0.5s;
     transition: height 0.5s;
-}
-
-.main {
-    padding: 2em;
-    background-color: #f9f9f9;
-    color: #777;
 }
 
 table {
