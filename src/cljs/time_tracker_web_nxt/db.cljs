@@ -28,10 +28,10 @@
 (s/def ::notes string?)
 (s/def ::app-user-id (s/nilable int?))
 (s/def ::started-time (s/nilable int?))
-(s/def ::timer (s/keys :req-un [::id ::project-id ::duration ::elapsed
+(s/def ::timer (s/keys :req-un [::id ::project-id ::duration
                                 ::state ::time-created ::notes
                                 ::started-time]
-                       :opt-un [::app-user-id]))
+                       :opt-un [::app-user-id ::elapsed]))
 (s/def ::timers (s/every-kv int? ::timer))
 
 ;; App DB
