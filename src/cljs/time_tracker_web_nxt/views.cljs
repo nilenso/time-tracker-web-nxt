@@ -143,12 +143,11 @@
 (defn datepicker []
   ;; Note: This seems more like a hacked-together solution. Should look
   ;; for a better implementation.
-  (let [date-atom (reagent/atom (js/Date.))]
-    [pikaday/date-selector {:date-atom date-atom
-                            :pikaday-attrs {:on-select
-                                            #(do (reset! date-atom %)
-                                                 (re-frame/dispatch [:timer-date-changed :timer-date @date-atom]))}
-                            }]))
+  (let [timer-date (re-frame/subscribe [:timer-date])]
+    [pikaday/date-selector
+     {:date-atom timer-date
+      :pikaday-attrs
+      {:on-select #(re-frame/dispatch [:timer-date-changed :timer-date %])}}]))
 
 (defn main-panel []
   (let [app-name (re-frame/subscribe [:app-name])
