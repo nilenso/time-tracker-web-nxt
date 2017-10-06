@@ -6,7 +6,11 @@
    [re-frame.core :as re-frame]
    [reagent.core :as reagent]
    [reagent.ratom :as ratom]
-   [time-tracker-web-nxt.auth :as auth]))
+   [time-tracker-web-nxt.auth :as auth]
+   [taoensso.timbre :as timbre
+    :refer-macros [log  trace  debug  info  warn  error  fatal  report
+                   logf tracef debugf infof warnf errorf fatalf reportf
+                   spy get-env]]))
 
 (defn project-dropdown [projects selected]
   [:select.project-dropdown {:placeholder "Add Project"
@@ -16,28 +20,32 @@
                                                   :name (-> % .-target .-label)})}
    (for [{:keys [id name]} projects]
      ^{:key id}
-     [:option {:value id} name])])
+     [:option {:value id :label name} name])])
 
 (defn add-timer-widget [projects]
-  (let [timer-note (atom "")
+  (let [default-note ""
+        timer-note (reagent/atom default-note)
         default-project (first projects)
-        timer-project (atom default-project)
+        timer-project (reagent/atom {:id (:id default-project) :name (:name default-project)})
         show? (re-frame/subscribe [:show-add-timer-widget?])]
-    [:div.new-timer-popup {:style (if @show? {} {:display "none"})}
-     [project-dropdown projects timer-project]
-     [:textarea.project-notes {:placeholder "Add notes"
-                               :on-change #(reset! timer-note (-> % .-target .-value))}]
-     [:div.button-group
-      [:button.btn.btn-secondary
-       {:type "input"
-        :on-click #(re-frame/dispatch [:show-add-timer-widget false])}
-       "Cancel"]
-      [:button.btn.btn-primary
-       {:type "input"
-        :on-click #(do
-                     (re-frame/dispatch [:show-add-timer-widget false])
-                     (re-frame/dispatch [:add-timer @timer-project @timer-note]))}
-       "Start"]]]))
+    (fn [projects]
+      [:div.new-timer-popup {:style (if @show? {} {:display "none"})}
+       [project-dropdown projects timer-project]
+       [:textarea.project-notes {:placeholder "Add notes"
+                                 :on-change #(reset! timer-note (-> % .-target .-value))}]
+       [:div.button-group
+        [:button.btn.btn-secondary
+         {:type "input"
+          :on-click #(re-frame/dispatch [:show-add-timer-widget false])}
+         "Cancel"]
+        [:button.btn.btn-primary
+         {:type "input"
+          :on-click
+          #(do
+             (info "Added timer with project" @timer-project " and note " @timer-note)
+             (re-frame/dispatch [:show-add-timer-widget false])
+             (re-frame/dispatch [:add-timer @timer-project @timer-note]))}
+         "Start"]]])))
 
 (defn split-time [elapsed-seconds]
   (let [hours (quot elapsed-seconds (* 60 60))
