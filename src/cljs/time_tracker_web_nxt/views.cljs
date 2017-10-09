@@ -13,20 +13,16 @@
                    spy get-env]]))
 
 (defn project-dropdown [projects selected]
-  [:select.project-dropdown {:placeholder "Add Project"
-                             :default-value (:name (first projects))
-                             :on-change #(reset! selected
-                                                 {:id (-> % .-target .-value)
-                                                  :name (-> % .-target .-label)})}
+  [:select.project-dropdown {:on-change #(reset! selected {:id (-> % .-target .-value)})}
    (for [{:keys [id name]} projects]
      ^{:key id}
      [:option {:value id :label name} name])])
 
 (defn add-timer-widget [projects]
   (let [default-note ""
-        timer-note (reagent/atom default-note)
-        default-project (first projects)
-        timer-project (reagent/atom {:id (:id default-project) :name (:name default-project)})
+        timer-note (atom default-note)
+        default-project (:id (first projects))
+        timer-project (atom default-project)
         show? (re-frame/subscribe [:show-add-timer-widget?])]
     (fn [projects]
       [:div.new-timer-popup {:style (if @show? {} {:display "none"})}
