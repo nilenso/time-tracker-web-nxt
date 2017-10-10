@@ -14,6 +14,8 @@
    [ajax.core :as ajax]
    [cljs-time.core :as t-core]
    [cljs-time.coerce :as t-coerce]
+   [cljs-time.format :as t-format]
+   [clojure.string :as clj-s]
    [taoensso.timbre :as timbre :refer-macros [log  trace  debug  info  warn  error  fatal  report
                                               logf tracef debugf infof warnf errorf fatalf reportf
                                               spy get-env]]))
@@ -43,13 +45,44 @@
  (fn [db [_ state]]
    (assoc db :show-add-timer-widget? state)))
 
+;; Note:
+;; We're doing redundant time conversions for the most common case
+;; i.e. today's date. One way to avoid that would have been to
+;; compare the timer-date arg with current DateTime. That is always
+;; going to differ as timer-date, being selected from a DatePicker
+;; doesn'have HH:mm:ss parts.
+;; TODO:
+;; We might be able to avoid some of this by getting the midnight corresponding
+;; to now-datetime and comparing it with timer-datetime.
+(defn timer-created-time
+  "Takes a date of the form 'Tue Oct 10 2017 11:30:21 GMT+0530 (IST)'
+  and returns a corresponding Unix epoch"
+  [timer-date now-datetime]
+  (let [timer-format "E MMM dd yyyy HH:mm:ss"
+        ;; Timer date in db is of the form "Tue Oct 10 2017 11:30:21 GMT+0530 (IST)"
+        ;; We choose a format to extract the date in UTC midnight
+        ;; To match it with formatter we have to drop the last 15 chars
+        timer-datetime (t-format/parse
+                        (t-format/formatter timer-format)
+                        (clj-s/join (drop-last 15 timer-date)))
+        ;; Timer date stores 00:00:00 for HH:mm:ss
+        ;; so we need to advance it by a Period corresponding to now
+        created-datetime (t-core/plus
+                          timer-datetime
+                          (t-core/hours (t-core/hour now-datetime))
+                          (t-core/minutes (t-core/minute now-datetime))
+                          (t-core/seconds (t-core/second now-datetime)))]
+    (t-coerce/to-epoch created-datetime)))
+
 (re-frame/reg-event-fx
  :add-timer
  (fn [{:keys [db] :as cofx} [_ timer-project timer-note]]
-   (let [[_ socket] (:conn db)]
+   (let [[_ socket] (:conn db)
+         timer-date (str (:timer-date db))
+         now (t-core/now)]
      {:ws-send [{:command "create-and-start-timer"
                  :project-id (js/parseInt (:id timer-project))
-                 :created-time (t-coerce/to-epoch (t-core/now))
+                 :created-time (timer-created-time timer-date now)
                  :notes timer-note} socket]})))
 
 (re-frame/reg-event-db
