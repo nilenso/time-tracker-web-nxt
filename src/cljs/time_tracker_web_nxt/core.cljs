@@ -3,6 +3,9 @@
    [cljs.core.async.macros :refer [go]])
   (:require [reagent.core :as reagent]
             [re-frame.core :as re-frame]
+            ;; Read
+            ;; https://github.com/Day8/re-frame/blob/master/docs/Basic-App-Structure.md#theres-a-small-gotcha
+            ;; to know why events and subs are explicitly `require`'d here.
             [time-tracker-web-nxt.events]
             [time-tracker-web-nxt.subs]
             [time-tracker-web-nxt.views :as views]
