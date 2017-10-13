@@ -108,15 +108,14 @@
 (re-frame/reg-event-fx
  :tick-running-timer
  (fn [{:keys [db] :as cofx} _]
-   (let [running? (fn [k v] (= :running (:state v)))
+   (let [running? (fn [timer] (= :running (:state timer)))
          running-timer-id (first
-                           (for [[k v] (:timers db)
-                                 :when (= :running (:state v))]
-                             k))]
+                           (for [[k v] (:timers db) :when (running? v)]
+                             k))
+         fx-map {:db (assoc db :boot-from-local-storage? false)}]
      (if running-timer-id
-       {:db (assoc db :boot-from-local-storage? false)
-        :set-clock running-timer-id}
-       {:db db}))))
+       (assoc fx-map :set-clock running-timer-id)
+       fx-map))))
 
 (re-frame/reg-event-db
  :add-interval
