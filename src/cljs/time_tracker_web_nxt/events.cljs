@@ -163,12 +163,15 @@
       :dispatch-n  [[:list-all-projects (:token user-profile)]
                     [:list-all-timers (:token user-profile) (t-core/today-at-midnight)]]})))
 
-(re-frame/reg-event-db
+(re-frame/reg-fx
+ :clear-local-storage
+ #(clear! local-storage))
+
+(re-frame/reg-event-fx
  :log-out
- [db-spec-inpector]
- (fn [db [_ user]]
-   (clear! local-storage)
-   (assoc db :user nil)))
+ (fn [{:keys [db] :as cofx} [_ user]]
+   {:db (assoc db :user nil)
+    :clear-local-storage nil}))
 
 (defn message-handler [{:keys [id started-time duration type] :as data}]
   (if (= "create" type)
