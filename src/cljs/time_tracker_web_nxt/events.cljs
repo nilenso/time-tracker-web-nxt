@@ -49,8 +49,12 @@
 (re-frame/reg-cofx
  :local-store-app-db
  (fn [cofx _]
-   (let [db-ls (-> local-storage (get-item "db") cljs.reader/read-string)]
-     (assoc cofx :local-store-app-db db-ls))))
+   (let [db (-> local-storage (get-item "db") cljs.reader/read-string)]
+     (assoc cofx
+            :local-store-app-db
+            (if db
+              (assoc db :boot-from-local-storage? true)
+              nil)))))
 
 (re-frame/reg-event-fx
  :initialize-db
@@ -100,6 +104,19 @@
       :set-clock timer-id
       :ws-send [{:command "start-timer"
                  :timer-id timer-id} socket]})))
+
+(re-frame/reg-event-fx
+ :tick-running-timer
+ (fn [{:keys [db] :as cofx} _]
+   (let [running? (fn [k v] (= :running (:state v)))
+         running-timer-id (first
+                           (for [[k v] (:timers db)
+                                 :when (= :running (:state v))]
+                             k))]
+     (if running-timer-id
+       {:db (assoc db :boot-from-local-storage? false)
+        :set-clock running-timer-id}
+       {:db db}))))
 
 (re-frame/reg-event-db
  :add-interval

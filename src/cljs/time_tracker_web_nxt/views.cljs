@@ -153,7 +153,7 @@
 (defn main-panel []
   (let [app-name (re-frame/subscribe [:app-name])
         user     (re-frame/subscribe [:user])
-        ts (re-frame/subscribe [:timers])
+        ts       (re-frame/subscribe [:timers])
         projects (re-frame/subscribe [:projects])]
     (fn []
       [:div.main
@@ -208,11 +208,15 @@
     [logout]]])
 
 (defn dashboard [user]
-  (do
-    (re-frame/dispatch [:create-ws-connection (:token user)])
-    [:div {:style {:height "100%"}}
-     [header user]
-     [main-panel]]))
+  (let [boot-ls? (re-frame/subscribe [:boot-from-local-storage?])]
+    (if @boot-ls?
+      ;; If loading data from localstorage, start ticking any running timer.
+      (re-frame/dispatch [:tick-running-timer])
+
+      (do (re-frame/dispatch [:create-ws-connection (:token user)])
+          [:div {:style {:height "100%"}}
+           [header user]
+           [main-panel]]))))
 
 (defn app []
   (let [user (re-frame/subscribe [:user])]

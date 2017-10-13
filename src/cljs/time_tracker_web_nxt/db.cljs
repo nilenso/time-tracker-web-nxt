@@ -47,4 +47,5 @@
    :projects []
    :conn []
    :app-user-id nil
-   :show-add-timer-widget? false})
+   :show-add-timer-widget? false
+   :boot-from-local-storage? false})
