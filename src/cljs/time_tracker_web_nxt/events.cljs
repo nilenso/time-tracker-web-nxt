@@ -2,48 +2,24 @@
   (:require-macros
    [cljs.core.async.macros :refer [go]])
   (:require
+   [ajax.core :as ajax]
+   [cljs-time.coerce :as t-coerce]
+   [cljs-time.core :as t-core]
+   [cljs-time.format :as t-format]
    [cljs.core.async :as async :refer [chan put! <! close! alts! take! timeout]]
    [cljs.spec.alpha :as s]
+   [day8.re-frame.http-fx]
    [hodgepodge.core :refer [local-storage set-item get-item clear!]]
    [re-frame.core :as rf]
-   [time-tracker-web-nxt.db :as db]
-   [time-tracker-web-nxt.config :as config]
-   [time-tracker-web-nxt.auth :as auth]
-   [wscljs.client :as ws]
-   [wscljs.format :as fmt]
-   [day8.re-frame.http-fx]
-   [ajax.core :as ajax]
-   [cljs-time.core :as t-core]
-   [cljs-time.coerce :as t-coerce]
-   [cljs-time.format :as t-format]
-   [clojure.string :as clj-s]
    [taoensso.timbre :as timbre :refer-macros [log  trace  debug  info  warn  error  fatal  report
                                               logf tracef debugf infof warnf errorf fatalf reportf
-                                              spy get-env]]))
-
-(defn check-and-throw
-  "Throws an exception if `db` doesn't match the Spec `a-spec`."
-  [a-spec db]
-  (when-not (s/valid? a-spec db)
-    (throw (ex-info (str "Spec failed => " (s/explain-str a-spec db)) {}))))
-
-;; This Interceptor runs `check-and-throw` `after` the event handler has finished, checking
-;; the value for `app-db` against a spec.
-;; If the event handler corrupted the value for `app-db` an exception will be
-;; thrown. This helps us detect event handler bugs early.
-;; Because all state is held in `app-db`, we are effectively validating the
-;; ENTIRE state of the application after each event handler runs.  All of it.
-(def db-spec-inpector (rf/after (partial check-and-throw :time-tracker-web-nxt.db/db)))
-
-(defn db->local-store
-  "Persists app db to local storage"
-  [app-db]
-  ;; Remove websocket and response channel
-  (let [new-db (assoc app-db :conn [])]
-    (set-item local-storage "db" (str new-db))))
-
-;; This interceptor persists the rf db to local-storage
-(def ->local-store (rf/after db->local-store))
+                                              spy get-env]]
+   [time-tracker-web-nxt.auth :as auth]
+   [time-tracker-web-nxt.config :as config]
+   [time-tracker-web-nxt.db :as db]
+   [time-tracker-web-nxt.interceptors :refer [db-spec-inspector ->local-store]]
+   [wscljs.client :as ws]
+   [wscljs.format :as fmt]))
 
 ;; This coeffect is injected into the `initialize-db` event
 ;; to add the db state stored in local-storage to the coeffects
@@ -66,7 +42,7 @@
 
 (rf/reg-event-db
  :show-add-timer-widget
- [db-spec-inpector ->local-store]
+ [db-spec-inspector ->local-store]
  (fn [db [_ state]]
    (assoc db :show-add-timer-widget? state)))
 
@@ -123,7 +99,7 @@
 
 (rf/reg-event-fx
  :start-timer
- [db-spec-inpector ->local-store]
+ [db-spec-inspector ->local-store]
  (fn [{:keys [db] :as cofx} [_ timer-id]]
    {:db (assoc-in db [:timers timer-id :state] :running)
     :set-clock timer-id}))
@@ -152,7 +128,7 @@
 
 (rf/reg-event-db
  :add-interval
- [db-spec-inpector ->local-store]
+ [db-spec-inspector ->local-store]
  (fn [db [_ timer-id interval-id]]
    (assoc-in db [:intervals timer-id] interval-id)))
 
@@ -169,7 +145,7 @@
 
 (rf/reg-event-fx
  :stop-timer
- [db-spec-inpector ->local-store]
+ [db-spec-inspector ->local-store]
  (fn [{:keys [db] :as cofx} [_ {:keys [id duration]}]]
    (let [timer-id id
          interval-id (get (:intervals db) timer-id)
@@ -186,7 +162,7 @@
 
 (rf/reg-event-fx
  :update-timer
- [db-spec-inpector ->local-store]
+ [db-spec-inspector ->local-store]
  (fn [{:keys [db] :as cofx} [_ timer-id {:keys [elapsed-hh elapsed-mm elapsed-ss notes] :as new}]]
    (let [elapsed (+ (* 60 60 elapsed-hh)
                     (* 60 elapsed-mm)
@@ -205,7 +181,7 @@
 
 (rf/reg-event-fx
  :log-in
- [db-spec-inpector ->local-store]
+ [db-spec-inspector ->local-store]
  (fn [{:keys [db] :as cofx} [_ user]]
    (let [user-profile (auth/user-profile user)]
      {:db          (assoc db :user user-profile)
@@ -244,7 +220,7 @@
 
 (rf/reg-event-fx
  :timer-date-changed
- [db-spec-inpector ->local-store]
+ [db-spec-inspector ->local-store]
  (fn [{:keys [db] :as cofx} [_ key date]]
    (let [auth-token (get-in db [:user :token])]
      {:db (assoc db key date)
@@ -252,7 +228,7 @@
 
 (rf/reg-event-db
  :add-timer-to-db
- [db-spec-inpector ->local-store]
+ [db-spec-inspector ->local-store]
  (fn [db [_ timer]]
    (-> db (assoc-in [:timers (:id timer)]
                     (assoc timer :state (timer-state timer))))))
@@ -299,13 +275,13 @@
 
 (rf/reg-event-db
  :add-db
- [db-spec-inpector ->local-store]
+ [db-spec-inspector ->local-store]
  (fn [db [_ k v]]
    (assoc db k v)))
 
 (rf/reg-event-db
  :add-timers-to-db
- [db-spec-inpector ->local-store]
+ [db-spec-inspector ->local-store]
  (fn [db [_ timers]]
    (let [state #(timer-state %)
          timers-map (reduce #(assoc %1 (:id %2)
