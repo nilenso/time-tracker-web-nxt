@@ -76,51 +76,48 @@
       nil)]
    ])
 
-(defn timer-display-editable
+(defn timer-edit
   [{:keys [elapsed notes]}]
   (let [changes (reagent/atom {:notes notes
                                :elapsed-hh (:hh elapsed)
                                :elapsed-mm (:mm elapsed)
                                :elapsed-ss (:ss elapsed)})
-        dur-change-handler (fn [elap-key e]
-                             (let [elap-val (-> e .-target .-value)]
-                               (swap! changes assoc elap-key (if (empty? elap-val)
-                                                               0
-                                                               (js/parseInt elap-val)))))
-        dur-change-handler-w-key #(partial dur-change-handler %)]
+        dur-change-handler (fn [k e]
+                             (let [val (-> e .-target .-value)
+                                   parsed (if (empty? val)
+                                            0
+                                            (js/parseInt val))]
+                               (swap! changes assoc k parsed)))
+        handler #(partial dur-change-handler %)]
     (fn [{:keys [id project edit-timer?]}]
-      [:div "Timer " id " for project " (:name project)
-       " has been paused after "
-       [:input {:value (:elapsed-hh @changes)
-                :on-change (dur-change-handler-w-key :elapsed-hh)}]
-       [:input {:value (:elapsed-mm @changes)
-                :on-change (dur-change-handler-w-key :elapsed-mm)}]
-       [:input {:value (:elapsed-ss @changes)
-                :on-change (dur-change-handler-w-key :elapsed-ss)}]
+      [:div
+       [:input {:value (:elapsed-hh @changes) :on-change (handler :elapsed-hh)}]
+       [:input {:value (:elapsed-mm @changes) :on-change (handler :elapsed-mm)}]
+       [:input {:value (:elapsed-ss @changes) :on-change (handler :elapsed-ss)}]
        [:textarea {:value (:notes @changes)
                    :on-change #(swap! changes assoc :notes (-> % .-target .-value))}]
        [:button {:on-click #(reset! edit-timer? false)} "Cancel"]
-       [:button {:on-click #(do
-                              (reset! edit-timer? false)
-                              (rf/dispatch [:update-timer id @changes]))} "Update"]])))
+       [:button {:on-click #(do (reset! edit-timer? false)
+                                (rf/dispatch [:update-timer id @changes]))} "Update"]])))
 
-(defn timer [{:keys [id elapsed project-id notes]}]
+(defn timer-row [{:keys [id elapsed project-id notes]}]
   (let [edit-timer? (reagent/atom false)]
     (fn [{:keys [id elapsed state project notes]}]
-      (let [elapsed-map (utils/->hh-mm-ss elapsed)
-            all-projects @(rf/subscribe [:projects])
-            get-project-by-id (fn [project-id projects]
-                                (some #(when (= project-id (:id %)) %) projects))
-            timer-options {:id id :elapsed elapsed-map
-                           :project {:id project-id
-                                     :name (:name (get-project-by-id project-id all-projects))}
-                           :state state
-                           :notes notes :edit-timer? edit-timer?}]
+      (let [elapsed       (utils/->hh-mm-ss elapsed)
+            projects      @(rf/subscribe [:projects])
+            get-by-id     (fn [p id] (some #(when (= id (:id %)) %) p))
+            timer-options {:id      id
+                           :elapsed elapsed
+                           :project {:id   project-id
+                                     :name (:name (get-by-id projects project-id))}
+                           :state   state
+                           :notes   notes
+                           :edit-timer? edit-timer?}]
         (if @edit-timer?
-          [timer-display-editable timer-options]
+          [timer-edit timer-options]
           [timer-display timer-options])))))
 
-(defn timers [ts]
+(defn timer-list [ts]
   (if (empty? ts)
     [:p.empty-list-placeholder "No timers for today"]
     (let [sorted-ts (->> ts vals (sort-by :id) reverse)]
@@ -133,7 +130,7 @@
        [:tbody
         (for [t sorted-ts]
           ^{:key (:id t)}
-          [timer t])]])))
+          [timer-row t])]])))
 
 (defn datepicker []
   ;; Note: This seems more like a hacked-together solution. Should look
@@ -144,7 +141,7 @@
       :pikaday-attrs
       {:on-select #(rf/dispatch [:timer-date-changed :timer-date %])}}]))
 
-(defn main-panel []
+(defn main []
   (let [app-name (rf/subscribe [:app-name])
         user     (rf/subscribe [:user])
         ts       (rf/subscribe [:timers])
@@ -162,7 +159,7 @@
 
        [:div.timers
         [:h3 [:i "Today's Timers"]]
-        [timers @ts]]])))
+        [timer-list @ts]]])))
 
 (defn login []
   [:div.splash-screen
@@ -210,7 +207,7 @@
       (do (rf/dispatch [:create-ws-connection (:token user)])
           [:div {:style {:height "100%"}}
            [header user]
-           [main-panel]]))))
+           [main]]))))
 
 (defn app []
   (let [user (rf/subscribe [:user])]
