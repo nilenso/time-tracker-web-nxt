@@ -4,7 +4,7 @@
    [goog.string :as gs]
    [goog.string.format]
    [hodgepodge.core :refer [get-item local-storage]]
-   [re-frame.core :as re-frame]
+   [re-frame.core :as rf]
    [reagent.core :as reagent]
    [reagent.ratom :as ratom]
    [time-tracker-web-nxt.auth :as auth]
@@ -24,7 +24,7 @@
         timer-note (atom default-note)
         default-project (:id (first projects))
         timer-project (atom default-project)
-        show? (re-frame/subscribe [:show-add-timer-widget?])]
+        show? (rf/subscribe [:show-add-timer-widget?])]
     (fn [projects]
       [:div.new-timer-popup {:style (if @show? {} {:display "none"})}
        [project-dropdown projects timer-project]
@@ -33,15 +33,15 @@
        [:div.button-group
         [:button.btn.btn-secondary
          {:type "input"
-          :on-click #(re-frame/dispatch [:show-add-timer-widget false])}
+          :on-click #(rf/dispatch [:show-add-timer-widget false])}
          "Cancel"]
         [:button.btn.btn-primary
          {:type "input"
           :on-click
           #(do
              (info "Added timer with project" @timer-project " and note " @timer-note)
-             (re-frame/dispatch [:show-add-timer-widget false])
-             (re-frame/dispatch [:add-timer @timer-project @timer-note]))}
+             (rf/dispatch [:show-add-timer-widget false])
+             (rf/dispatch [:add-timer @timer-project @timer-note]))}
          "Start"]]])))
 
 (defn split-time [elapsed-seconds]
@@ -71,7 +71,7 @@
       :paused
       [:span
        [:button.btn.btn-primary
-        {:style {:margin-right 10} :on-click #(re-frame/dispatch [:resume-timer id])}
+        {:style {:margin-right 10} :on-click #(rf/dispatch [:resume-timer id])}
         "Start"]
        [:button.btn.btn-secondary
         {:on-click #(reset! edit-timer? true)}
@@ -80,7 +80,7 @@
       :running
       [:span
        [:button.btn.btn-primary
-        {:on-click #(re-frame/dispatch [:stop-timer timer])}
+        {:on-click #(rf/dispatch [:stop-timer timer])}
         "Stop"]]
 
       nil)]
@@ -112,13 +112,13 @@
        [:button {:on-click #(reset! edit-timer? false)} "Cancel"]
        [:button {:on-click #(do
                               (reset! edit-timer? false)
-                              (re-frame/dispatch [:update-timer id @changes]))} "Update"]])))
+                              (rf/dispatch [:update-timer id @changes]))} "Update"]])))
 
 (defn timer [{:keys [id elapsed project-id notes]}]
   (let [edit-timer? (reagent/atom false)]
     (fn [{:keys [id elapsed state project notes]}]
       (let [elapsed-map (split-time elapsed)
-            all-projects @(re-frame/subscribe [:projects])
+            all-projects @(rf/subscribe [:projects])
             get-project-by-id (fn [project-id projects]
                                 (some #(when (= project-id (:id %)) %) projects))
             timer-options {:id id :elapsed elapsed-map
@@ -148,17 +148,17 @@
 (defn datepicker []
   ;; Note: This seems more like a hacked-together solution. Should look
   ;; for a better implementation.
-  (let [timer-date (re-frame/subscribe [:timer-date])]
+  (let [timer-date (rf/subscribe [:timer-date])]
     [pikaday/date-selector
      {:date-atom timer-date
       :pikaday-attrs
-      {:on-select #(re-frame/dispatch [:timer-date-changed :timer-date %])}}]))
+      {:on-select #(rf/dispatch [:timer-date-changed :timer-date %])}}]))
 
 (defn main-panel []
-  (let [app-name (re-frame/subscribe [:app-name])
-        user     (re-frame/subscribe [:user])
-        ts       (re-frame/subscribe [:timers])
-        projects (re-frame/subscribe [:projects])]
+  (let [app-name (rf/subscribe [:app-name])
+        user     (rf/subscribe [:user])
+        ts       (rf/subscribe [:timers])
+        projects (rf/subscribe [:projects])]
     (fn []
       [:div.main
        [:div.new-timer
@@ -166,7 +166,7 @@
          "Current Date: "]
         [datepicker]
         [:button.btn.btn-primary
-         {:on-click #(re-frame/dispatch [:show-add-timer-widget true])}
+         {:on-click #(rf/dispatch [:show-add-timer-widget true])}
          "+"]
         [add-timer-widget @projects]]
 
@@ -181,7 +181,7 @@
     {:href "#"
      :on-click (fn [_] (-> (.signIn (auth/auth-instance))
                           (.then
-                           #(re-frame/dispatch [:log-in %]))))
+                           #(rf/dispatch [:log-in %]))))
      } [:img {:src "../images/btn_google_signin_light_normal_web@2x.png"
               :style {:width "12em"}}]]
    ])
@@ -190,7 +190,7 @@
   [:a.link.link-secondary {:href "#"
                            :on-click (fn [_] (-> (.signOut (auth/auth-instance))
                                                 (.then
-                                                 #(re-frame/dispatch [:log-out]))))}
+                                                 #(rf/dispatch [:log-out]))))}
    "Sign Out"])
 
 (defn profile [user]
@@ -212,18 +212,18 @@
     [logout]]])
 
 (defn dashboard [user]
-  (let [boot-ls? (re-frame/subscribe [:boot-from-local-storage?])]
+  (let [boot-ls? (rf/subscribe [:boot-from-local-storage?])]
     (if @boot-ls?
       ;; If loading data from localstorage, start ticking any running timer.
-      (re-frame/dispatch [:tick-running-timer])
+      (rf/dispatch [:tick-running-timer])
 
-      (do (re-frame/dispatch [:create-ws-connection (:token user)])
+      (do (rf/dispatch [:create-ws-connection (:token user)])
           [:div {:style {:height "100%"}}
            [header user]
            [main-panel]]))))
 
 (defn app []
-  (let [user (re-frame/subscribe [:user])]
+  (let [user (rf/subscribe [:user])]
     (if-not (:signed-in? @user)
       [login]
       [dashboard @user])))

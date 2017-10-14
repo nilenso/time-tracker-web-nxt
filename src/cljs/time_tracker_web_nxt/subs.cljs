@@ -1,18 +1,18 @@
 (ns time-tracker-web-nxt.subs
   (:require-macros [reagent.ratom :refer [reaction]])
-  (:require [re-frame.core :as re-frame]))
+  (:require [re-frame.core :as rf]))
 
-(defn subscribe [db-var]
-  (re-frame/reg-sub
+(defn create-subscription [db-var]
+  (rf/reg-sub
    db-var
    (fn [db]
      (db-var db))))
 
-(subscribe :app-name)
-(subscribe :timers)
-(subscribe :projects)
-(subscribe :user)
-(subscribe :conn)
-(subscribe :timer-date)
-(subscribe :show-add-timer-widget?)
-(subscribe :boot-from-local-storage?)
+(create-subscription :app-name)
+(create-subscription :timers)
+(create-subscription :projects)
+(create-subscription :user)
+(create-subscription :conn)
+(create-subscription :timer-date)
+(create-subscription :show-add-timer-widget?)
+(create-subscription :boot-from-local-storage?)

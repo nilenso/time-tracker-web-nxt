@@ -5,7 +5,7 @@
    [cljs.core.async :as async :refer [chan put! <! close! alts! take! timeout]]
    [cljs.spec.alpha :as s]
    [hodgepodge.core :refer [local-storage set-item get-item clear!]]
-   [re-frame.core :as re-frame]
+   [re-frame.core :as rf]
    [time-tracker-web-nxt.db :as db]
    [time-tracker-web-nxt.config :as config]
    [time-tracker-web-nxt.auth :as auth]
@@ -33,7 +33,7 @@
 ;; thrown. This helps us detect event handler bugs early.
 ;; Because all state is held in `app-db`, we are effectively validating the
 ;; ENTIRE state of the application after each event handler runs.  All of it.
-(def db-spec-inpector (re-frame/after (partial check-and-throw :time-tracker-web-nxt.db/db)))
+(def db-spec-inpector (rf/after (partial check-and-throw :time-tracker-web-nxt.db/db)))
 
 (defn db->local-store
   "Persists app db to local storage"
@@ -42,13 +42,13 @@
   (let [new-db (assoc app-db :conn [])]
     (set-item local-storage "db" (str new-db))))
 
-;; This interceptor persists the re-frame db to local-storage
-(def ->local-store (re-frame.core/after db->local-store))
+;; This interceptor persists the rf db to local-storage
+(def ->local-store (rf/after db->local-store))
 
 ;; This coeffect is injected into the `initialize-db` event
 ;; to add the db state stored in local-storage to the coeffects
 ;; of the event handler.
-(re-frame/reg-cofx
+(rf/reg-cofx
  :local-store-app-db
  (fn [cofx _]
    (let [db (-> local-storage (get-item "db") cljs.reader/read-string)]
@@ -58,13 +58,13 @@
               (assoc db :boot-from-local-storage? true)
               nil)))))
 
-(re-frame/reg-event-fx
+(rf/reg-event-fx
  :initialize-db
- [(re-frame.core/inject-cofx :local-store-app-db)]
+ [(rf/inject-cofx :local-store-app-db)]
  (fn  [{:keys [db local-store-app-db]} cofx]
    {:db (or local-store-app-db db/default-db)}))
 
-(re-frame/reg-event-db
+(rf/reg-event-db
  :show-add-timer-widget
  [db-spec-inpector ->local-store]
  (fn [db [_ state]]
@@ -99,7 +99,7 @@
                           (t-core/seconds (t-core/second now-datetime)))]
     (t-coerce/to-epoch created-datetime)))
 
-(re-frame/reg-event-fx
+(rf/reg-event-fx
  :add-timer
  [->local-store]
  (fn [{:keys [db] :as cofx} [_ timer-project timer-note]]
@@ -111,7 +111,7 @@
                  :created-time (timer-created-time timer-date now)
                  :notes timer-note} socket]})))
 
-(re-frame/reg-event-db
+(rf/reg-event-db
  :inc-timer-dur
  [->local-store]
  (fn [db [_ timer-id]]
@@ -121,14 +121,14 @@
                 inc)
      db)))
 
-(re-frame/reg-event-fx
+(rf/reg-event-fx
  :start-timer
  [db-spec-inpector ->local-store]
  (fn [{:keys [db] :as cofx} [_ timer-id]]
    {:db (assoc-in db [:timers timer-id :state] :running)
     :set-clock timer-id}))
 
-(re-frame/reg-event-fx
+(rf/reg-event-fx
  :resume-timer
  [->local-store]
  (fn [{:keys [db] :as cofx} [_ timer-id]]
@@ -138,7 +138,7 @@
       :ws-send [{:command "start-timer"
                  :timer-id timer-id} socket]})))
 
-(re-frame/reg-event-fx
+(rf/reg-event-fx
  :tick-running-timer
  (fn [{:keys [db] :as cofx} _]
    (let [running? (fn [timer] (= :running (:state timer)))
@@ -150,24 +150,24 @@
        (assoc fx-map :set-clock running-timer-id)
        fx-map))))
 
-(re-frame/reg-event-db
+(rf/reg-event-db
  :add-interval
  [db-spec-inpector ->local-store]
  (fn [db [_ timer-id interval-id]]
    (assoc-in db [:intervals timer-id] interval-id)))
 
-(re-frame/reg-fx
+(rf/reg-fx
  :set-clock
  (fn [timer-id]
-   (let [interval-id (js/setInterval #(re-frame/dispatch [:inc-timer-dur timer-id]) 1000)]
-     (re-frame/dispatch [:add-interval timer-id interval-id]))))
+   (let [interval-id (js/setInterval #(rf/dispatch [:inc-timer-dur timer-id]) 1000)]
+     (rf/dispatch [:add-interval timer-id interval-id]))))
 
-(re-frame/reg-fx
+(rf/reg-fx
  :clear-clock
  (fn [interval-id]
    (js/clearInterval interval-id)))
 
-(re-frame/reg-event-fx
+(rf/reg-event-fx
  :stop-timer
  [db-spec-inpector ->local-store]
  (fn [{:keys [db] :as cofx} [_ {:keys [id duration]}]]
@@ -184,7 +184,7 @@
       :ws-send [{:command "stop-timer"
                  :timer-id timer-id} socket]})))
 
-(re-frame/reg-event-fx
+(rf/reg-event-fx
  :update-timer
  [db-spec-inpector ->local-store]
  (fn [{:keys [db] :as cofx} [_ timer-id {:keys [elapsed-hh elapsed-mm elapsed-ss notes] :as new}]]
@@ -203,7 +203,7 @@
                  :duration elapsed
                  :notes notes} socket]})))
 
-(re-frame/reg-event-fx
+(rf/reg-event-fx
  :log-in
  [db-spec-inpector ->local-store]
  (fn [{:keys [db] :as cofx} [_ user]]
@@ -212,11 +212,11 @@
       :dispatch-n  [[:list-all-projects (:token user-profile)]
                     [:list-all-timers (:token user-profile) (t-core/today-at-midnight)]]})))
 
-(re-frame/reg-fx
+(rf/reg-fx
  :clear-local-storage
  #(clear! local-storage))
 
-(re-frame/reg-event-fx
+(rf/reg-event-fx
  :log-out
  (fn [{:keys [db] :as cofx} [_ user]]
    {:db (assoc db :user nil)
@@ -226,23 +226,23 @@
   (if (= "create" type)
     (do
       (info "Create: " data)
-      (re-frame/dispatch [:add-timer-to-db (dissoc data :type)])
+      (rf/dispatch [:add-timer-to-db (dissoc data :type)])
       (debug "Starting timer: " id)
-      (re-frame/dispatch [:start-timer id]))
+      (rf/dispatch [:start-timer id]))
     (if (= "update" type)
       (do
         (info "Update: " data)
         (if (and (nil? started-time) (> duration 0))
           (do
             (debug "Stopping timer: " id)
-            (re-frame/dispatch [:stop-timer data]))))
+            (rf/dispatch [:stop-timer data]))))
       (debug "Default: " data))))
 
 (defn timer-state
   [{:keys [duration] :as timer}]
   (if (= 0 duration) :running :paused))
 
-(re-frame/reg-event-fx
+(rf/reg-event-fx
  :timer-date-changed
  [db-spec-inpector ->local-store]
  (fn [{:keys [db] :as cofx} [_ key date]]
@@ -250,19 +250,19 @@
      {:db (assoc db key date)
       :dispatch [:list-all-timers auth-token (t-coerce/from-date date)]})))
 
-(re-frame/reg-event-db
+(rf/reg-event-db
  :add-timer-to-db
  [db-spec-inpector ->local-store]
  (fn [db [_ timer]]
    (-> db (assoc-in [:timers (:id timer)]
                     (assoc timer :state (timer-state timer))))))
 
-(re-frame/reg-event-fx
+(rf/reg-event-fx
  :create-ws-connection
  (fn [cofx [_ google-auth-token]]
    {:create-conn google-auth-token}))
 
-(re-frame/reg-fx
+(rf/reg-fx
  :create-conn
  (fn [goog-auth-id]
    (let [response-chan (chan)
@@ -276,18 +276,18 @@
            (do
              (ws/send conn (clj->js {:command "authenticate" :token goog-auth-id}) fmt/json)
              (if (= "success" (:auth-status (<! response-chan)))
-               (re-frame/dispatch [:save-connection [response-chan conn]])
+               (rf/dispatch [:save-connection [response-chan conn]])
                (throw (ex-info "Authentication Failed" {}))))
            ;; TODO: Retry server connection
            (throw (ex-info "Server not ready" {}))))))))
 
-(re-frame/reg-event-fx
+(rf/reg-event-fx
  :save-connection
  (fn [{:keys [db] :as cofx} [_ sock]]
    {:dispatch [:add-db :conn sock]
     :heartbeat sock}))
 
-(re-frame/reg-fx
+(rf/reg-fx
  :heartbeat
  (fn [[_ sock]]
    (go
@@ -297,13 +297,13 @@
 
 ;; ========== API ============
 
-(re-frame/reg-event-db
+(rf/reg-event-db
  :add-db
  [db-spec-inpector ->local-store]
  (fn [db [_ k v]]
    (assoc db k v)))
 
-(re-frame/reg-event-db
+(rf/reg-event-db
  :add-timers-to-db
  [db-spec-inpector ->local-store]
  (fn [db [_ timers]]
@@ -314,13 +314,13 @@
                                         (assoc :elapsed (:duration %2)))) {} timers)]
      (assoc db :timers timers-map))))
 
-(re-frame/reg-event-db
+(rf/reg-event-db
  :http-failure
  (fn [_ [_ e]]
    (error e)))
 
 ;; Possible Solution: https://github.com/JulianBirch/cljs-ajax/issues/93
-(re-frame/reg-event-fx
+(rf/reg-event-fx
  :list-all-projects
  (fn [cofx [_ auth-token]]
    {:http-xhrio {:method :get
@@ -332,7 +332,7 @@
                  :on-success [:add-db :projects]
                  :on-failure [:http-failure]}}))
 
-(re-frame/reg-event-fx
+(rf/reg-event-fx
  :list-all-timers
  (fn [cofx [_ auth-token timer-date]]
    (let [start-epoch (t-coerce/to-epoch timer-date)
@@ -352,7 +352,7 @@
 
 ;; ====== Websocket ==========
 
-(re-frame/reg-fx
+(rf/reg-fx
  :ws-send
  (fn [[data socket]]
    (ws/send socket (clj->js data) fmt/json)))
