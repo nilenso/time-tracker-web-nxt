@@ -15,3 +15,4 @@
 (subscribe :conn)
 (subscribe :timer-date)
 (subscribe :show-add-timer-widget?)
+(subscribe :boot-from-local-storage?)

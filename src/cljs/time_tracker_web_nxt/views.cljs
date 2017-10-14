@@ -3,6 +3,7 @@
    [cljs-pikaday.reagent :as pikaday]
    [goog.string :as gs]
    [goog.string.format]
+   [hodgepodge.core :refer [get-item local-storage]]
    [re-frame.core :as re-frame]
    [reagent.core :as reagent]
    [reagent.ratom :as ratom]
@@ -147,17 +148,16 @@
 (defn datepicker []
   ;; Note: This seems more like a hacked-together solution. Should look
   ;; for a better implementation.
-  (let [date-atom (reagent/atom (js/Date.))]
-    [pikaday/date-selector {:date-atom date-atom
-                            :pikaday-attrs {:on-select
-                                            #(do (reset! date-atom %)
-                                                 (re-frame/dispatch [:timer-date-changed :timer-date @date-atom]))}
-                            }]))
+  (let [timer-date (re-frame/subscribe [:timer-date])]
+    [pikaday/date-selector
+     {:date-atom timer-date
+      :pikaday-attrs
+      {:on-select #(re-frame/dispatch [:timer-date-changed :timer-date %])}}]))
 
 (defn main-panel []
   (let [app-name (re-frame/subscribe [:app-name])
         user     (re-frame/subscribe [:user])
-        ts (re-frame/subscribe [:timers])
+        ts       (re-frame/subscribe [:timers])
         projects (re-frame/subscribe [:projects])]
     (fn []
       [:div.main
@@ -189,8 +189,8 @@
 (defn logout []
   [:a.link.link-secondary {:href "#"
                            :on-click (fn [_] (-> (.signOut (auth/auth-instance))
-                                                 (.then
-                                                  #(re-frame/dispatch [:log-out]))))}
+                                                (.then
+                                                 #(re-frame/dispatch [:log-out]))))}
    "Sign Out"])
 
 (defn profile [user]
@@ -212,9 +212,15 @@
     [logout]]])
 
 (defn dashboard [user]
-  [:div {:style {:height "100%"}}
-   [header user]
-   [main-panel]])
+  (let [boot-ls? (re-frame/subscribe [:boot-from-local-storage?])]
+    (if @boot-ls?
+      ;; If loading data from localstorage, start ticking any running timer.
+      (re-frame/dispatch [:tick-running-timer])
+
+      (do (re-frame/dispatch [:create-ws-connection (:token user)])
+          [:div {:style {:height "100%"}}
+           [header user]
+           [main-panel]]))))
 
 (defn app []
   (let [user (re-frame/subscribe [:user])]
