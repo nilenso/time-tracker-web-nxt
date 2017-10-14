@@ -8,7 +8,8 @@
                  [com.andrewmcveigh/cljs-time "0.5.0"]
                  [cljs-pikaday "0.1.4"]
                  [com.taoensso/timbre "4.10.0"]
-                 [funcool/hodgepodge "0.1.4"]]
+                 [funcool/hodgepodge "0.1.4"]
+                 [day8.re-frame/test "0.1.5"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]]
 
