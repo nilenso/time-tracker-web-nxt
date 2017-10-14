@@ -1,23 +1,22 @@
 (ns time-tracker-web-nxt.views
   (:require
    [cljs-pikaday.reagent :as pikaday]
-   [goog.string :as gs]
-   [goog.string.format]
    [hodgepodge.core :refer [get-item local-storage]]
    [re-frame.core :as rf]
    [reagent.core :as reagent]
    [reagent.ratom :as ratom]
    [time-tracker-web-nxt.auth :as auth]
+   [time-tracker-web-nxt.utils :as utils]
    [taoensso.timbre :as timbre
     :refer-macros [log  trace  debug  info  warn  error  fatal  report
                    logf tracef debugf infof warnf errorf fatalf reportf
                    spy get-env]]))
 
 (defn project-dropdown [projects selected]
-  [:select.project-dropdown {:on-change #(reset! selected {:id (-> % .-target .-value)})}
+  [:select.project-dropdown
+   {:on-change #(reset! selected {:id (-> % .-target .-value)})}
    (for [{:keys [id name]} projects]
-     ^{:key id}
-     [:option {:value id :label name} name])])
+     ^{:key id} [:option {:value id :label name} name])])
 
 (defn add-timer-widget [projects]
   (let [default-note ""
@@ -44,15 +43,6 @@
              (rf/dispatch [:add-timer @timer-project @timer-note]))}
          "Start"]]])))
 
-(defn split-time [elapsed-seconds]
-  (let [hours (quot elapsed-seconds (* 60 60))
-        minutes (- (quot elapsed-seconds 60) (* hours 60))
-        seconds (- elapsed-seconds (* hours 60 60) (* minutes 60))]
-    {:hh hours :mm minutes :ss seconds}))
-
-(defn format-time [elapsed-hh elapsed-mm elapsed-ss]
-  (gs/format "%02d:%02d:%02d" elapsed-hh elapsed-mm elapsed-ss))
-
 (defn format-project-name [p]
   (when-not (empty? p)
     (.join (.split p "|") " : ")))
@@ -65,7 +55,7 @@
     [:p.timer-notes notes]
     ]
    [:td.time-column {:style {:border "none"}}
-    [:span.time-display (format-time (:hh elapsed) (:mm elapsed) (:ss elapsed))]]
+    [:span.time-display (utils/format-time (:hh elapsed) (:mm elapsed) (:ss elapsed))]]
    [:td.time-column {:style {:border "none"}}
     (case state
       :paused
@@ -117,7 +107,7 @@
 (defn timer [{:keys [id elapsed project-id notes]}]
   (let [edit-timer? (reagent/atom false)]
     (fn [{:keys [id elapsed state project notes]}]
-      (let [elapsed-map (split-time elapsed)
+      (let [elapsed-map (utils/->hh-mm-ss elapsed)
             all-projects @(rf/subscribe [:projects])
             get-project-by-id (fn [project-id projects]
                                 (some #(when (= project-id (:id %)) %) projects))

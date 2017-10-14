@@ -18,6 +18,7 @@
    [time-tracker-web-nxt.config :as config]
    [time-tracker-web-nxt.db :as db]
    [time-tracker-web-nxt.interceptors :refer [db-spec-inspector ->local-store]]
+   [time-tracker-web-nxt.utils :as utils]
    [wscljs.client :as ws]
    [wscljs.format :as fmt]))
 
@@ -46,35 +47,6 @@
  (fn [db [_ state]]
    (assoc db :show-add-timer-widget? state)))
 
-;; Note:
-;; We're doing redundant time conversions for the most common case
-;; i.e. today's date. One way to avoid that would have been to
-;; compare the timer-date arg with current DateTime. That is always
-;; going to differ as timer-date, being selected from a DatePicker
-;; doesn'have HH:mm:ss parts.
-;; TODO:
-;; We might be able to avoid some of this by getting the midnight corresponding
-;; to now-datetime and comparing it with timer-datetime.
-(defn timer-created-time
-  "Takes a date of the form 'Tue Oct 10 2017 11:30:21 GMT+0530 (IST)'
-  and returns a corresponding Unix epoch"
-  [timer-date now-datetime]
-  (let [timer-format "E MMM dd yyyy HH:mm:ss"
-        ;; Timer date in db is of the form "Tue Oct 10 2017 11:30:21 GMT+0530 (IST)"
-        ;; We choose a format to extract the date in UTC midnight
-        ;; To match it with formatter we have to drop the last 15 chars
-        timer-datetime (t-format/parse
-                        (t-format/formatter timer-format)
-                        (clj-s/join (drop-last 15 timer-date)))
-        ;; Timer date stores 00:00:00 for HH:mm:ss
-        ;; so we need to advance it by a Period corresponding to now
-        created-datetime (t-core/plus
-                          timer-datetime
-                          (t-core/hours (t-core/hour now-datetime))
-                          (t-core/minutes (t-core/minute now-datetime))
-                          (t-core/seconds (t-core/second now-datetime)))]
-    (t-coerce/to-epoch created-datetime)))
-
 (rf/reg-event-fx
  :add-timer
  [->local-store]
@@ -84,17 +56,15 @@
          now (t-core/now)]
      {:ws-send [{:command "create-and-start-timer"
                  :project-id (js/parseInt (:id timer-project))
-                 :created-time (timer-created-time timer-date now)
+                 :created-time (utils/timer-created-time timer-date now)
                  :notes timer-note} socket]})))
 
 (rf/reg-event-db
  :inc-timer-dur
  [->local-store]
  (fn [db [_ timer-id]]
-   (if (= :running
-          (get-in db [:timers timer-id :state]))
-     (update-in db [:timers timer-id :elapsed]
-                inc)
+   (if (= :running (get-in db [:timers timer-id :state]))
+     (update-in db [:timers timer-id :elapsed] inc)
      db)))
 
 (rf/reg-event-fx
@@ -135,7 +105,8 @@
 (rf/reg-fx
  :set-clock
  (fn [timer-id]
-   (let [interval-id (js/setInterval #(rf/dispatch [:inc-timer-dur timer-id]) 1000)]
+   (let [dispatch-fn #(rf/dispatch [:inc-timer-dur timer-id])
+         interval-id (js/setInterval dispatch-fn 1000)]
      (rf/dispatch [:add-interval timer-id interval-id]))))
 
 (rf/reg-fx
@@ -164,20 +135,23 @@
  :update-timer
  [db-spec-inspector ->local-store]
  (fn [{:keys [db] :as cofx} [_ timer-id {:keys [elapsed-hh elapsed-mm elapsed-ss notes] :as new}]]
-   (let [elapsed (+ (* 60 60 elapsed-hh)
-                    (* 60 elapsed-mm)
-                    elapsed-ss)
-         new (assoc new :elapsed elapsed)
-         ori (-> db :timers (get timer-id) (select-keys [:notes :elapsed]))
-         new-map (merge ori new)
+   (let [elapsed    (utils/->seconds elapsed-hh elapsed-mm elapsed-ss)
+         new        (assoc new :elapsed elapsed)
+         ori        (-> db
+                        :timers
+                        (get timer-id)
+                        (select-keys [:notes :elapsed]))
+         new-map    (merge ori new)
          [_ socket] (:conn db)]
-     {:db (-> db
-              (assoc-in [:timers timer-id :elapsed] (:elapsed new-map))
-              (assoc-in [:timers timer-id :notes] (:notes new-map)))
-      :ws-send [{:command "update-timer"
+     {:db      (-> db
+                   (assoc-in [:timers timer-id :elapsed]
+                             (:elapsed new-map))
+                   (assoc-in [:timers timer-id :notes]
+                             (:notes new-map)))
+      :ws-send [{:command  "update-timer"
                  :timer-id timer-id
                  :duration elapsed
-                 :notes notes} socket]})))
+                 :notes    notes} socket]})))
 
 (rf/reg-event-fx
  :log-in
