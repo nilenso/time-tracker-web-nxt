@@ -155,15 +155,12 @@
 
 (defn login []
   [:div.splash-screen
-   [:h1 {:style {:font-size "5em"}} "Time Tracker"]
-   [:a.google-sign-in
-    {:href "#"
-     :on-click (fn [_] (-> (.signIn (auth/auth-instance))
-                           (.then
-                            #(rf/dispatch [:log-in %]))))
-     } [:img {:src "../images/btn_google_signin_light_normal_web@2x.png"
-              :style {:width "12em"}}]]
-   ])
+   [:h1.splash-screen-title "Time Tracker"]
+   [:a.sign-in {:href "#"
+                :on-click (fn [_] (-> (.signIn (auth/auth-instance))
+                                    (.then
+                                     #(rf/dispatch [:log-in %]))))}
+    [:img.google-sign-in]]])
 
 (defn logout []
   [:a.link.link-secondary {:href "#"

@@ -230,6 +230,10 @@ body {
     padding-top: 16em;
 }
 
+.splash-screen-title {
+    font-size: 5em;
+}
+
 .button-xsmall {
     font-size: 70%;
 }
@@ -253,9 +257,14 @@ legend {
     border-bottom: 1px solid #e5e5e5;
 }
 
-.google-sign-in {
+.sign-in {
     width: 10em;
     border: 0;
+}
+
+img.google-sign-in {
+    content:url("../images/btn_google_signin_light_normal_web@2x.png");
+    width: 12em;
 }
 
 .custom-wrapper {
