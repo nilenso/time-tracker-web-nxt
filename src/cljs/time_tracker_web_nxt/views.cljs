@@ -18,7 +18,7 @@
    (for [{:keys [id name]} projects]
      ^{:key id} [:option {:value id :label name} name])])
 
-(defn add-timer-widget []
+(defn create-timer-widget []
   (let [projects        @(rf/subscribe [:projects])
         default-note    ""
         timer-note      (atom default-note)
@@ -141,19 +141,18 @@
 (defn main []
   [:div.main
    [:div.new-timer
-    [:label
-     "Current Date: "]
+    [:label "Current Date: "]
     [datepicker]
     [:button.btn.btn-primary
      {:on-click #(rf/dispatch [:show-add-timer-widget true])}
      "+"]
-    [add-timer-widget]]
+    [create-timer-widget]]
 
    [:div.timers
     [:h3 [:i "Today's Timers"]]
     [timer-list]]])
 
-(defn login []
+(defn sign-in []
   [:div.splash-screen
    [:h1.splash-screen-title "Time Tracker"]
    [:a.sign-in {:href "#"
@@ -162,7 +161,7 @@
                                      #(rf/dispatch [:log-in %]))))}
     [:img.google-sign-in]]])
 
-(defn logout []
+(defn sign-out []
   [:a.link.link-secondary {:href "#"
                            :on-click (fn [_] (-> (.signOut (auth/auth-instance))
                                                (.then
@@ -185,12 +184,12 @@
      ]]
    [:div.user-profile-and-signout
     [profile user]
-    [logout]]])
+    [sign-out]]])
 
-(defn dashboard [user]
+(defn timers-panel [user]
   (let [boot-ls? (rf/subscribe [:boot-from-local-storage?])]
+    ;; If loading data from localstorage, start ticking a running timer if any.
     (if @boot-ls?
-      ;; If loading data from localstorage, start ticking any running timer.
       (rf/dispatch [:tick-running-timer])
 
       (do (rf/dispatch [:create-ws-connection (:token user)])
@@ -201,5 +200,5 @@
 (defn app []
   (let [user (rf/subscribe [:user])]
     (if-not (:signed-in? @user)
-      [login]
-      [dashboard @user])))
+      [sign-in]
+      [timers-panel @user])))
