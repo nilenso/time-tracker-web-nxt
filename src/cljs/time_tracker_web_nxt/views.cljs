@@ -38,7 +38,7 @@
          {:type "input"
           :on-click
           #(do
-             (info "Added timer with project" @timer-project " and note " @timer-note)
+             (info "Create timer for project: " @timer-project " with notes: " @timer-note)
              (rf/dispatch [:show-add-timer-widget false])
              (rf/dispatch [:add-timer @timer-project @timer-note]))}
          "Start"]]])))
@@ -167,8 +167,8 @@
    [:a.google-sign-in
     {:href "#"
      :on-click (fn [_] (-> (.signIn (auth/auth-instance))
-                          (.then
-                           #(rf/dispatch [:log-in %]))))
+                           (.then
+                            #(rf/dispatch [:log-in %]))))
      } [:img {:src "../images/btn_google_signin_light_normal_web@2x.png"
               :style {:width "12em"}}]]
    ])
@@ -205,7 +205,7 @@
       (rf/dispatch [:tick-running-timer])
 
       (do (rf/dispatch [:create-ws-connection (:token user)])
-          [:div {:style {:height "100%"}}
+          [:div.page
            [header user]
            [main]]))))
 

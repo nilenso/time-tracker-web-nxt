@@ -4,6 +4,10 @@
     box-sizing: border-box;
 }
 
+.page {
+    height: 100%;
+}
+
 .link {
     text-decoration: none;
 }

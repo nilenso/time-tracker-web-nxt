@@ -54,6 +54,7 @@
    (let [[_ socket] (:conn db)
          timer-date (str (:timer-date db))
          now (t-core/now)]
+     (info "Create timer for " (utils/timer-created-time timer-date now))
      {:ws-send [{:command "create-and-start-timer"
                  :project-id (js/parseInt (:id timer-project))
                  :created-time (utils/timer-created-time timer-date now)
