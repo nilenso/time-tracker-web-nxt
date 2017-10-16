@@ -171,7 +171,7 @@
  :log-out
  (fn [{:keys [db] :as cofx} [_ user]]
    (let [[_ socket] (:conn db)]
-     {:db (assoc db :user nil)
+     {:db db/default-db
       :ws-close-connection socket
       :clear-local-storage nil})))
 
