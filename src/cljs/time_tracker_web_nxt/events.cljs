@@ -170,8 +170,10 @@
 (rf/reg-event-fx
  :log-out
  (fn [{:keys [db] :as cofx} [_ user]]
-   {:db (assoc db :user nil)
-    :clear-local-storage nil}))
+   (let [[_ socket] (:conn db)]
+     {:db (assoc db :user nil)
+      :ws-close-connection socket
+      :clear-local-storage nil})))
 
 (defn message-handler [{:keys [id started-time duration type] :as data}]
   (if (= "create" type)
@@ -231,6 +233,12 @@
           (throw (ex-info "Server not ready" {})))))))
 
 (rf/reg-fx :create-conn ws-create)
+
+(defn ws-close [socket]
+  (.log js/console "Closing websocket connection")
+  (ws/close socket))
+
+(rf/reg-fx :ws-close-connection ws-close)
 
 (rf/reg-event-fx
  :save-connection
