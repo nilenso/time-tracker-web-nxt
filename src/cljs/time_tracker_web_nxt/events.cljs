@@ -212,24 +212,24 @@
  (fn [cofx [_ google-auth-token]]
    {:create-conn google-auth-token}))
 
-(rf/reg-fx
- :create-conn
- (fn [goog-auth-id]
-   (let [response-chan (chan)
-         handlers {:on-message #(do
-                                  (message-handler (fmt/read fmt/json (.-data %)))
-                                  (put! response-chan (fmt/read fmt/json (.-data %))))}
-         conn (ws/create (:conn-url config/env) handlers)]
-     (go
-       (let [data (<! response-chan)]
-         (if (= "ready" (:type data))
-           (do
-             (ws/send conn (clj->js {:command "authenticate" :token goog-auth-id}) fmt/json)
-             (if (= "success" (:auth-status (<! response-chan)))
-               (rf/dispatch [:save-connection [response-chan conn]])
-               (throw (ex-info "Authentication Failed" {}))))
-           ;; TODO: Retry server connection
-           (throw (ex-info "Server not ready" {}))))))))
+(defn ws-create [goog-auth-id]
+  (let [response-chan (chan)
+        handlers {:on-message #(do
+                                 (message-handler (fmt/read fmt/json (.-data %)))
+                                 (put! response-chan (fmt/read fmt/json (.-data %))))}
+        conn (ws/create (:conn-url config/env) handlers)]
+    (go
+      (let [data (<! response-chan)]
+        (if (= "ready" (:type data))
+          (do
+            (ws/send conn (clj->js {:command "authenticate" :token goog-auth-id}) fmt/json)
+            (if (= "success" (:auth-status (<! response-chan)))
+              (rf/dispatch [:save-connection [response-chan conn]])
+              (throw (ex-info "Authentication Failed" {}))))
+          ;; TODO: Retry server connection
+          (throw (ex-info "Server not ready" {})))))))
+
+(rf/reg-fx :create-conn ws-create)
 
 (rf/reg-event-fx
  :save-connection
@@ -237,13 +237,13 @@
    {:dispatch [:add-db :conn sock]
     :heartbeat sock}))
 
-(rf/reg-fx
- :heartbeat
- (fn [[_ sock]]
-   (go
-     (while (= :open (ws/status sock))
-       (<! (timeout 10000))
-       (ws/send sock (clj->js {:command "ping"}) fmt/json)))))
+(defn ws-ping [[_ sock]]
+  (go
+    (while (= :open (ws/status sock))
+      (<! (timeout 10000))
+      (ws/send sock (clj->js {:command "ping"}) fmt/json))))
+
+(rf/reg-fx :heartbeat ws-ping)
 
 ;; ========== API ============
 
@@ -269,10 +269,7 @@
  (fn [_ [_ e]]
    (error e)))
 
-;; Possible Solution: https://github.com/JulianBirch/cljs-ajax/issues/93
-(rf/reg-event-fx
- :list-all-projects
- (fn [cofx [_ auth-token]]
+(defn get-projects [cofx [_ auth-token]]
    {:http-xhrio {:method :get
                  :uri "/api/projects/"
                  :timeout 8000
@@ -280,29 +277,31 @@
                  :headers {"Authorization" (str "Bearer " auth-token)
                            "Access-Control-Allow-Origin" "*"}
                  :on-success [:add-db :projects]
-                 :on-failure [:http-failure]}}))
+                 :on-failure [:http-failure]}})
 
-(rf/reg-event-fx
- :list-all-timers
- (fn [cofx [_ auth-token timer-date]]
-   (let [start-epoch (t-coerce/to-epoch timer-date)
-         end-epoch   (-> timer-date
-                         (t-core/plus (t-core/days 1))
-                         t-coerce/to-epoch)]
-     {:http-xhrio {:method          :get
-                   :uri             "/api/timers/"
-                   :params          {:start start-epoch
-                                     :end   end-epoch}
-                   :timeout         8000
-                   :response-format (ajax/json-response-format {:keywords? true})
-                   :headers         {"Authorization"               (str "Bearer " auth-token)
-                                     "Access-Control-Allow-Origin" "*"}
-                   :on-success      [:add-timers-to-db]
-                   :on-failure      [:http-failure]}})))
+(rf/reg-event-fx :list-all-projects get-projects)
+
+(defn get-timers [cofx [_ auth-token timer-date]]
+  (let [start-epoch (t-coerce/to-epoch timer-date)
+        end-epoch   (-> timer-date
+                        (t-core/plus (t-core/days 1))
+                        t-coerce/to-epoch)]
+    {:http-xhrio {:method          :get
+                  :uri             "/api/timers/"
+                  :params          {:start start-epoch
+                                    :end   end-epoch}
+                  :timeout         8000
+                  :response-format (ajax/json-response-format {:keywords? true})
+                  :headers         {"Authorization"               (str "Bearer " auth-token)
+                                    "Access-Control-Allow-Origin" "*"}
+                  :on-success      [:add-timers-to-db]
+                  :on-failure      [:http-failure]}}))
+
+(rf/reg-event-fx :list-all-timers get-timers)
 
 ;; ====== Websocket ==========
 
-(rf/reg-fx
- :ws-send
- (fn [[data socket]]
-   (ws/send socket (clj->js data) fmt/json)))
+(defn ws-send [[data socket]]
+  (ws/send socket (clj->js data) fmt/json))
+
+(rf/reg-fx :ws-send ws-send)
