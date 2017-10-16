@@ -18,20 +18,21 @@
    (for [{:keys [id name]} projects]
      ^{:key id} [:option {:value id :label name} name])])
 
-(defn add-timer-widget [projects]
-  (let [default-note ""
-        timer-note (atom default-note)
+(defn add-timer-widget []
+  (let [projects        @(rf/subscribe [:projects])
+        default-note    ""
+        timer-note      (atom default-note)
         default-project (:id (first projects))
-        timer-project (atom default-project)
-        show? (rf/subscribe [:show-add-timer-widget?])]
-    (fn [projects]
+        timer-project   (atom default-project)
+        show?           (rf/subscribe [:show-add-timer-widget?])]
+    (fn []
       [:div.new-timer-popup {:style (if @show? {} {:display "none"})}
        [project-dropdown projects timer-project]
        [:textarea.project-notes {:placeholder "Add notes"
-                                 :on-change #(reset! timer-note (-> % .-target .-value))}]
+                                 :on-change   #(reset! timer-note (-> % .-target .-value))}]
        [:div.button-group
         [:button.btn.btn-secondary
-         {:type "input"
+         {:type     "input"
           :on-click #(rf/dispatch [:show-add-timer-widget false])}
          "Cancel"]
         [:button.btn.btn-primary
@@ -117,49 +118,40 @@
           [timer-edit timer-options]
           [timer-display timer-options])))))
 
-(defn timer-list [ts]
-  (if (empty? ts)
-    [:p.empty-list-placeholder "No timers for today"]
-    (let [sorted-ts (->> ts vals (sort-by :id) reverse)]
-      [:table.pure-table.pure-table-horizontal
-       [:colgroup
-        [:col {:style {:width "60%"}}]
-        [:col {:style {:width "20%"}}]
-        [:col {:style {:width "20%"}}]
-        ]
-       [:tbody
-        (for [t sorted-ts]
-          ^{:key (:id t)}
-          [timer-row t])]])))
+(defn timer-list []
+  (let [sorted-timers @(rf/subscribe [:sorted-timers])]
+    (if (empty? sorted-timers)
+     [:p.empty-list-placeholder "No timers for today"]
+     [:table.pure-table.pure-table-horizontal
+      [:colgroup
+       [:col {:style {:width "60%"}}]
+       [:col {:style {:width "20%"}}]
+       [:col {:style {:width "20%"}}]
+       ]
+      [:tbody
+       (for [t sorted-timers]
+         ^{:key (:id t)} [timer-row t])]])))
 
 (defn datepicker []
-  ;; Note: This seems more like a hacked-together solution. Should look
-  ;; for a better implementation.
-  (let [timer-date (rf/subscribe [:timer-date])]
-    [pikaday/date-selector
-     {:date-atom timer-date
-      :pikaday-attrs
-      {:on-select #(rf/dispatch [:timer-date-changed :timer-date %])}}]))
+  [pikaday/date-selector
+   {:date-atom (rf/subscribe [:timer-date])
+    :pikaday-attrs
+    {:on-select #(rf/dispatch [:timer-date-changed :timer-date %])}}])
 
 (defn main []
-  (let [app-name (rf/subscribe [:app-name])
-        user     (rf/subscribe [:user])
-        ts       (rf/subscribe [:timers])
-        projects (rf/subscribe [:projects])]
-    (fn []
-      [:div.main
-       [:div.new-timer
-        [:label
-         "Current Date: "]
-        [datepicker]
-        [:button.btn.btn-primary
-         {:on-click #(rf/dispatch [:show-add-timer-widget true])}
-         "+"]
-        [add-timer-widget @projects]]
+  [:div.main
+   [:div.new-timer
+    [:label
+     "Current Date: "]
+    [datepicker]
+    [:button.btn.btn-primary
+     {:on-click #(rf/dispatch [:show-add-timer-widget true])}
+     "+"]
+    [add-timer-widget]]
 
-       [:div.timers
-        [:h3 [:i "Today's Timers"]]
-        [timer-list @ts]]])))
+   [:div.timers
+    [:h3 [:i "Today's Timers"]]
+    [timer-list]]])
 
 (defn login []
   [:div.splash-screen
@@ -176,8 +168,8 @@
 (defn logout []
   [:a.link.link-secondary {:href "#"
                            :on-click (fn [_] (-> (.signOut (auth/auth-instance))
-                                                (.then
-                                                 #(rf/dispatch [:log-out]))))}
+                                               (.then
+                                                #(rf/dispatch [:log-out]))))}
    "Sign Out"])
 
 (defn profile [user]

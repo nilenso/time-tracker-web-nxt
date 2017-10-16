@@ -2,6 +2,12 @@
   (:require-macros [reagent.ratom :refer [reaction]])
   (:require [re-frame.core :as rf]))
 
+(rf/reg-sub
+ :sorted-timers
+ :<- [:timers]
+ (fn [timers _]
+   (->> timers vals (sort-by :id) reverse)))
+
 (defn create-subscription [db-var]
   (rf/reg-sub
    db-var
