@@ -24,7 +24,7 @@
         timer-note      (atom default-note)
         default-project (:id (first projects))
         timer-project   (atom default-project)
-        show?           (rf/subscribe [:show-add-timer-widget?])]
+        show?           (rf/subscribe [:show-create-timer-widget?])]
     (fn []
       [:div.new-timer-popup {:style (if @show? {} {:display "none"})}
        [project-dropdown projects timer-project]
@@ -33,14 +33,14 @@
        [:div.button-group
         [:button.btn.btn-secondary
          {:type     "input"
-          :on-click #(rf/dispatch [:show-add-timer-widget false])}
+          :on-click #(rf/dispatch [:show-create-timer-widget false])}
          "Cancel"]
         [:button.btn.btn-primary
          {:type "input"
           :on-click
           #(do
              (info "Create timer for project: " @timer-project " with notes: " @timer-note)
-             (rf/dispatch [:show-add-timer-widget false])
+             (rf/dispatch [:show-create-timer-widget false])
              (rf/dispatch [:create-and-start-timer @timer-project @timer-note]))}
          "Start"]]])))
 
@@ -144,7 +144,7 @@
     [:label "Current Date: "]
     [datepicker]
     [:button.btn.btn-primary
-     {:on-click #(rf/dispatch [:show-add-timer-widget true])}
+     {:on-click #(rf/dispatch [:show-create-timer-widget true])}
      "+"]
     [create-timer-widget]]
 

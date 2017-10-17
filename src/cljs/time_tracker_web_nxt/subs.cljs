@@ -20,5 +20,5 @@
 (create-subscription :user)
 (create-subscription :conn)
 (create-subscription :timer-date)
-(create-subscription :show-add-timer-widget?)
+(create-subscription :show-create-timer-widget?)
 (create-subscription :boot-from-local-storage?)

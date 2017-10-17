@@ -3,7 +3,7 @@
 
 (s/def ::app-name string?)
 (s/def ::conn coll?)
-(s/def ::show-add-timer-widget? boolean?)
+(s/def ::show-create-timer-widget? boolean?)
 (s/def ::timer-date inst?)
 
 ;; User
@@ -35,7 +35,7 @@
 (s/def ::timers (s/every-kv int? ::timer))
 
 ;; App DB
-(s/def ::db (s/keys :req-un [::app-name ::projects ::show-add-timer-widget?
+(s/def ::db (s/keys :req-un [::app-name ::projects ::show-create-timer-widget?
                              ::timers ::user ::conn]
                     :opt-un [::intervals ::timer-date]))
 
@@ -47,5 +47,5 @@
    :projects []
    :conn []
    :app-user-id nil
-   :show-add-timer-widget? false
+   :show-create-timer-widget? false
    :boot-from-local-storage? false})
