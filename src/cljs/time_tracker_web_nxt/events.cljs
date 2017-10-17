@@ -48,7 +48,7 @@
    (assoc db :show-add-timer-widget? state)))
 
 (rf/reg-event-fx
- :add-timer
+ :create-and-start-timer
  [->local-store]
  (fn [{:keys [db] :as cofx} [_ timer-project timer-note]]
    (let [[_ socket] (:conn db)

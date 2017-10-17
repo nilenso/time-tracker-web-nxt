@@ -41,7 +41,7 @@
           #(do
              (info "Create timer for project: " @timer-project " with notes: " @timer-note)
              (rf/dispatch [:show-add-timer-widget false])
-             (rf/dispatch [:add-timer @timer-project @timer-note]))}
+             (rf/dispatch [:create-and-start-timer @timer-project @timer-note]))}
          "Start"]]])))
 
 (defn format-project-name [p]
