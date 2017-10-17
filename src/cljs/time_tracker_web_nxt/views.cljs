@@ -23,18 +23,26 @@
 
 (defn create-timer-widget []
   (let [projects         (rf/subscribe [:projects])
-        selected-project (reagent/atom (:id (first @projects)))
+        default {:id (:id (first @projects))}
+        selected-project (reagent/atom default)
         notes            (reagent/atom "")
         show?            (rf/subscribe [:show-create-timer-widget?])]
     (fn []
       (let [default-selected     {:id (:id (first @projects))}
             notes-change-handler #(reset! notes (-> % .-target .-value))
-            cancel-handler       #(do (reset! selected-project default-selected)
-                                      (reset! notes "")
-                                      (rf/dispatch [:show-create-timer-widget false]))
-            start-handler        #(do (rf/dispatch [:show-create-timer-widget false])
-                                      (rf/dispatch
-                                       [:create-and-start-timer @selected-project @notes]))]
+            reset-widget         #(do (reset! selected-project default-selected)
+                                      (reset! notes ""))
+            cancel-handler       #(do (rf/dispatch [:show-create-timer-widget false])
+                                      (reset-widget))
+            start-handler        #(do
+                                    (rf/dispatch [:show-create-timer-widget false])
+                                    (rf/dispatch
+                                     [:create-and-start-timer
+                                      (if (:id @selected-project)
+                                        @selected-project
+                                        default-selected)
+                                      @notes])
+                                    (reset-widget))]
         [:div.new-timer-popup {:style (if @show? {} {:display "none"})}
          [project-dropdown @projects selected-project]
          [:textarea.project-notes {:placeholder "Add notes"
