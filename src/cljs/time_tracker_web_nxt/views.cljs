@@ -23,31 +23,32 @@
 
 (defn create-timer-widget []
   (let [projects         (rf/subscribe [:projects])
-        default-project  (:id (first @projects))
-        selected-project (reagent/atom default-project)
-        default-note     ""
-        notes            (reagent/atom default-note)
+        selected-project (reagent/atom (:id (first @projects)))
+        notes            (reagent/atom "")
         show?            (rf/subscribe [:show-create-timer-widget?])]
     (fn []
-      [:div.new-timer-popup {:style (if @show? {} {:display "none"})}
-       [project-dropdown @projects selected-project]
-       [:textarea.project-notes {:placeholder "Add notes"
-                                 :value       @notes
-                                 :on-change   #(reset! notes (-> % .-target .-value))}]
-       [:div.button-group
-        [:button.btn.btn-secondary
-         {:type     "input"
-          :on-click #(do (reset! selected-project {:id default-project})
-                         (reset! notes default-note)
-                         (rf/dispatch [:show-create-timer-widget false]))}
-         "Cancel"]
-        [:button.btn.btn-primary
-         {:type "input"
-          :on-click
-          #(do
-             (rf/dispatch [:show-create-timer-widget false])
-             (rf/dispatch [:create-and-start-timer @selected-project @notes]))}
-         "Start"]]])))
+      (let [default-selected     {:id (:id (first @projects))}
+            notes-change-handler #(reset! notes (-> % .-target .-value))
+            cancel-handler       #(do (reset! selected-project default-selected)
+                                      (reset! notes "")
+                                      (rf/dispatch [:show-create-timer-widget false]))
+            start-handler        #(do (rf/dispatch [:show-create-timer-widget false])
+                                      (rf/dispatch
+                                       [:create-and-start-timer @selected-project @notes]))]
+        [:div.new-timer-popup {:style (if @show? {} {:display "none"})}
+         [project-dropdown @projects selected-project]
+         [:textarea.project-notes {:placeholder "Add notes"
+                                   :value       @notes
+                                   :on-change   notes-change-handler}]
+         [:div.button-group
+          [:button.btn.btn-secondary
+           {:type     "input"
+            :on-click cancel-handler}
+           "Cancel"]
+          [:button.btn.btn-primary
+           {:type     "input"
+            :on-click start-handler}
+           "Start"]]]))))
 
 (defn format-project-name [p]
   (when-not (empty? p)
