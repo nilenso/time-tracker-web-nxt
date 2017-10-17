@@ -13,35 +13,40 @@
                    spy get-env]]))
 
 (defn project-dropdown [projects selected]
-  [:select.project-dropdown
-   {:on-change #(reset! selected {:id (-> % .-target .-value)})}
-   (for [{:keys [id name]} projects]
-     ^{:key id} [:option {:value id :label name} name])])
+  (let [selected-id (:id @selected)]
+    [:select.project-dropdown
+     {:on-change #(reset! selected {:id (-> % .-target .-value)})}
+     (for [{:keys [id name]} projects]
+       ^{:key id} [:option (if (= selected-id id)
+                             {:value id :label name :selected "selected"}
+                             {:value id :label name}) name])]))
 
 (defn create-timer-widget []
-  (let [projects        @(rf/subscribe [:projects])
-        default-note    ""
-        timer-note      (atom default-note)
-        default-project (:id (first projects))
-        timer-project   (atom default-project)
-        show?           (rf/subscribe [:show-create-timer-widget?])]
+  (let [projects         (rf/subscribe [:projects])
+        default-project  (:id (first @projects))
+        selected-project (reagent/atom default-project)
+        default-note     ""
+        notes            (reagent/atom default-note)
+        show?            (rf/subscribe [:show-create-timer-widget?])]
     (fn []
       [:div.new-timer-popup {:style (if @show? {} {:display "none"})}
-       [project-dropdown projects timer-project]
+       [project-dropdown @projects selected-project]
        [:textarea.project-notes {:placeholder "Add notes"
-                                 :on-change   #(reset! timer-note (-> % .-target .-value))}]
+                                 :value       @notes
+                                 :on-change   #(reset! notes (-> % .-target .-value))}]
        [:div.button-group
         [:button.btn.btn-secondary
          {:type     "input"
-          :on-click #(rf/dispatch [:show-create-timer-widget false])}
+          :on-click #(do (reset! selected-project {:id default-project})
+                         (reset! notes default-note)
+                         (rf/dispatch [:show-create-timer-widget false]))}
          "Cancel"]
         [:button.btn.btn-primary
          {:type "input"
           :on-click
           #(do
-             (info "Create timer for project: " @timer-project " with notes: " @timer-note)
              (rf/dispatch [:show-create-timer-widget false])
-             (rf/dispatch [:create-and-start-timer @timer-project @timer-note]))}
+             (rf/dispatch [:create-and-start-timer @selected-project @notes]))}
          "Start"]]])))
 
 (defn format-project-name [p]
