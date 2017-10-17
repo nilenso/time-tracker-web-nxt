@@ -161,7 +161,9 @@
    (let [user-profile (auth/user-profile user)]
      {:db          (assoc db :user user-profile)
       :dispatch-n  [[:list-all-projects (:token user-profile)]
-                    [:list-all-timers (:token user-profile) (t-core/today-at-midnight)]]})))
+                    [:list-all-timers
+                     (:token user-profile)
+                     (t-coerce/from-date (:timer-date db))]]})))
 
 (rf/reg-fx
  :clear-local-storage

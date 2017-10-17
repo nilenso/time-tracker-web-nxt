@@ -42,7 +42,7 @@
 (def default-db
   {:app-name "the future Time Tracker"
    :timers {}
-   :timer-date (js/Date.)
+   :timer-date (js/Date. (.setHours (js/Date.) 0 0 0 0))
    :intervals {}
    :projects []
    :conn []
