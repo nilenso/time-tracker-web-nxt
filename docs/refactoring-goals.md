@@ -13,3 +13,13 @@
   - https://github.com/Day8/re-frame/blob/master/docs/Subscribing-To-External-Data.md
 - Create a replacement for reg-event-db using standard interceptors for ease of use
   - https://github.com/Day8/re-frame/blob/master/docs/Debugging-Event-Handlers.md#too-much-repetition---part-2
+- Have seperate keys for seperate views in re-frame.db/db?
+  - Makes it obvious as to what view uses what data
+- Eliminate side causes (implicit inputs) from handlers to make them pure
+  - Easier to test this
+  - Use `inject-cofx` to inject required inputs for handlers
+
+
+## Resources
+
+- https://groups.google.com/forum/#!topic/clojurescript/Ta8HnekpiZk
