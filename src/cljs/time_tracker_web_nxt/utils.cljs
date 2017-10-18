@@ -46,3 +46,16 @@
                           (tcore/minutes (tcore/minute now-datetime))
                           (tcore/seconds (tcore/second now-datetime)))]
     (tcoerce/to-epoch created-datetime)))
+
+
+(defn timer-state
+  [{:keys [duration] :as timer}]
+  (if (= 0 duration) :running :paused))
+
+(defn ->timer-map [timers]
+  (reduce #(assoc %1
+                  (:id %2)
+                  (-> %2
+                     (assoc :state (timer-state %2))
+                     (assoc :elapsed (:duration %2))))
+          {} timers))

@@ -32,10 +32,9 @@
             notes-change-handler #(reset! notes (-> % .-target .-value))
             reset-widget         #(do (reset! selected-project default-selected)
                                       (reset! notes ""))
-            cancel-handler       #(do (rf/dispatch [:show-create-timer-widget false])
+            cancel-handler       #(do (rf/dispatch [:hide-widget false])
                                       (reset-widget))
             start-handler        #(do
-                                    (rf/dispatch [:show-create-timer-widget false])
                                     (rf/dispatch
                                      [:create-and-start-timer
                                       (if (:id @selected-project)
@@ -101,7 +100,7 @@
                              (let [val (-> e .-target .-value)
                                    parsed (if (empty? val)
                                             0
-                                            (js/parseInt val))]
+                                            (js/parseInt val 10))]
                                (swap! changes assoc k parsed)))
         handler #(partial dur-change-handler %)]
     (fn [{:keys [id project edit-timer?]}]
@@ -158,7 +157,7 @@
     [:label "Current Date: "]
     [datepicker]
     [:button.btn.btn-primary
-     {:on-click #(rf/dispatch [:show-create-timer-widget true])}
+     {:on-click #(rf/dispatch [:show-widget])}
      "+"]
     [create-timer-widget]]
 
@@ -205,7 +204,6 @@
     ;; If loading data from localstorage, start ticking a running timer if any.
     (if @boot-ls?
       (rf/dispatch [:tick-running-timer])
-
       (do (rf/dispatch [:create-ws-connection (:token user)])
           [:div.page
            [header user]
