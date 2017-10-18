@@ -35,6 +35,11 @@
               (assoc db :boot-from-local-storage? true)
               nil)))))
 
+(rf/reg-cofx
+ :current-timestamp
+ (fn [cofx _]
+   (assoc cofx :current-timestamp (t-core/now))))
+
 (rf/reg-event-fx
  :initialize-db
  [(rf/inject-cofx :local-store-app-db)]
