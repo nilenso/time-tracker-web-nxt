@@ -26,8 +26,9 @@
   :profiles
   {:dev
    {:dependencies [[binaryage/devtools "0.9.4"]
-                   [figwheel-sidecar "0.5.13"]
                    [com.cemerick/piggieback "0.2.2"]
+                   [figwheel-sidecar "0.5.13"]
+                   [pjstadig/humane-test-output "0.8.3"]
                    [re-frisk "0.5.0"]]
 
     :plugins [[lein-figwheel "0.5.13"]
