@@ -163,7 +163,7 @@
     {:db (assoc db :show-create-timer-widget? false)
      :ws/send [{:command "create-and-start-timer"
                 :project-id (js/parseInt (:id timer-project) 10)
-                :created-time (utils/timer-created-time timer-date current-timestamp)
+                :created-time (utils/datepicker-date->epoch timer-date current-timestamp)
                 :notes timer-note} socket]}))
 
 (defn ws-create [goog-auth-id]

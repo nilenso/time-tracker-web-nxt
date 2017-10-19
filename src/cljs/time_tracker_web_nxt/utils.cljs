@@ -18,16 +18,16 @@
 (defn format-time [elapsed-hh elapsed-mm elapsed-ss]
   (gs/format "%02d:%02d:%02d" elapsed-hh elapsed-mm elapsed-ss))
 
-;; Note:
+;; NOTE:
 ;; We're doing redundant time conversions for the most common case
 ;; i.e. today's date. One way to avoid that would have been to
 ;; compare the timer-date arg with current DateTime. That is always
 ;; going to differ as timer-date, being selected from a DatePicker
 ;; doesn'have HH:mm:ss parts.
-;; TODO:
-;; We might be able to avoid some of this by getting the midnight corresponding
+;;
+;; TODO: We might be able to avoid some of this by getting the midnight corresponding
 ;; to now-datetime and comparing it with timer-datetime.
-(defn timer-created-time
+(defn datepicker-date->epoch
   "Takes a date of the form 'Tue Oct 10 2017 11:30:21 GMT+0530 (IST)'
   and returns a corresponding Unix epoch"
   [timer-date now-datetime]
