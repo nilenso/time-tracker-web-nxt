@@ -12,6 +12,9 @@
                    logf tracef debugf infof warnf errorf fatalf reportf
                    spy get-env]]))
 
+(defn get-element-value [event]
+  (-> event .-target .-value))
+
 (defn project-dropdown [projects selected]
   (let [selected-id (:id @selected)]
     [:select.project-dropdown
@@ -23,25 +26,27 @@
 
 (defn create-timer-widget []
   (let [projects         (rf/subscribe [:projects])
-        default {:id (:id (first @projects))}
+        default          {:id (:id (first @projects))}
         selected-project (reagent/atom default)
         notes            (reagent/atom "")
         show?            (rf/subscribe [:show-create-timer-widget?])]
     (fn []
       (let [default-selected     {:id (:id (first @projects))}
-            notes-change-handler #(reset! notes (-> % .-target .-value))
-            reset-widget         #(do (reset! selected-project default-selected)
-                                      (reset! notes ""))
-            cancel-handler       #(do (rf/dispatch [:hide-widget false])
-                                      (reset-widget))
-            start-handler        #(do
-                                    (rf/dispatch
-                                     [:create-and-start-timer
-                                      (if (:id @selected-project)
-                                        @selected-project
-                                        default-selected)
-                                      @notes])
-                                    (reset-widget))]
+            notes-change-handler #(reset! notes (get-element-value %))
+            reset-elements!      (fn []
+                                   (reset! selected-project default-selected)
+                                   (reset! notes ""))
+            cancel-handler       (fn []
+                                   (rf/dispatch [:hide-widget])
+                                   (reset-elements!))
+            start-handler        (fn []
+                                   (rf/dispatch
+                                    [:create-and-start-timer
+                                     (if (:id @selected-project)
+                                       @selected-project
+                                       default-selected)
+                                     @notes])
+                                   (reset-elements!))]
         [:div.new-timer-popup {:style (if @show? {} {:display "none"})}
          [project-dropdown @projects selected-project]
          [:textarea.project-notes {:placeholder "Add notes"
@@ -49,12 +54,10 @@
                                    :on-change   notes-change-handler}]
          [:div.button-group
           [:button.btn.btn-secondary
-           {:type     "input"
-            :on-click cancel-handler}
+           {:type "input" :on-click cancel-handler}
            "Cancel"]
           [:button.btn.btn-primary
-           {:type     "input"
-            :on-click start-handler}
+           {:type "input" :on-click start-handler}
            "Start"]]]))))
 
 (defn format-project-name [p]
@@ -92,27 +95,28 @@
 
 (defn timer-edit
   [{:keys [elapsed notes]}]
-  (let [changes (reagent/atom {:notes notes
-                               :elapsed-hh (:hh elapsed)
-                               :elapsed-mm (:mm elapsed)
-                               :elapsed-ss (:ss elapsed)})
-        dur-change-handler (fn [k e]
-                             (let [val (-> e .-target .-value)
-                                   parsed (if (empty? val)
-                                            0
-                                            (js/parseInt val 10))]
-                               (swap! changes assoc k parsed)))
-        handler #(partial dur-change-handler %)]
+  (let [changes                 (reagent/atom {:notes      notes
+                                               :elapsed-hh (:hh elapsed)
+                                               :elapsed-mm (:mm elapsed)
+                                               :elapsed-ss (:ss elapsed)})
+        duration-change-handler (fn [key event]
+                                  (let [val    (get-element-value event)
+                                        parsed (if (empty? val) 0 (js/parseInt val 10))]
+                                    (swap! changes assoc key parsed)))
+        handler                 #(partial duration-change-handler %)]
     (fn [{:keys [id project edit-timer?]}]
       [:div
        [:input {:value (:elapsed-hh @changes) :on-change (handler :elapsed-hh)}]
        [:input {:value (:elapsed-mm @changes) :on-change (handler :elapsed-mm)}]
        [:input {:value (:elapsed-ss @changes) :on-change (handler :elapsed-ss)}]
-       [:textarea {:value (:notes @changes)
-                   :on-change #(swap! changes assoc :notes (-> % .-target .-value))}]
+       [:textarea {:value     (:notes @changes)
+                   :on-change #(swap! changes assoc :notes (get-element-value %))}]
        [:button {:on-click #(reset! edit-timer? false)} "Cancel"]
-       [:button {:on-click #(do (reset! edit-timer? false)
-                                (rf/dispatch [:update-timer id @changes]))} "Update"]])))
+       [:button
+        {:on-click (fn []
+                     (reset! edit-timer? false)
+                     (rf/dispatch [:update-timer id @changes]))}
+        "Update"]])))
 
 (defn timer-row [{:keys [id elapsed project-id notes]}]
   (let [edit-timer? (reagent/atom false)]
@@ -120,12 +124,12 @@
       (let [elapsed       (utils/->hh-mm-ss elapsed)
             projects      @(rf/subscribe [:projects])
             get-by-id     (fn [p id] (some #(when (= id (:id %)) %) p))
-            timer-options {:id      id
-                           :elapsed elapsed
-                           :project {:id   project-id
-                                     :name (:name (get-by-id projects project-id))}
-                           :state   state
-                           :notes   notes
+            timer-options {:id          id
+                           :elapsed     elapsed
+                           :project     {:id   project-id
+                                         :name (:name (get-by-id projects project-id))}
+                           :state       state
+                           :notes       notes
                            :edit-timer? edit-timer?}]
         (if @edit-timer?
           [timer-edit timer-options]
@@ -168,14 +172,14 @@
 (defn sign-in []
   [:div.splash-screen
    [:h1.splash-screen-title "Time Tracker"]
-   [:a.sign-in {:href "#"
+   [:a.sign-in {:href     "#"
                 :on-click (fn [_] (-> (.signIn (auth/auth-instance))
                                     (.then
                                      #(rf/dispatch [:log-in %]))))}
     [:img.google-sign-in]]])
 
 (defn sign-out []
-  [:a.link.link-secondary {:href "#"
+  [:a.link.link-secondary {:href     "#"
                            :on-click (fn [_] (-> (.signOut (auth/auth-instance))
                                                (.then
                                                 #(rf/dispatch [:log-out]))))}
@@ -202,6 +206,7 @@
 (defn timers-panel [user]
   (let [boot-ls? (rf/subscribe [:boot-from-local-storage?])]
     ;; If loading data from localstorage, start ticking a running timer if any.
+    ;; FIXME: Figure out a better way to do this
     (if @boot-ls?
       (rf/dispatch [:tick-running-timer])
       (do (rf/dispatch [:create-ws-connection (:token user)])
