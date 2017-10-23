@@ -146,7 +146,7 @@
      {:db (assoc db :conn sock)
       :ws/ping sock}))
 
-  (rf/reg-event-fx
+  (tt-reg-event-fx
    :create-and-start-timer
    [(rf/inject-cofx :current-timestamp) ->local-store]
    handlers/ws-create-and-start-timer)

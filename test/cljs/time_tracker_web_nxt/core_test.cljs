@@ -1,5 +1,6 @@
 (ns time-tracker-web-nxt.core-test
-  (:require [cljs.test :refer-macros [deftest testing is use-fixtures]]
+  (:require [cljs-time.core :as t-core]
+            [cljs.test :refer-macros [deftest testing is use-fixtures]]
             [day8.re-frame.test :as rf-test]
             [re-frame.core :as rf]
             [time-tracker-web-nxt.core :as core]
@@ -23,6 +24,8 @@
 (defn after-handler [context]
   (let [event (-> context :coeffects :event first)]
     (case event
+      :create-and-start-timer
+      (update-in context [:effects] dissoc :ws/send)
       :start-timer
       (update-in context [:effects] dissoc :set-clock)
       :stop-timer
@@ -91,3 +94,23 @@
       (rf/dispatch [:start-timer timer])
       (rf/dispatch [:stop-timer timer])
       (is (= :paused (get-in @timers [2 :state]))))))
+
+
+(deftest create-and-start-timer-test
+  (testing "user can create a new timer"
+    (let [project     {:id 12}
+          notes       "My notes for this timer"
+          ws-response {:id           1
+                       :project-id   (:id project)
+                       :started-time nil
+                       :duration     0
+                       :time-created (utils/datepicker-date->epoch (str (js/Date.)) (t-core/now))
+                       :notes        notes
+                       :type         "create"}
+          timers      (rf/subscribe [:timers])
+          expected    (-> ws-response (dissoc :type) (assoc :state :running))]
+      (rf/dispatch [:create-and-start-timer project notes])
+      ;; Assuming websocket sends response as expected
+      (handlers/ws-receive ws-response)
+
+      (is (= expected (get @timers (:id ws-response)))))))

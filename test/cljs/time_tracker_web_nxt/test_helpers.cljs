@@ -9,7 +9,7 @@
 
 (defn make-timer [opts]
   (let [now (t-core/now)
-        created-at (utils/timer-created-time (str (js/Date.)) now)
+        created-at (utils/datepicker-date->epoch (str (js/Date.)) now)
         default {:id 1
                  :project-id 1
                  :started-time nil
