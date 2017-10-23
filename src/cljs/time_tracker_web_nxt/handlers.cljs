@@ -39,9 +39,9 @@
     {:db       (assoc db key date)
      :dispatch [:api/get-timers auth-token (t-coerce/from-date date)]}))
 
-(defn start-timer [{:keys [db] :as cofx} [_ timer-id]]
-  {:db        (assoc-in db [:timers timer-id :state] :running)
-   :set-clock timer-id})
+(defn start-timer [{:keys [db] :as cofx} [_ {:keys [id]}]]
+  {:db        (assoc-in db [:timers id :state] :running)
+   :set-clock id})
 
 (defn resume-timer [{:keys [db] :as cofx} [_ timer-id]]
   (let [[_ socket] (:conn db)]
@@ -109,7 +109,7 @@
                (timbre/info "Create: " data)
                (rf/dispatch [:add-timer-to-db (dissoc data :type)])
                (timbre/debug "Starting timer: " id)
-               (rf/dispatch [:start-timer id]))
+               (rf/dispatch [:start-timer (dissoc data :type)]))
     "update" (do
                (timbre/info "Update: " data)
                (if (and (nil? started-time) (> duration 0))
