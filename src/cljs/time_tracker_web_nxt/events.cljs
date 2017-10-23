@@ -113,7 +113,7 @@
    :tick-running-timer
    handlers/tick-running-timer)
 
-  (rf/reg-event-fx
+  (tt-reg-event-fx
    :update-timer
    [db-spec-inspector ->local-store]
    handlers/update-timer)
