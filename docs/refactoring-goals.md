@@ -18,7 +18,7 @@
 - Eliminate side causes (implicit inputs) from handlers to make them pure
   - Easier to test this
   - Use `inject-cofx` to inject required inputs for handlers
-
+- Use the `trim-v` interceptor to make event handlers more readable
 
 ## Resources
 
