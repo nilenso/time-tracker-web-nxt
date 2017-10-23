@@ -29,3 +29,27 @@
 
 ;; This interceptor persists the rf db to local-storage
 (def ->local-store (rf/after db->local-store))
+
+(def standard-interceptor
+  (rf/->interceptor
+   :id :standard-interceptor
+   :before (fn [x] (prn "std before.") x)
+   :after  identity))
+
+(defn tt-reg-event-db
+  ([id handler]
+   (rf/reg-event-db id std-interceptors handler))
+  ([id interceptors handler]
+   (rf/reg-event-db
+    id
+    [standard-interceptor interceptors]
+    handler)))
+
+(defn tt-reg-event-fx
+  ([id handler]
+    (rf/reg-event-fx id std-interceptors-fx handler))
+  ([id interceptors handler]
+    (rf/reg-event-fx
+      id
+      [standard-interceptor interceptors]
+      handler)))
