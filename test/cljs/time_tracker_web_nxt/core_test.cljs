@@ -5,8 +5,8 @@
             [re-frame.core :as rf]
             [time-tracker-web-nxt.core :as core]
             [time-tracker-web-nxt.db :as db]
-            [time-tracker-web-nxt.events :as e]
-            [time-tracker-web-nxt.handlers :as handlers]
+            [time-tracker-web-nxt.events.core :as e]
+            [time-tracker-web-nxt.events.ws :as ws-events]
             [time-tracker-web-nxt.interceptors :as interceptors]
             [time-tracker-web-nxt.test-helpers :as helpers]
             [time-tracker-web-nxt.utils :as utils]))
@@ -25,13 +25,13 @@
   (let [event (-> context :coeffects :event first)]
     (case event
       :create-and-start-timer
-      (update-in context [:effects] dissoc :ws/send)
+      (update-in context [:effects] dissoc :send)
       :start-timer
       (update-in context [:effects] dissoc :set-clock)
       :stop-timer
-      (update-in context [:effects] dissoc :ws/send)
+      (update-in context [:effects] dissoc :send)
       :update-timer
-      (update-in context [:effects] dissoc :ws/send)
+      (update-in context [:effects] dissoc :send)
 
       context)))
 
@@ -41,15 +41,6 @@
    :before before-handler
    :after  after-handler))
 
-(defn fixtures [f]
-  (rf-test/run-test-sync
-   (test-fixtures)
-   (with-redefs [interceptors/standard-interceptor stubbed-interceptor]
-     (e/init)
-     (f))))
-
-(use-fixtures :once fixtures)
-
 (defn test-fixtures []
   (rf/reg-event-db
    :add-user
@@ -58,6 +49,15 @@
 
   (rf/dispatch [:initialize-db])
   (rf/dispatch [:add-user test-user]))
+
+(defn fixtures [f]
+  (rf-test/run-test-sync
+   (with-redefs [interceptors/standard-interceptor stubbed-interceptor]
+     (e/init)
+     (test-fixtures)
+     (f))))
+
+(use-fixtures :once fixtures)
 
 ;; ===================== Tests ============================
 
@@ -97,7 +97,6 @@
       (rf/dispatch [:stop-timer timer])
       (is (= :paused (get-in @timers [2 :state]))))))
 
-
 (deftest create-and-start-timer-test
   (testing "user can create a new timer"
     (let [project      {:id 12}
@@ -115,7 +114,7 @@
       (rf/dispatch [:create-and-start-timer project notes])
       (is (= false @show-widget?))
       ;; Assuming websocket sends response as expected
-      (handlers/ws-receive ws-response)
+      (ws-events/ws-receive ws-response)
       (is (= expected (get @timers (:id ws-response)))))))
 
 
