@@ -6,7 +6,7 @@
             ;; Read
             ;; https://github.com/Day8/re-frame/blob/master/docs/Basic-App-Structure.md#theres-a-small-gotcha
             ;; to know why events and subs are explicitly `require`'d here.
-            [time-tracker-web-nxt.events]
+            [time-tracker-web-nxt.events.core :as events]
             [time-tracker-web-nxt.subs]
             [time-tracker-web-nxt.views :as views]
             [time-tracker-web-nxt.config :as config]
@@ -29,8 +29,9 @@
   (reagent/render [views/app]
                   (.getElementById js/document "app")))
 
-;; TODO: Consider using https://github.com/Day8/re-frame-async-flow-fx
 (defn ^:export init []
+  ;; Register all events
+  (events/init)
   ;; Put an initial value into app-db.
   ;; The event handler for `:initialise-db` can be found in `events.cljs`
   ;; Using the sync version of dispatch means that value is in
