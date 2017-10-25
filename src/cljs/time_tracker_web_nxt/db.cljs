@@ -44,7 +44,6 @@
    :active-panel :sign-in-panel
    :timers {}
    :timer-date (js/Date. (.setHours (js/Date.) 0 0 0 0))
-   :intervals {}
    :projects []
    :conn []
    :app-user-id nil
