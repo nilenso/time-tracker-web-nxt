@@ -19,7 +19,7 @@
 (defn project-dropdown [projects selected]
   (let [selected-id (:id @selected)]
     [:select.project-dropdown
-     {:value (:id @selected)
+     {:value (if @selected (:id @selected) nil)
       :on-change #(reset! selected {:id (-> % .-target .-value)})}
      (for [{:keys [id name]} projects]
        ^{:key id} [:option (if (= selected-id id)
@@ -140,16 +140,16 @@
 (defn timer-list []
   (let [sorted-timers @(rf/subscribe [:sorted-timers])]
     (if (empty? sorted-timers)
-     [:p.empty-list-placeholder "No timers for today"]
-     [:table.pure-table.pure-table-horizontal
-      [:colgroup
-       [:col {:style {:width "60%"}}]
-       [:col {:style {:width "20%"}}]
-       [:col {:style {:width "20%"}}]
-       ]
-      [:tbody
-       (for [t sorted-timers]
-         ^{:key (:id t)} [timer-row t])]])))
+      [:p.empty-list-placeholder "No timers for today"]
+      [:table.pure-table.pure-table-horizontal
+       [:colgroup
+        [:col {:style {:width "60%"}}]
+        [:col {:style {:width "20%"}}]
+        [:col {:style {:width "20%"}}]
+        ]
+       [:tbody
+        (for [t sorted-timers]
+          ^{:key (:id t)} [timer-row t])]])))
 
 (defn datepicker []
   [pikaday/date-selector
