@@ -33,12 +33,12 @@
 (def standard-interceptor
   (rf/->interceptor
    :id :standard-interceptor
-   :before (fn [x] (prn "std before.") x)
+   :before identity
    :after  identity))
 
 (defn tt-reg-event-db
   ([id handler]
-   (rf/reg-event-db id std-interceptors handler))
+   (rf/reg-event-db id [] handler))
   ([id interceptors handler]
    (rf/reg-event-db
     id
@@ -47,9 +47,9 @@
 
 (defn tt-reg-event-fx
   ([id handler]
-    (rf/reg-event-fx id std-interceptors-fx handler))
+   (rf/reg-event-fx id [] handler))
   ([id interceptors handler]
-    (rf/reg-event-fx
-      id
-      [standard-interceptor interceptors]
-      handler)))
+   (rf/reg-event-fx
+    id
+    [standard-interceptor interceptors]
+    handler)))
