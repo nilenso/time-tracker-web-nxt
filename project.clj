@@ -9,7 +9,9 @@
                  [cljs-pikaday "0.1.4"]
                  [com.taoensso/timbre "4.10.0"]
                  [funcool/hodgepodge "0.1.4"]
-                 [day8.re-frame/test "0.1.5"]]
+                 [day8.re-frame/test "0.1.5"]
+                 [bidi "2.1.2"]
+                 [kibu/pushy "0.3.8"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]]
 

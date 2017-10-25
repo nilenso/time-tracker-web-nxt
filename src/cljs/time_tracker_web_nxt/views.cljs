@@ -6,6 +6,7 @@
    [reagent.core :as reagent]
    [reagent.ratom :as ratom]
    [time-tracker-web-nxt.auth :as auth]
+   [time-tracker-web-nxt.routes :as routes]
    [time-tracker-web-nxt.utils :as utils]
    [taoensso.timbre :as timbre
     :refer-macros [log  trace  debug  info  warn  error  fatal  report
@@ -18,10 +19,11 @@
 (defn project-dropdown [projects selected]
   (let [selected-id (:id @selected)]
     [:select.project-dropdown
-     {:on-change #(reset! selected {:id (-> % .-target .-value)})}
+     {:value (:id @selected)
+      :on-change #(reset! selected {:id (-> % .-target .-value)})}
      (for [{:keys [id name]} projects]
        ^{:key id} [:option (if (= selected-id id)
-                             {:value id :label name :selected "selected"}
+                             {:value id :label name}
                              {:value id :label name}) name])]))
 
 (defn create-timer-widget []
@@ -185,37 +187,60 @@
                                                 #(rf/dispatch [:log-out]))))}
    "Sign Out"])
 
-(defn profile [user]
-  [:div.user-profile
-   [:p.user-name (:name user)]
-   [:img.user-image {:src (:image-url user)}]])
+(defn user-profile []
+  (let [user (rf/subscribe [:user])]
+    [:div.user-profile
+     [:p.user-name (:name @user)]
+     [:img.user-image {:src (:image-url @user)}]]))
 
-(defn header [user]
-  [:div.header.pure-menu.pure-menu-horizontal
-   [:p#logo
-    {:href "#"} "Time Tracker"]
-   [:nav.menu
-    [:ul.header-links
-     [:li.header-link.active "Timers"]
-     [:li.header-link "About"]
-     ]]
-   [:div.user-profile-and-signout
-    [profile user]
-    [sign-out]]])
+(defn header []
+  (let [active-panel (rf/subscribe [:active-panel])
+        timers-panel? (= :timers-panel @active-panel)
+        about-panel? (= :about-panel @active-panel)]
+    [:div.header.pure-menu.pure-menu-horizontal
+     [:p#logo
+      {:href "#"} "Time Tracker"]
+     [:nav.menu
+      [:ul.header-links
+       [:li.header-link {:class (if timers-panel? "active" "")}
+        [:a.nav-link
+         {:href (routes/url-for :timers)
+          :on-click #(rf/dispatch [:set-active-panel :timers-panel])}
+         "Timers"]]
+       [:li.header-link {:class (if about-panel? "active" "")}
+        [:a.nav-link
+         {:href (routes/url-for :about)
+          :on-click #(rf/dispatch [:set-active-panel :about-panel])}
+         "About"]]]]
+     [:div.user-profile-and-signout
+      [user-profile]
+      [sign-out]]]))
 
-(defn timers-panel [user]
-  (let [boot-ls? (rf/subscribe [:boot-from-local-storage?])]
+(defn timers-panel []
+  (let [user     (rf/subscribe [:user])
+        boot-ls? (rf/subscribe [:boot-from-local-storage?])]
     ;; If loading data from localstorage, start ticking a running timer if any.
     ;; FIXME: Figure out a better way to do this
     (if @boot-ls?
       (rf/dispatch [:tick-running-timer])
-      (do (rf/dispatch [:create-ws-connection (:token user)])
+      (do (rf/dispatch [:create-ws-connection (:token @user)])
           [:div.page
-           [header user]
+           [header]
            [main]]))))
 
+(defn about-panel []
+  [:div.page
+   [header]
+   [:div.about
+    [:p "Built with ♥ by the folks at Nilenso"]]])
+
+(defmulti panels identity)
+(defmethod panels :timers-panel [] [timers-panel])
+(defmethod panels :about-panel [] [about-panel])
+
 (defn app []
-  (let [user (rf/subscribe [:user])]
+  (let [user         (rf/subscribe [:user])
+        active-panel (rf/subscribe [:active-panel])]
     (if-not (:signed-in? @user)
       [sign-in]
-      [timers-panel @user])))
+      [panels @active-panel])))

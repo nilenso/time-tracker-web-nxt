@@ -45,4 +45,9 @@
   (rf/reg-fx
    :error
    (fn [e]
-     (timbre/error e))))
+     (timbre/error e)))
+
+  (rf/reg-event-db
+   :set-active-panel
+   (fn [db [_ panel]]
+     (assoc db :active-panel panel))))

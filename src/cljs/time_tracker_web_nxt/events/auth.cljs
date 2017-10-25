@@ -9,7 +9,9 @@
 (defn login
   [{:keys [db] :as cofx} [_ user]]
   (let [user-profile (auth/user-profile user)]
-    {:db          (assoc db :user user-profile)
+    {:db          (-> db
+                     (assoc :user user-profile)
+                     (assoc :active-panel :timers-panel))
      :dispatch-n  [[:get-projects (:token user-profile)]
                    [:get-timers
                     (:token user-profile)

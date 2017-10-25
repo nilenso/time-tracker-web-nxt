@@ -133,6 +133,11 @@ body {
     line-height: 1.5em;
 }
 
+.nav-link {
+    text-decoration: none;
+    color: inherit;
+}
+
 /* MAIN */
 .main {
     display: flex;
@@ -316,4 +321,9 @@ td.timer-column {
 .timer-notes {
     font-size: 0.9em;
     margin-top: 6px;
+}
+
+.about {
+    margin-top: 10em;
+    text-align: center;
 }

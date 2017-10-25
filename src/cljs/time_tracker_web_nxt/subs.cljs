@@ -15,6 +15,7 @@
      (db-var db))))
 
 (create-subscription :app-name)
+(create-subscription :active-panel)
 (create-subscription :timers)
 (create-subscription :projects)
 (create-subscription :user)
