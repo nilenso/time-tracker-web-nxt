@@ -41,6 +41,7 @@
 
 (def default-db
   {:app-name "the future Time Tracker"
+   :active-panel :sign-in-panel
    :timers {}
    :timer-date (js/Date. (.setHours (js/Date.) 0 0 0 0))
    :intervals {}

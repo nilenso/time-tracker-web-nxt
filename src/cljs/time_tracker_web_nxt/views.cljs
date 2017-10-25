@@ -171,14 +171,15 @@
     [:h3 [:i "Today's Timers"]]
     [timer-list]]])
 
-(defn sign-in []
-  [:div.splash-screen
-   [:h1.splash-screen-title "Time Tracker"]
-   [:a.sign-in {:href     "#"
-                :on-click (fn [_] (-> (.signIn (auth/auth-instance))
-                                    (.then
-                                     #(rf/dispatch [:log-in %]))))}
-    [:img.google-sign-in]]])
+(defn sign-in-panel []
+  (if-not (:signed-in? @(rf/subscribe [:user]))
+    [:div.splash-screen
+     [:h1.splash-screen-title "Time Tracker"]
+     [:a.sign-in {:href     "#"
+                  :on-click (fn [_] (-> (.signIn (auth/auth-instance))
+                                      (.then
+                                       #(rf/dispatch [:log-in %]))))}
+      [:img.google-sign-in]]]))
 
 (defn sign-out []
   [:a.link.link-secondary {:href     "#"
@@ -237,10 +238,8 @@
 (defmulti panels identity)
 (defmethod panels :timers-panel [] [timers-panel])
 (defmethod panels :about-panel [] [about-panel])
+(defmethod panels :sign-in-panel [] [sign-in-panel])
 
 (defn app []
-  (let [user         (rf/subscribe [:user])
-        active-panel (rf/subscribe [:active-panel])]
-    (if-not (:signed-in? @user)
-      [sign-in]
-      [panels @active-panel])))
+  (let [active-panel (rf/subscribe [:active-panel])]
+    [panels @active-panel]))
