@@ -197,7 +197,8 @@
 (defn header []
   (let [active-panel (rf/subscribe [:active-panel])
         timers-panel? (= :timers-panel @active-panel)
-        about-panel? (= :about-panel @active-panel)]
+        about-panel? (= :about-panel @active-panel)
+        create-client-panel? (= :create-client-panel @active-panel)]
     [:div.header.pure-menu.pure-menu-horizontal
      [:p#logo
       {:href "#"} "Time Tracker"]
@@ -212,7 +213,12 @@
         [:a.nav-link
          {:href (routes/url-for :about)
           :on-click #(rf/dispatch [:set-active-panel :about-panel])}
-         "About"]]]]
+         "About"]]
+       [:li.header-link {:class (if create-client-panel? "active" "")}
+        [:a.nav-link
+         {:href (routes/url-for :create-client)
+          :on-click #(rf/dispatch [:set-active-panel :create-client-panel])}
+         "New Client"]]]]
      [:div.user-profile-and-signout
       [user-profile]
       [sign-out]]]))
@@ -235,10 +241,21 @@
    [:div.about
     [:p "Built with ♥ by the folks at Nilenso"]]])
 
+(defn create-client-panel []
+  [:div.page
+   [header]
+   [:div.create-client-form
+    [:div [:label.cclabel "Name: "] [:input.ccinput {:type "text" :name "name"}]]
+    [:div [:label.cclabel "Address: "] [:textarea.cctextarea {:name "address"}]]
+    [:div [:label.cclabel "GSTIN: "] [:input.ccinput {:type "text" :name "gstin"}]]
+    [:div [:label.cclabel "PAN: "] [:input.ccinput {:type "text" :name "pan"}]]
+    [:button.btn.btn-primary {:type "input" :on-click #()} "Create"]]])
+
 (defmulti panels identity)
 (defmethod panels :timers-panel [] [timers-panel])
 (defmethod panels :about-panel [] [about-panel])
 (defmethod panels :sign-in-panel [] [sign-in-panel])
+(defmethod panels :create-client-panel [] [create-client-panel])
 
 (defn app []
   (let [active-panel (rf/subscribe [:active-panel])]
