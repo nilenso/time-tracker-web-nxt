@@ -19,7 +19,7 @@
 (defn project-dropdown [projects selected]
   (let [selected-id (:id @selected)]
     [:select.project-dropdown
-     {:value (if @selected (:id @selected) nil)
+     {:value (if @selected (:id @selected) "")
       :on-change #(reset! selected {:id (-> % .-target .-value)})}
      (for [{:keys [id name]} projects]
        ^{:key id} [:option (if (= selected-id id)
