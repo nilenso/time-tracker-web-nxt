@@ -258,12 +258,12 @@
     [:div [:label.cclabel "PAN: "] [:input.ccinput {:type "text" :name "pan"}]]
     [:button.btn.btn-primary {:type "input" :on-click #()} "Create"]]])
 
-(defmulti panels identity)
-(defmethod panels :timers-panel [] [timers-panel])
-(defmethod panels :about-panel [] [about-panel])
-(defmethod panels :sign-in-panel [] [sign-in-panel])
-(defmethod panels :create-client-panel [] [create-client-panel])
+(def panels
+  {:timers-panel        timers-panel
+   :about-panel         about-panel
+   :sign-in-panel       sign-in-panel
+   :create-client-panel create-client-panel})
 
 (defn app []
   (let [active-panel (rf/subscribe [:active-panel])]
-    [panels @active-panel]))
+    [(panels @active-panel)]))
