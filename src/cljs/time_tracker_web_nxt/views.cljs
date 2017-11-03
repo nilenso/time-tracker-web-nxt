@@ -181,24 +181,32 @@
                                        #(rf/dispatch [:log-in %]))))}
       [:img.google-sign-in]]]))
 
-(defn sign-out []
-  [:a.link.link-secondary {:href     "#"
-                           :on-click (fn [_] (-> (.signOut (auth/auth-instance))
-                                               (.then
-                                                #(rf/dispatch [:log-out]))))}
-   "Sign Out"])
-
 (defn user-profile []
   (let [user (rf/subscribe [:user])]
     [:div.user-profile
-     [:p.user-name (:name @user)]
      [:img.user-image {:src (:image-url @user)}]]))
+
+(defn user-menu []
+  (let [show? (rf/subscribe [:show-user-menu?])
+        user  (rf/subscribe [:user])]
+    [:ul.user-menu-links
+     {:style {:display (if @show? "block" "none")}}
+     [:li.user-menu-header (str "Signed in as ")
+      [:span.user-menu-username [:strong (:name @user)]]]
+     [:li.dropdown-divider]
+     [:a {:href "javascript:void(0)"
+          :on-click #(rf/dispatch [:set-active-panel :create-client-panel])}
+      [:li.user-menu-link "Manage Clients"]]
+     [:a {:href "javascript:void(0)"
+          :on-click (fn [_] (-> (.signOut (auth/auth-instance))
+                              (.then
+                               #(rf/dispatch [:log-out]))))}
+      [:li.user-menu-link "Sign out"]]]))
 
 (defn header []
   (let [active-panel (rf/subscribe [:active-panel])
         timers-panel? (= :timers-panel @active-panel)
-        about-panel? (= :about-panel @active-panel)
-        create-client-panel? (= :create-client-panel @active-panel)]
+        about-panel? (= :about-panel @active-panel)]
     [:div.header.pure-menu.pure-menu-horizontal
      [:p#logo
       {:href "#"} "Time Tracker"]
@@ -213,15 +221,14 @@
         [:a.nav-link
          {:href (routes/url-for :about)
           :on-click #(rf/dispatch [:set-active-panel :about-panel])}
-         "About"]]
-       [:li.header-link {:class (if create-client-panel? "active" "")}
-        [:a.nav-link
-         {:href (routes/url-for :create-client)
-          :on-click #(rf/dispatch [:set-active-panel :create-client-panel])}
-         "New Client"]]]]
-     [:div.user-profile-and-signout
-      [user-profile]
-      [sign-out]]]))
+         "About"]]]]
+     [:a.user-profile-link
+      {:href "javascript:void(0)"
+       :on-click #(rf/dispatch [:toggle-user-menu])}
+      [:div.user-profile-and-signout
+       [user-profile]
+       [:span.menu-arrow "▿"]]]
+     [user-menu]]))
 
 (defn timers-panel []
   (let [user     (rf/subscribe [:user])

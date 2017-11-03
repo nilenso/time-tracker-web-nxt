@@ -117,7 +117,7 @@ body {
 
 .header .user-profile-and-signout .user-profile {
     display: flex;
-    margin-right: 1rem;
+    margin-right: 0.5rem;
 }
 
 .header .user-profile-and-signout .user-profile .user-name {
@@ -360,4 +360,65 @@ td.timer-column {
 
 .create-client-form button {
     margin-left: 9em;
+}
+
+.user-profile-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.user-profile-link a:hover {
+    background: grey;
+}
+
+.menu-arrow {
+    font-size: 18px;
+}
+
+.user-menu-header {
+    padding: 10px 20px;
+}
+
+.user-menu-links {
+    background: white;
+    border: 1px solid rgba(0,0,0,.12);
+    border-radius: 4px;
+    box-shadow: 0 0 16px rgba(0,0,0,.12);
+    position: absolute;
+    top: 40px;
+    right: 15px;
+    left: auto;
+    width: 180px;
+    z-index: 1;
+    list-style: none;
+}
+
+.user-menu-links a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.user-menu-link {
+    padding: 10px 20px;
+}
+
+li.user-menu-link:hover {
+    background: rgba(0,0,0,.12);
+}
+
+.user-menu-link a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.user-menu-username {
+    width: 100%;
+    word-wrap: break-word;
+    white-space: normal;
+}
+
+.dropdown-divider {
+    height: 1px;
+    /* margin: 8px 1px; */
+    background-color: #e1e4e8;
 }
