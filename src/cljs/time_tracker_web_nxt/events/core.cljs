@@ -6,6 +6,7 @@
    [time-tracker-web-nxt.events.auth :as auth-events]
    [time-tracker-web-nxt.events.timer :as timer-events]
    [time-tracker-web-nxt.events.utils :as utils-events]
+   [time-tracker-web-nxt.events.ui :as ui-events]
    [time-tracker-web-nxt.events.ws :as ws-events]))
 
 (defn initialize-db [{:keys [db local-store-app-db]} cofx]
@@ -21,4 +22,5 @@
   (auth-events/init)
   (timer-events/init)
   (utils-events/init)
+  (ui-events/init)
   (ws-events/init))
