@@ -19,7 +19,6 @@
   (let [panel (-> matched-route
                  :handler
                  name
-                 (str "-panel")
                  keyword)]
     (rf/dispatch [:set-active-panel panel])))
 

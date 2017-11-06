@@ -195,7 +195,7 @@
       [:span.user-menu-username [:strong (:name @user)]]]
      [:li.dropdown-divider]
      [:a {:href "javascript:void(0)"
-          :on-click #(rf/dispatch [:set-active-panel :create-client-panel])}
+          :on-click #(rf/dispatch [:set-active-panel :create-client])}
       [:li.user-menu-link "Manage Clients"]]
      [:a {:href "javascript:void(0)"
           :on-click (fn [_] (-> (.signOut (auth/auth-instance))
@@ -204,9 +204,9 @@
       [:li.user-menu-link "Sign out"]]]))
 
 (defn header []
-  (let [active-panel (rf/subscribe [:active-panel])
-        timers-panel? (= :timers-panel @active-panel)
-        about-panel? (= :about-panel @active-panel)]
+  (let [active-panel  (rf/subscribe [:active-panel])
+        timers-panel? (= :timers @active-panel)
+        about-panel?  (= :about @active-panel)]
     [:div.header.pure-menu.pure-menu-horizontal
      [:p#logo
       {:href "#"} "Time Tracker"]
@@ -214,16 +214,16 @@
       [:ul.header-links
        [:li.header-link {:class (if timers-panel? "active" "")}
         [:a.nav-link
-         {:href (routes/url-for :timers)
-          :on-click #(rf/dispatch [:set-active-panel :timers-panel])}
+         {:href     (routes/url-for :timers)
+          :on-click #(rf/dispatch [:set-active-panel :timers])}
          "Timers"]]
        [:li.header-link {:class (if about-panel? "active" "")}
         [:a.nav-link
-         {:href (routes/url-for :about)
-          :on-click #(rf/dispatch [:set-active-panel :about-panel])}
+         {:href     (routes/url-for :about)
+          :on-click #(rf/dispatch [:set-active-panel :about])}
          "About"]]]]
      [:a.user-profile-link
-      {:href "javascript:void(0)"
+      {:href     "javascript:void(0)"
        :on-click #(rf/dispatch [:toggle-user-menu])}
       [:div.user-profile-and-signout
        [user-profile]
@@ -334,10 +334,10 @@
          "Create"]]])))
 
 (def panels
-  {:timers-panel        timers-panel
-   :about-panel         about-panel
-   :sign-in-panel       sign-in-panel
-   :create-client-panel create-client-panel})
+  {:timers        timers-panel
+   :about         about-panel
+   :sign-in       sign-in-panel
+   :create-client create-client-panel})
 
 (defn app []
   (let [active-panel (rf/subscribe [:active-panel])]

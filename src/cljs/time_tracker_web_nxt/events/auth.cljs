@@ -11,7 +11,7 @@
   (let [user-profile (auth/user-profile user)]
     {:db          (-> db
                      (assoc :user user-profile)
-                     (assoc :active-panel :timers-panel))
+                     (assoc :active-panel :timers))
      :dispatch-n  [[:get-projects (:token user-profile)]
                    [:get-timers
                     (:token user-profile)
