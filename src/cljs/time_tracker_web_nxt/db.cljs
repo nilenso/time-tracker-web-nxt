@@ -4,6 +4,7 @@
 (s/def ::app-name string?)
 (s/def ::conn coll?)
 (s/def ::show-create-timer-widget? boolean?)
+(s/def ::show-user-menu? boolean?)
 (s/def ::timer-date inst?)
 
 ;; User
@@ -36,16 +37,17 @@
 
 ;; App DB
 (s/def ::db (s/keys :req-un [::app-name ::projects ::show-create-timer-widget?
-                             ::timers ::user ::conn]
+                             ::timers ::user ::conn ::show-user-menu?]
                     :opt-un [::intervals ::timer-date]))
 
 (def default-db
   {:app-name "the future Time Tracker"
-   :active-panel :sign-in-panel
+   :active-panel :sign-in
    :timers {}
    :timer-date (js/Date. (.setHours (js/Date.) 0 0 0 0))
    :projects []
    :conn []
    :app-user-id nil
    :show-create-timer-widget? false
+   :show-user-menu? false
    :boot-from-local-storage? false})

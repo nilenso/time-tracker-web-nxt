@@ -6,8 +6,9 @@
    [taoensso.timbre :as timbre]))
 
 
-(def routes ["/" {""      :timers
-                  "about" :about}])
+(def routes ["/" {""         :timers
+                  "about"    :about
+                  "clients/" {"new" :create-client}}])
 
 (def url-for (partial bidi/path-for routes))
 
@@ -18,7 +19,6 @@
   (let [panel (-> matched-route
                  :handler
                  name
-                 (str "-panel")
                  keyword)]
     (rf/dispatch [:set-active-panel panel])))
 

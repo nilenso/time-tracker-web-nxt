@@ -19,6 +19,8 @@
   - Easier to test this
   - Use `inject-cofx` to inject required inputs for handlers
 - Use the `trim-v` interceptor to make event handlers more readable
+- Use [reframe-websocket](https://github.com/ftravers/reframe-websocket) instead of
+  handrolled implementation perhaps?
 
 ## Resources
 

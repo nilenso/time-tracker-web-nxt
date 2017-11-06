@@ -13,13 +13,13 @@
                    logf tracef debugf infof warnf errorf fatalf reportf
                    spy get-env]]))
 
-(defn get-element-value [event]
+(defn element-value [event]
   (-> event .-target .-value))
 
 (defn project-dropdown [projects selected]
   (let [selected-id (:id @selected)]
     [:select.project-dropdown
-     {:value (if @selected (:id @selected) nil)
+     {:value (or selected-id "")
       :on-change #(reset! selected {:id (-> % .-target .-value)})}
      (for [{:keys [id name]} projects]
        ^{:key id} [:option (if (= selected-id id)
@@ -34,7 +34,7 @@
         show?            (rf/subscribe [:show-create-timer-widget?])]
     (fn []
       (let [default-selected     {:id (:id (first @projects))}
-            notes-change-handler #(reset! notes (get-element-value %))
+            notes-change-handler #(reset! notes (element-value %))
             reset-elements!      (fn []
                                    (reset! selected-project default-selected)
                                    (reset! notes ""))
@@ -102,7 +102,7 @@
                                                :elapsed-mm (:mm elapsed)
                                                :elapsed-ss (:ss elapsed)})
         duration-change-handler (fn [key event]
-                                  (let [val    (get-element-value event)
+                                  (let [val    (element-value event)
                                         parsed (if (empty? val) 0 (js/parseInt val 10))]
                                     (swap! changes assoc key parsed)))
         handler                 #(partial duration-change-handler %)]
@@ -112,7 +112,7 @@
        [:input {:value (:elapsed-mm @changes) :on-change (handler :elapsed-mm)}]
        [:input {:value (:elapsed-ss @changes) :on-change (handler :elapsed-ss)}]
        [:textarea {:value     (:notes @changes)
-                   :on-change #(swap! changes assoc :notes (get-element-value %))}]
+                   :on-change #(swap! changes assoc :notes (element-value %))}]
        [:button {:on-click #(reset! edit-timer? false)} "Cancel"]
        [:button
         {:on-click (fn []
@@ -181,23 +181,35 @@
                                        #(rf/dispatch [:log-in %]))))}
       [:img.google-sign-in]]]))
 
-(defn sign-out []
-  [:a.link.link-secondary {:href     "#"
-                           :on-click (fn [_] (-> (.signOut (auth/auth-instance))
-                                               (.then
-                                                #(rf/dispatch [:log-out]))))}
-   "Sign Out"])
-
 (defn user-profile []
   (let [user (rf/subscribe [:user])]
     [:div.user-profile
-     [:p.user-name (:name @user)]
      [:img.user-image {:src (:image-url @user)}]]))
 
+(defn user-menu []
+  (let [show? (rf/subscribe [:show-user-menu?])
+        user  (rf/subscribe [:user])]
+    [:ul.user-menu-links
+     {:style {:display (if @show? "block" "none")}}
+     [:li.user-menu-header (str "Signed in as ")
+      [:span.user-menu-username [:strong (:name @user)]]]
+     [:li.dropdown-divider]
+     [:a {:href "javascript:void(0)"
+          :style {:display (if (= "admin" (:role @user))
+                             "block"
+                             "none")}
+          :on-click #(rf/dispatch [:set-active-panel :create-client])}
+      [:li.user-menu-link "Manage Clients"]]
+     [:a {:href "javascript:void(0)"
+          :on-click (fn [_] (-> (.signOut (auth/auth-instance))
+                              (.then
+                               #(rf/dispatch [:log-out]))))}
+      [:li.user-menu-link "Sign out"]]]))
+
 (defn header []
-  (let [active-panel (rf/subscribe [:active-panel])
-        timers-panel? (= :timers-panel @active-panel)
-        about-panel? (= :about-panel @active-panel)]
+  (let [active-panel  (rf/subscribe [:active-panel])
+        timers-panel? (= :timers @active-panel)
+        about-panel?  (= :about @active-panel)]
     [:div.header.pure-menu.pure-menu-horizontal
      [:p#logo
       {:href "#"} "Time Tracker"]
@@ -205,17 +217,21 @@
       [:ul.header-links
        [:li.header-link {:class (if timers-panel? "active" "")}
         [:a.nav-link
-         {:href (routes/url-for :timers)
-          :on-click #(rf/dispatch [:set-active-panel :timers-panel])}
+         {:href     (routes/url-for :timers)
+          :on-click #(rf/dispatch [:set-active-panel :timers])}
          "Timers"]]
        [:li.header-link {:class (if about-panel? "active" "")}
         [:a.nav-link
-         {:href (routes/url-for :about)
-          :on-click #(rf/dispatch [:set-active-panel :about-panel])}
+         {:href     (routes/url-for :about)
+          :on-click #(rf/dispatch [:set-active-panel :about])}
          "About"]]]]
-     [:div.user-profile-and-signout
-      [user-profile]
-      [sign-out]]]))
+     [:a.user-profile-link
+      {:href     "javascript:void(0)"
+       :on-click #(rf/dispatch [:toggle-user-menu])}
+      [:div.user-profile-and-signout
+       [user-profile]
+       [:span.menu-arrow "▿"]]]
+     [user-menu]]))
 
 (defn timers-panel []
   (let [user     (rf/subscribe [:user])
@@ -235,11 +251,97 @@
    [:div.about
     [:p "Built with ♥ by the folks at Nilenso"]]])
 
-(defmulti panels identity)
-(defmethod panels :timers-panel [] [timers-panel])
-(defmethod panels :about-panel [] [about-panel])
-(defmethod panels :sign-in-panel [] [sign-in-panel])
+(defn points-of-contact [count poc-list]
+  (let [update-poc (fn [path val] (swap! poc-list assoc-in path val))]
+    (conj
+     [:div.poc-parent]
+     (for [[id data] @poc-list]
+       ^{:key id}
+       [:div.poc-child
+        [:label.cclabel "Name: "]
+        [:input.poc-input
+         {:type "text"
+          :name (str "poc-name-" id)
+          :value (:name data)
+          :on-change #(update-poc [id :name] (element-value %))}]
+        [:label.cclabel "Phone: "]
+        [:input.poc-input
+         {:type "text"
+          :name (str "poc-phone-" id)
+          :value (:phone data)
+          :on-change #(update-poc [id :phone] (element-value %))}]
+        [:label.cclabel "Email: "]
+        [:input.poc-input
+         {:type "text"
+          :name (str "poc-email-" id)
+          :value (:email data)
+          :on-change #(update-poc [id :email] (element-value %))}]])
+     [:a.link.link-primary
+      {:href "javascript:void(0)"
+       :on-click #(do (swap! count inc)
+                      (swap! poc-list
+                             (fn [m]
+                               (assoc m @count {:name "" :phone "" :email ""}))))}
+      "+ Point of Contact"])))
+
+(defn create-client-panel []
+  (let [name      (reagent/atom "")
+        address   (reagent/atom "")
+        gstin     (reagent/atom "")
+        pan       (reagent/atom "")
+        poc-count (reagent/atom 0)
+        poc-list  (reagent/atom {})]
+    (fn []
+      [:div.page
+       [header]
+       [:div.create-client-form
+        [:div
+         [:label.cclabel "Name: "]
+         [:input.ccinput {:type      "text"
+                          :name      "name"
+                          :value     @name
+                          :on-change #(reset! name (element-value %))}]]
+        [:div
+         [:label.cclabel "Address: "]
+         [:textarea.cctextarea {:name      "address"
+                                :value     @address
+                                :on-change #(reset! address (element-value %))}]]
+        [:div
+         [:label.cclabel "GSTIN: "]
+         [:input.ccinput {:type      "text"
+                          :name      "gstin"
+                          :value     @gstin
+                          :on-change #(reset! gstin (element-value %))}]]
+        [:div
+         [:label.cclabel "PAN: "]
+         [:input.ccinput {:type      "text"
+                          :name      "pan"
+                          :value     @pan
+                          :on-change #(reset! pan (element-value %))}]]
+        [points-of-contact poc-count poc-list]
+        [:button.btn.btn-primary
+         {:type     "input"
+          :on-click #(do
+                       (rf/dispatch [:create-client
+                                     {:name              @name
+                                      :address           @address
+                                      :gstin             @gstin
+                                      :pan               @pan
+                                      :points-of-contact (vals @poc-list)}])
+                       (reset! name "")
+                       (reset! address "")
+                       (reset! gstin "")
+                       (reset! pan "")
+                       (reset! poc-count 0)
+                       (reset! poc-list {}))}
+         "Create"]]])))
+
+(def panels
+  {:timers        timers-panel
+   :about         about-panel
+   :sign-in       sign-in-panel
+   :create-client create-client-panel})
 
 (defn app []
   (let [active-panel (rf/subscribe [:active-panel])]
-    [panels @active-panel]))
+    [(panels @active-panel)]))

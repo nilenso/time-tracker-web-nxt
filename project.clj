@@ -11,7 +11,8 @@
                  [funcool/hodgepodge "0.1.4"]
                  [day8.re-frame/test "0.1.5"]
                  [bidi "2.1.2"]
-                 [kibu/pushy "0.3.8"]]
+                 [kibu/pushy "0.3.8"]
+                 [cljsjs/toastr "2.1.2-0"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]]
 
