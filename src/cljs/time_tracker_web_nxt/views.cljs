@@ -13,7 +13,7 @@
                    logf tracef debugf infof warnf errorf fatalf reportf
                    spy get-env]]))
 
-(defn get-element-value [event]
+(defn element-value [event]
   (-> event .-target .-value))
 
 (defn project-dropdown [projects selected]
@@ -34,7 +34,7 @@
         show?            (rf/subscribe [:show-create-timer-widget?])]
     (fn []
       (let [default-selected     {:id (:id (first @projects))}
-            notes-change-handler #(reset! notes (get-element-value %))
+            notes-change-handler #(reset! notes (element-value %))
             reset-elements!      (fn []
                                    (reset! selected-project default-selected)
                                    (reset! notes ""))
@@ -102,7 +102,7 @@
                                                :elapsed-mm (:mm elapsed)
                                                :elapsed-ss (:ss elapsed)})
         duration-change-handler (fn [key event]
-                                  (let [val    (get-element-value event)
+                                  (let [val    (element-value event)
                                         parsed (if (empty? val) 0 (js/parseInt val 10))]
                                     (swap! changes assoc key parsed)))
         handler                 #(partial duration-change-handler %)]
@@ -112,7 +112,7 @@
        [:input {:value (:elapsed-mm @changes) :on-change (handler :elapsed-mm)}]
        [:input {:value (:elapsed-ss @changes) :on-change (handler :elapsed-ss)}]
        [:textarea {:value     (:notes @changes)
-                   :on-change #(swap! changes assoc :notes (get-element-value %))}]
+                   :on-change #(swap! changes assoc :notes (element-value %))}]
        [:button {:on-click #(reset! edit-timer? false)} "Cancel"]
        [:button
         {:on-click (fn []
