@@ -8,14 +8,14 @@
 
 (defn login
   [{:keys [db] :as cofx} [_ user]]
-  (let [user-profile (auth/user-profile user)]
-    {:db          (-> db
-                     (assoc :user user-profile)
-                     (assoc :active-panel :timers))
-     :dispatch-n  [[:get-projects (:token user-profile)]
-                   [:get-timers
-                    (:token user-profile)
-                    (t-coerce/from-date (:timer-date db))]]}))
+  (let [user-profile (auth/user-profile user)
+        token        (:token user-profile)]
+    {:db         (-> db
+                    (assoc :user user-profile)
+                    (assoc :active-panel :timers))
+     :dispatch-n [[:get-user-details token]
+                  [:get-projects token]
+                  [:get-timers token (t-coerce/from-date (:timer-date db))]]}))
 
 (defn logout
   [{:keys [db] :as cofx} [_ user]]

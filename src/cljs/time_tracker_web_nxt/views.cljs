@@ -195,6 +195,9 @@
       [:span.user-menu-username [:strong (:name @user)]]]
      [:li.dropdown-divider]
      [:a {:href "javascript:void(0)"
+          :style {:display (if (= "admin" (:role @user))
+                             "block"
+                             "none")}
           :on-click #(rf/dispatch [:set-active-panel :create-client])}
       [:li.user-menu-link "Manage Clients"]]
      [:a {:href "javascript:void(0)"

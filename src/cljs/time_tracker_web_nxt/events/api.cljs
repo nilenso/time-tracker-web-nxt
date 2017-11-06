@@ -8,6 +8,19 @@
    [time-tracker-web-nxt.interceptors :as intr]
    [time-tracker-web-nxt.utils :as utils]))
 
+(defn user-details-retrieved [db [_ user]]
+  (assoc-in db [:user :role] (:role user)))
+
+(defn get-user-details [cofx [_ auth-token]]
+  {:http-xhrio {:method :get
+                :uri "/api/users/me/"
+                :timeout 5000
+                :response-format (ajax/json-response-format {:keywords? true})
+                :headers {"Authorization" (str "Bearer " auth-token)
+                          "Access-Control-Allow-Origin" "*"}
+                :on-success [:user-details-retrieved]
+                :on-failure [:request-failed]}})
+
 (defn get-projects [cofx [_ auth-token]]
   {:http-xhrio {:method :get
                 :uri "/api/projects/"
@@ -70,6 +83,7 @@
   (rf/reg-event-fx :get-projects get-projects)
   (rf/reg-event-fx :get-timers get-timers)
   (rf/reg-event-fx :create-client create-client)
+  (rf/reg-event-fx :get-user-details get-user-details)
 
   (intr/tt-reg-event-db
    :projects-retrieved
@@ -80,6 +94,11 @@
    :timers-retrieved
    [intr/db-spec-inspector intr/->local-store]
    timers-retrieved)
+
+  (intr/tt-reg-event-db
+   :user-details-retrieved
+   [intr/db-spec-inspector intr/->local-store]
+   user-details-retrieved)
 
   (intr/tt-reg-event-fx :client-created client-created)
   (intr/tt-reg-event-fx :client-creation-failed client-creation-failed))
