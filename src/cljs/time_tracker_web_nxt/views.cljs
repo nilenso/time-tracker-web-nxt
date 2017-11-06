@@ -248,15 +248,90 @@
    [:div.about
     [:p "Built with ♥ by the folks at Nilenso"]]])
 
+(defn points-of-contact [count poc-list]
+  (let [update-poc (fn [path val] (swap! poc-list assoc-in path val))]
+    (conj
+     [:div.poc-parent]
+     (for [[id data] @poc-list]
+       ^{:key id}
+       [:div.poc-child
+        [:label.cclabel "Name: "]
+        [:input.poc-input
+         {:type "text"
+          :name (str "poc-name-" id)
+          :value (:name data)
+          :on-change #(update-poc [id :name] (element-value %))}]
+        [:label.cclabel "Phone: "]
+        [:input.poc-input
+         {:type "text"
+          :name (str "poc-phone-" id)
+          :value (:phone data)
+          :on-change #(update-poc [id :phone] (element-value %))}]
+        [:label.cclabel "Email: "]
+        [:input.poc-input
+         {:type "text"
+          :name (str "poc-email-" id)
+          :value (:email data)
+          :on-change #(update-poc [id :email] (element-value %))}]])
+     [:a.link.link-primary
+      {:href "javascript:void(0)"
+       :on-click #(do (swap! count inc)
+                      (swap! poc-list
+                             (fn [m]
+                               (assoc m @count {:name "" :phone "" :email ""}))))}
+      "+ Point of Contact"])))
+
 (defn create-client-panel []
-  [:div.page
-   [header]
-   [:div.create-client-form
-    [:div [:label.cclabel "Name: "] [:input.ccinput {:type "text" :name "name"}]]
-    [:div [:label.cclabel "Address: "] [:textarea.cctextarea {:name "address"}]]
-    [:div [:label.cclabel "GSTIN: "] [:input.ccinput {:type "text" :name "gstin"}]]
-    [:div [:label.cclabel "PAN: "] [:input.ccinput {:type "text" :name "pan"}]]
-    [:button.btn.btn-primary {:type "input" :on-click #()} "Create"]]])
+  (let [name      (reagent/atom "")
+        address   (reagent/atom "")
+        gstin     (reagent/atom "")
+        pan       (reagent/atom "")
+        poc-count (reagent/atom 0)
+        poc-list  (reagent/atom {})]
+    (fn []
+      [:div.page
+       [header]
+       [:div.create-client-form
+        [:div
+         [:label.cclabel "Name: "]
+         [:input.ccinput {:type      "text"
+                          :name      "name"
+                          :value     @name
+                          :on-change #(reset! name (element-value %))}]]
+        [:div
+         [:label.cclabel "Address: "]
+         [:textarea.cctextarea {:name      "address"
+                                :value     @address
+                                :on-change #(reset! address (element-value %))}]]
+        [:div
+         [:label.cclabel "GSTIN: "]
+         [:input.ccinput {:type      "text"
+                          :name      "gstin"
+                          :value     @gstin
+                          :on-change #(reset! gstin (element-value %))}]]
+        [:div
+         [:label.cclabel "PAN: "]
+         [:input.ccinput {:type      "text"
+                          :name      "pan"
+                          :value     @pan
+                          :on-change #(reset! pan (element-value %))}]]
+        [points-of-contact poc-count poc-list]
+        [:button.btn.btn-primary
+         {:type     "input"
+          :on-click #(do
+                       (rf/dispatch [:create-client
+                                     {:name              @name
+                                      :address           @address
+                                      :gstin             @gstin
+                                      :pan               @pan
+                                      :points-of-contact (vals @poc-list)}])
+                       (reset! name "")
+                       (reset! address "")
+                       (reset! gstin "")
+                       (reset! pan "")
+                       (reset! poc-count 0)
+                       (reset! poc-list {}))}
+         "Create"]]])))
 
 (def panels
   {:timers-panel        timers-panel

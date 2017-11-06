@@ -5,7 +5,7 @@
    [cljs-time.core :as t-core]
    [day8.re-frame.http-fx]
    [re-frame.core :as rf]
-   [time-tracker-web-nxt.interceptors :refer [db-spec-inspector ->local-store]]
+   [time-tracker-web-nxt.interceptors :as intr]
    [time-tracker-web-nxt.utils :as utils]))
 
 (defn get-projects [cofx [_ auth-token]]
@@ -41,6 +41,27 @@
 (defn timers-retrieved [db [_ timers]]
   (assoc db :timers (utils/->timer-map timers)))
 
+(defn create-client [{:keys [db] :as cofx} [_ data]]
+  (let [token (get-in db [:user :token])]
+    {:http-xhrio {:method          :post
+                  :uri             "/api/clients/"
+                  :headers         {"Authorization" (str "Bearer " token)
+                                    "Access-Control-Allow-Origin" "*"}
+                  :params          data
+                  :timeout         5000
+                  :format          (ajax/json-request-format)
+                  :response-format (ajax/json-response-format {:keywords? true})
+                  :on-success      [:client-created]
+                  :on-failure      [:client-creation-failed]}}))
+
+(defn client-created [{:keys [db]}]
+  {:db (assoc db :client-creation-status "success")
+   :notify-success "Client created successfully."})
+
+(defn client-creation-failed [{:keys [db]}]
+  {:db (assoc db :client-creation-status "failed")
+   :notify-error "Failed to create client"})
+
 (defn http-failure [_ [_ e]]
   {:error e})
 
@@ -48,13 +69,17 @@
   (rf/reg-event-fx :request-failed http-failure)
   (rf/reg-event-fx :get-projects get-projects)
   (rf/reg-event-fx :get-timers get-timers)
+  (rf/reg-event-fx :create-client create-client)
 
-  (rf/reg-event-db
+  (intr/tt-reg-event-db
    :projects-retrieved
-   [db-spec-inspector ->local-store]
+   [intr/db-spec-inspector intr/->local-store]
    projects-retrieved)
 
-  (rf/reg-event-db
+  (intr/tt-reg-event-db
    :timers-retrieved
-   [db-spec-inspector ->local-store]
-   timers-retrieved))
+   [intr/db-spec-inspector intr/->local-store]
+   timers-retrieved)
+
+  (intr/tt-reg-event-fx :client-created client-created)
+  (intr/tt-reg-event-fx :client-creation-failed client-creation-failed))

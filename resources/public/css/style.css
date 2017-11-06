@@ -335,7 +335,7 @@ td.timer-column {
 .create-client-form {
     margin: 0 auto;
     margin-top: 100px;
-    width: 400px;
+    width: 700px;
 }
 
 .create-client-form div {
@@ -345,6 +345,7 @@ td.timer-column {
 .ccinput {
     width: 100%;
     border: 1px solid rgba(0,0,0,.12);
+    height: 30px;
 }
 
 .cctextarea {
@@ -359,7 +360,7 @@ td.timer-column {
 }
 
 .create-client-form button {
-    margin-left: 9em;
+    margin-left: 18em;
 }
 
 .user-profile-link {
@@ -421,4 +422,35 @@ li.user-menu-link:hover {
     height: 1px;
     /* margin: 8px 1px; */
     background-color: #e1e4e8;
+}
+
+.poc-parent {
+    margin-top: 3em;
+}
+
+.poc-input {
+    margin-right: 30px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: rgba(0, 0, 0, 0.12);
+    border-image: initial;
+    height: 30px;
+}
+
+.success-msg {
+    background-color: #5eb95e;
+    color: white;
+    font-weight: bold;
+    height: 40px;
+    padding: 8px;
+    margin-top: 30px;
+}
+
+.error-msg {
+    background-color: #ec4b53;
+    color: white;
+    font-weight: bold;
+    height: 40px;
+    padding: 8px;
+    margin-top: 30px;
 }
