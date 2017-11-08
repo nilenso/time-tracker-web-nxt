@@ -355,12 +355,19 @@
     [rdt/datatable
      :client-datatable
      [:clients]
-     [{::rdt/column-key [:id]}
-      {::rdt/column-key [:name]    ::rdt/column-label "Name"}
+     [{::rdt/column-key [:id] ::rdt/column-label "#" ::rdt/sorting {::rdt/enabled? true}}
+      {::rdt/column-key [:name] ::rdt/column-label "Name" ::rdt/sorting {::rdt/enabled? true}}
       {::rdt/column-key [:address] ::rdt/column-label "Address"}
-      {::rdt/column-key [:gstin]   ::rdt/column-label "GSTIN"}
-      {::rdt/column-key [:pan]     ::rdt/column-label "PAN"}]
-     ]]])
+      {::rdt/column-key [:gstin] ::rdt/column-label "GSTIN"}
+      {::rdt/column-key [:pan] ::rdt/column-label "PAN"}
+      {::rdt/column-key []
+       ::rdt/column-label ""
+       ::rdt/render-fn
+       (fn [_]
+         [:a {:href "javascript:void(0)"}
+          [:i.fa.fa-pencil-square-o {:aria-hidden "true"}]])}]
+     {::rdt/pagination {::rdt/enabled? true
+                        ::rdt/per-page 10}}]]])
 
 (def panels
   {:timers        timers-panel

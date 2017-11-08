@@ -492,3 +492,24 @@ li.user-menu-link:hover {
 .re-frame-datatable tr td:first-child + td + td{
     width: 30%;
 }
+
+.re-frame-datatable a {
+    text-decoration: none;
+    color: #eb5424;
+    font-size: 19px;
+    vertical-align: middle;
+}
+
+.button-group.actions {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-evenly;
+}
+
+.button-group.actions button {
+    width: 111px;
+}
+
+.fa.fa-plus-square {
+    margin-right: 0.3em;
+}
