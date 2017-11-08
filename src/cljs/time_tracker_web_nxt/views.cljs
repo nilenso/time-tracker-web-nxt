@@ -3,6 +3,7 @@
    [cljs-pikaday.reagent :as pikaday]
    [hodgepodge.core :refer [get-item local-storage]]
    [re-frame.core :as rf]
+   [re-frame-datatable.core :as rdt]
    [reagent.core :as reagent]
    [reagent.ratom :as ratom]
    [time-tracker-web-nxt.auth :as auth]
@@ -336,10 +337,36 @@
                        (reset! poc-list {}))}
          "Create"]]])))
 
+(defn client-row [client]
+  [:tr
+   [:td [:p (:name client)]]
+   [:td [:p (:address client)]]
+   [:td [:p (:gstin client)]]
+   [:td [:p (:pan  client)]]])
+
+(defn clients-panel []
+  [:div.page
+   [header]
+   [:div.panel
+    [:button.btn.btn-primary
+     {:type     "input"
+      :on-click #(rf/dispatch [:set-active-panel :create-client])}
+     "+ Add Client"]
+    [rdt/datatable
+     :client-datatable
+     [:clients]
+     [{::rdt/column-key [:id]}
+      {::rdt/column-key [:name]    ::rdt/column-label "Name"}
+      {::rdt/column-key [:address] ::rdt/column-label "Address"}
+      {::rdt/column-key [:gstin]   ::rdt/column-label "GSTIN"}
+      {::rdt/column-key [:pan]     ::rdt/column-label "PAN"}]
+     ]]])
+
 (def panels
   {:timers        timers-panel
    :about         about-panel
    :sign-in       sign-in-panel
+   :clients       clients-panel
    :create-client create-client-panel})
 
 (defn app []

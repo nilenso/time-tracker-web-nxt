@@ -4,6 +4,13 @@
    [re-frame.core :as rf]
    [time-tracker-web-nxt.interceptors :refer [db-spec-inspector ->local-store tt-reg-event-db]]))
 
+
+(defn set-active-panel-handler [db [_ panel]]
+  (let [status (:show-user-menu? db)]
+    (-> db
+       (assoc :active-panel panel)
+       (assoc :show-user-menu? false))))
+
 (defn init []
 
   ;; Set options for Toastr.js notifications
@@ -38,11 +45,7 @@
 
   (rf/reg-event-db
    :set-active-panel
-   (fn [db [_ panel]]
-     (let [status (:show-user-menu? db)]
-       (-> db
-          (assoc :active-panel panel)
-          (assoc :show-user-menu? false)))))
+   set-active-panel-handler)
 
   (rf/reg-event-db
    :toggle-user-menu

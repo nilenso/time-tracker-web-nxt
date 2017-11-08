@@ -359,10 +359,6 @@ td.timer-column {
     font-weight: bold;
 }
 
-.create-client-form button {
-    margin-left: 18em;
-}
-
 .user-profile-link {
     text-decoration: none;
     color: inherit;
@@ -453,4 +449,46 @@ li.user-menu-link:hover {
     height: 40px;
     padding: 8px;
     margin-top: 30px;
+}
+
+.panel {
+    height: 100%;
+    margin: 5em auto;
+    width: 800px;
+}
+
+.panel button {
+    margin-bottom: 1em;
+}
+
+.re-frame-datatable {
+    width: 100%;
+    background: #FFF;
+    border: 1px solid rgba(34,36,38,.15);
+    box-shadow: none;
+    text-align: left;
+    color: rgba(0,0,0,.87);
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.9em;
+}
+
+.re-frame-datatable thead th {
+    background: #F9FAFB;
+    color: rgba(0,0,0,.87);
+    padding: 1em 1em;
+}
+
+.re-frame-datatable td {
+    padding: 1em 1em;
+    line-height: 1.5em;
+    border-top: 1px solid rgba(34,36,38,.1);
+}
+
+.re-frame-datatable tr td:first-child + td {
+    width: 25%;
+}
+
+.re-frame-datatable tr td:first-child + td + td{
+    width: 30%;
 }

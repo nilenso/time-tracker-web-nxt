@@ -6,7 +6,8 @@
    [day8.re-frame.http-fx]
    [re-frame.core :as rf]
    [time-tracker-web-nxt.interceptors :as intr]
-   [time-tracker-web-nxt.utils :as utils]))
+   [time-tracker-web-nxt.utils :as utils]
+   [time-tracker-web-nxt.events.ui :as ui-events]))
 
 (defn user-details-retrieved [db [_ user]]
   (assoc-in db [:user :role] (:role user)))
@@ -45,7 +46,7 @@
                                     :end   end-epoch}
                   :timeout         8000
                   :response-format (ajax/json-response-format {:keywords? true})
-                  :headers         {"Authorization"               (str "Bearer " auth-token)
+                  :headers         {"Authorization" (str "Bearer " auth-token)
                                     "Access-Control-Allow-Origin" "*"}
                   :on-success      [:timers-retrieved]
                   :on-failure      [:request-failed]}}))
@@ -53,6 +54,20 @@
 
 (defn timers-retrieved [db [_ timers]]
   (assoc db :timers (utils/->timer-map timers)))
+
+(defn clients-retrieved [db [_ clients]]
+  (assoc db :clients clients))
+
+(defn get-all-clients [{:keys [db] :as cofx} [_ auth-token]]
+  {:db (ui-events/set-active-panel-handler db [:set-active-panel :clients])
+   :http-xhrio {:method :get
+                :uri "/api/clients/"
+                :timeout 5000
+                :response-format (ajax/json-response-format {:keywords? true})
+                :headers         {"Authorization" (str "Bearer " auth-token)
+                                  "Access-Control-Allow-Origin" "*"}
+                :on-success      [:clients-retrieved]
+                :on-failure      [:request-failed]}})
 
 (defn create-client [{:keys [db] :as cofx} [_ data]]
   (let [token (get-in db [:user :token])]
@@ -82,6 +97,7 @@
   (rf/reg-event-fx :request-failed http-failure)
   (rf/reg-event-fx :get-projects get-projects)
   (rf/reg-event-fx :get-timers get-timers)
+  (rf/reg-event-fx :get-all-clients get-all-clients)
   (rf/reg-event-fx :create-client create-client)
   (rf/reg-event-fx :get-user-details get-user-details)
 
@@ -99,6 +115,11 @@
    :user-details-retrieved
    [intr/db-spec-inspector intr/->local-store]
    user-details-retrieved)
+
+  (intr/tt-reg-event-db
+   :clients-retrieved
+   [intr/db-spec-inspector intr/->local-store]
+   clients-retrieved)
 
   (intr/tt-reg-event-fx :client-created client-created)
   (intr/tt-reg-event-fx :client-creation-failed client-creation-failed))

@@ -8,7 +8,8 @@
 
 (def routes ["/" {""         :timers
                   "about"    :about
-                  "clients/" {"new" :create-client}}])
+                  "clients/" {""    :clients
+                              "new" :create-client}}])
 
 (def url-for (partial bidi/path-for routes))
 
