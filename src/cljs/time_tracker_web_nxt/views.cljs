@@ -4,6 +4,7 @@
    [hodgepodge.core :refer [get-item local-storage]]
    [re-frame.core :as rf]
    [re-frame-datatable.core :as rdt]
+   [re-frame-datatable.views :as rdt-views]
    [reagent.core :as reagent]
    [reagent.ratom :as ratom]
    [time-tracker-web-nxt.auth :as auth]
@@ -367,7 +368,10 @@
          [:a {:href "javascript:void(0)"}
           [:i.fa.fa-pencil-square-o {:aria-hidden "true"}]])}]
      {::rdt/pagination {::rdt/enabled? true
-                        ::rdt/per-page 10}}]]])
+                        ::rdt/per-page 10}}]
+    [rdt-views/default-pagination-controls
+     :client-datatable
+     [:clients]]]])
 
 (def panels
   {:timers        timers-panel

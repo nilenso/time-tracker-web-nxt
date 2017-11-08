@@ -500,6 +500,10 @@ li.user-menu-link:hover {
     vertical-align: middle;
 }
 
+.re-frame-datatable.page-selector {
+    text-align: right;
+}
+
 .button-group.actions {
     display: flex;
     flex-flow: row wrap;
