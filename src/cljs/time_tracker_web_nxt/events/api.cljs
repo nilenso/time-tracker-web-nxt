@@ -75,7 +75,9 @@
                 :on-failure      [:request-failed]}})
 
 (defn create-client [{:keys [db] :as cofx} [_ data]]
-  (let [token (get-in db [:user :token])]
+  (let [token (get-in db [:user :token])
+        pocs  (or (vals (:points-of-contact data)) [])
+        data  (assoc data :points-of-contact pocs)]
     {:http-xhrio {:method          :post
                   :uri             "/api/clients/"
                   :headers         {"Authorization" (str "Bearer " token)
@@ -93,8 +95,33 @@
    :notify-success "Client created successfully."})
 
 (defn client-creation-failed [{:keys [db]}]
-  {:db (assoc db :client-creation-status "failed")
-   :notify-error "Failed to create client"})
+  {:notify-error "Failed to create client"})
+
+(defn update-client [{:keys [db] :as cofx} [_ data]]
+  (let [token (get-in db [:user :token])
+        client-id (:id data)
+        pocs (or (vals (:points-of-contact data)) [])
+        data (assoc data :points-of-contact pocs)]
+    {:http-xhrio {:method          :put
+                  :uri             (str "/api/clients/" client-id "/")
+                  :headers         {"Authorization" (str "Bearer " token)
+                                    "Access-Control-Allow-Origin" "*"}
+                  :params          data
+                  :timeout         5000
+                  :format          (ajax/json-request-format)
+                  :response-format (ajax/json-response-format {:keywords? true})
+                  :on-success      [:client-updated]
+                  :on-failure      [:client-update-failed]}}))
+
+(defn client-updated [{:keys [db]}]
+  {:dispatch-n [[:get-all-clients (get-in db [:user :token])]
+                [:set-active-panel :clients]]
+   :notify-success "Client updated successfully."})
+
+(defn client-update-failed [{:keys [db]}]
+  {:notify-error "Failed to update client"})
+
+(defn get-poc [{:keys [db]} [_ client]])
 
 (defn http-failure [_ [_ e]]
   {:error e})
@@ -105,6 +132,7 @@
   (rf/reg-event-fx :get-timers get-timers)
   (rf/reg-event-fx :get-all-clients get-all-clients)
   (rf/reg-event-fx :create-client create-client)
+  (rf/reg-event-fx :update-client update-client)
   (rf/reg-event-fx :get-user-details get-user-details)
 
   (intr/tt-reg-event-db
@@ -127,5 +155,11 @@
    [intr/db-spec-inspector intr/->local-store]
    clients-retrieved)
 
+  (intr/tt-reg-event-fx
+   :client-updated
+   [intr/db-spec-inspector intr/->local-store]
+   client-updated)
+
+  (intr/tt-reg-event-fx :client-update-failed client-update-failed)
   (intr/tt-reg-event-fx :client-created client-created)
   (intr/tt-reg-event-fx :client-creation-failed client-creation-failed))

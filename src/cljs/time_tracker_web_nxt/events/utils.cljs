@@ -30,6 +30,24 @@
    (fn [cofx _]
      (assoc cofx :current-timestamp (t-core/now))))
 
+  (rf/reg-event-db
+   :update-client-details
+   (fn [db [_ key val]]
+     (assoc-in db [:client key] val)))
+
+  (rf/reg-event-db
+   :update-point-of-contact
+   (fn [db [_ path val]]
+     (let [path (concat [:client :points-of-contact] path)]
+       (assoc-in db path val))))
+
+  (rf/reg-event-db
+   :add-point-of-contact
+   (fn [db [_ data]]
+     (let [path [:client :points-of-contact]
+           poc  (get-in db path)
+           id   (inc (count poc))]
+       (assoc-in db (conj path id) data))))
 
   (rf/reg-fx
    :error

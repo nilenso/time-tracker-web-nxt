@@ -25,3 +25,4 @@
 (create-subscription :boot-from-local-storage?)
 (create-subscription :show-user-menu?)
 (create-subscription :clients)
+(create-subscription :client)
