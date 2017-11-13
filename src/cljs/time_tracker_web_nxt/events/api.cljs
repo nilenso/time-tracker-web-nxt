@@ -56,7 +56,12 @@
   (assoc db :timers (utils/->timer-map timers)))
 
 (defn clients-retrieved [db [_ clients]]
-  (assoc db :clients clients))
+  (let [transform (fn [{:keys [points-of-contact]}]
+                    (zipmap (range) points-of-contact))]
+    (assoc db
+           :clients
+           (map #(assoc % :points-of-contact (transform %))
+              clients))))
 
 (defn get-all-clients [{:keys [db] :as cofx} [_ auth-token]]
   {:db (ui-events/set-active-panel-handler db [:set-active-panel :clients])
@@ -83,7 +88,8 @@
                   :on-failure      [:client-creation-failed]}}))
 
 (defn client-created [{:keys [db]}]
-  {:db (assoc db :client-creation-status "success")
+  {:dispatch-n [[:get-all-clients (get-in db [:user :token])]
+                [:set-active-panel :clients]]
    :notify-success "Client created successfully."})
 
 (defn client-creation-failed [{:keys [db]}]
