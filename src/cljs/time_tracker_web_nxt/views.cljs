@@ -181,7 +181,9 @@
                   :on-click (fn [_] (-> (.signIn (auth/auth-instance))
                                       (.then
                                        #(rf/dispatch [:log-in %]))))}
-      [:img.google-sign-in]]]))
+      [:img.google-sign-in
+       {:src "images/btn_google_signin_light_normal_web@2x.png"
+        :alt "Sign in with Google"}]]]))
 
 (defn user-profile []
   (let [user (rf/subscribe [:user])]
