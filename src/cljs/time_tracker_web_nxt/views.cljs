@@ -91,7 +91,7 @@
       :running
       [:span
        [:button.btn.btn-primary
-        {:on-click #(rf/dispatch [:stop-timer timer])}
+        {:on-click #(rf/dispatch [:trigger-stop-timer timer])}
         "Stop"]]
 
       nil)]

@@ -36,30 +36,33 @@
   (let [elapsed    (utils/->seconds elapsed-hh elapsed-mm elapsed-ss)
         new        (assoc new :elapsed elapsed)
         ori        (-> db
-                      :timers
-                      (get timer-id)
-                      (select-keys [:notes :elapsed]))
+                       :timers
+                       (get timer-id)
+                       (select-keys [:notes :elapsed]))
         new-map    (merge ori new)
         [_ socket] (:conn db)]
     {:db      (-> db
-                 (assoc-in [:timers timer-id :elapsed]
-                           (:elapsed new-map))
-                 (assoc-in [:timers timer-id :notes]
-                           (:notes new-map)))
+                  (assoc-in [:timers timer-id :elapsed]
+                            (:elapsed new-map))
+                  (assoc-in [:timers timer-id :notes]
+                            (:notes new-map)))
      :send [{:command  "update-timer"
              :timer-id timer-id
              :duration elapsed
              :notes    notes} socket]}))
 
+(defn trigger-stop-timer [{:keys [db] :as cofx} [_ {:keys [id duration]}]]
+  (let [[_ socket]  (:conn db)]
+    {:send [{:command "stop-timer"
+             :timer-id id} socket]}))
+
 (defn stop-timer [{:keys [db] :as cofx} [_ {:keys [id duration]}]]
   (let [[_ socket]  (:conn db)]
     {:db   (-> db
-              (assoc-in [:timers id :state] :paused)
-              (assoc-in [:timers id :duration] duration)
-              (assoc-in [:timers id :elapsed] duration))
-     :tick {:action :stop :id id}
-     :send [{:command  "stop-timer"
-             :timer-id id} socket]}))
+               (assoc-in [:timers id :state] :paused)
+               (assoc-in [:timers id :duration] duration)
+               (assoc-in [:timers id :elapsed] duration))
+     :tick {:action :stop :id id}}))
 
 (defn timer-date-changed
   [{:keys [db] :as cofx} [_ key date]]
@@ -112,6 +115,11 @@
    :update-timer
    [db-spec-inspector ->local-store]
    update-timer)
+
+  (tt-reg-event-fx
+   :trigger-stop-timer
+   [db-spec-inspector ->local-store]
+   trigger-stop-timer)
 
   (tt-reg-event-fx
    :stop-timer
