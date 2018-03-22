@@ -7,18 +7,15 @@
    [time-tracker-web-nxt.utils :as utils]))
 
 (defn start-timer [{:keys [db] :as cofx} [_ {:keys [id]}]]
-  {:db   (assoc-in db [:timers id :state] :running)
-   :tick {:action :start
-          :id     id
-          :event  [:increment-timer-duration id]}})
+  (when-not (= (get-in db [:timers id :state]) :running)
+    {:db   (assoc-in db [:timers id :state] :running)
+     :tick {:action :start
+            :id     id
+            :event  [:increment-timer-duration id]}}))
 
-(defn resume-timer [{:keys [db] :as cofx} [_ id]]
+(defn trigger-start-timer [{:keys [db] :as cofx} [_ id]]
   (let [[_ socket] (:conn db)]
-    {:db        (assoc-in db [:timers id :state] :running)
-     :tick      {:action :start
-                 :id     id
-                 :event  [:increment-timer-duration id]}
-     :send      [{:command  "start-timer"
+    {:send      [{:command  "start-timer"
                   :timer-id id} socket]}))
 
 (defn tick-running-timer [{:keys [db] :as cofx} _]
@@ -90,7 +87,7 @@
    [db-spec-inspector ->local-store]
    (fn [db [_ timer]]
      (-> db (assoc-in [:timers (:id timer)]
-                     (assoc timer :state (utils/timer-state timer))))))
+                      (assoc timer :state (utils/timer-state timer))))))
 
   (tt-reg-event-fx
    :create-and-start-timer
@@ -103,9 +100,9 @@
    start-timer)
 
   (rf/reg-event-fx
-   :resume-timer
+   :trigger-start-timer
    [->local-store]
-   resume-timer)
+   trigger-start-timer)
 
   (rf/reg-event-fx
    :tick-running-timer
