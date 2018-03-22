@@ -2,7 +2,7 @@
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.9.908"]
                  [reagent "0.7.0"]
-                 [re-frame "0.10.1"]
+                 [re-frame "0.10.5"]
                  [day8.re-frame/http-fx "0.1.4"]
                  [nilenso/wscljs "0.1.1"]
                  [com.andrewmcveigh/cljs-time "0.5.0"]
@@ -33,7 +33,8 @@
                    [com.cemerick/piggieback "0.2.2"]
                    [figwheel-sidecar "0.5.13"]
                    [pjstadig/humane-test-output "0.8.3"]
-                   [re-frisk "0.5.0"]]
+                   [re-frisk "0.5.0"]
+                   [day8.re-frame/re-frame-10x "0.2.1"]]
 
     :plugins [[lein-figwheel "0.5.13"]
               [lein-doo "0.1.7"]]
@@ -51,11 +52,13 @@
      :compiler     {:main                 time-tracker-web-nxt.core
                     :output-to            "resources/public/js/compiled/app.js"
                     :output-dir           "resources/public/js/compiled/out"
-                    :closure-defines      {time-tracker-web-nxt.config.debug? true}
+                    :closure-defines      {time-tracker-web-nxt.config.debug? true
+                                           "re_frame.trace.trace_enabled_QMARK_" true}
                     :asset-path           "js/compiled/out"
                     :source-map-timestamp true
                     :preloads             [devtools.preload
-                                           re-frisk.preload]
+                                           re-frisk.preload
+                                           day8.re-frame-10x.preload]
                     :external-config      {:devtools/config {:features-to-install :all}}}}
 
     {:id           "min"
