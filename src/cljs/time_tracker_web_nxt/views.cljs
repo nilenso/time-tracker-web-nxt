@@ -82,7 +82,7 @@
       :paused
       [:span
        [:button.btn.btn-primary
-        {:style {:margin-right 10} :on-click #(rf/dispatch [:resume-timer id])}
+        {:style {:margin-right 10} :on-click #(rf/dispatch [:trigger-start-timer id])}
         "Start"]
        [:button.btn.btn-secondary
         {:on-click #(reset! edit-timer? true)}
@@ -91,7 +91,7 @@
       :running
       [:span
        [:button.btn.btn-primary
-        {:on-click #(rf/dispatch [:stop-timer timer])}
+        {:on-click #(rf/dispatch [:trigger-stop-timer timer])}
         "Stop"]]
 
       nil)]
