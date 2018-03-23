@@ -5,4 +5,10 @@ jobs:
        - image: circleci/clojure:lein-browsers
      steps:
        - checkout
+       - restore_cache:
+           key: time-tracker-web-nxt-{{ checksum "project.clj" }}
        - run: lein doo once
+       - save_cache:
+           key: time-tracker-web-nxt-{{ checksum "project.clj" }}
+           paths:
+             - /home/circleci/.m2
