@@ -1,5 +1,7 @@
 # time-tracker-web-nxt
 
+[![CircleCI](https://circleci.com/gh/nilenso/time-tracker-web-nxt.svg?style=svg)](https://circleci.com/gh/nilenso/time-tracker-web-nxt)
+
 A time tracker application brought to you by ClojureScript with all the goodness
 of [re-frame](https://github.com/Day8/re-frame).
 

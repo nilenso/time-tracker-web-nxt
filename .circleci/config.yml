@@ -2,7 +2,13 @@ version: 2
 jobs:
    build:
      docker:
-       - image: circleci/clojure:lein
+       - image: circleci/clojure:lein-browsers
      steps:
        - checkout
-       - run: lein test
+       - restore_cache:
+           key: time-tracker-web-nxt-{{ checksum "project.clj" }}
+       - run: lein doo once
+       - save_cache:
+           key: time-tracker-web-nxt-{{ checksum "project.clj" }}
+           paths:
+             - /home/circleci/.m2
