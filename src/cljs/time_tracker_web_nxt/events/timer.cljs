@@ -4,14 +4,14 @@
    [re-frame.core :as rf]
    [time-tracker-web-nxt.events.ws :as ws-events]
    [time-tracker-web-nxt.interceptors :refer [db-spec-inspector ->local-store tt-reg-event-db tt-reg-event-fx]]
-   [time-tracker-web-nxt.utils :as utils]))
+   [time-tracker-web-nxt.utils :as utils]
+   [taoensso.timbre :as timbre]))
 
 (defn start-timer [{:keys [db] :as cofx} [_ {:keys [id]}]]
-  (when-not (= (get-in db [:timers id :state]) :running)
-    {:db   (assoc-in db [:timers id :state] :running)
-     :tick {:action :start
-            :id     id
-            :event  [:increment-timer-duration id]}}))
+  {:db   (assoc-in db [:timers id :state] :running)
+   :tick {:action :start
+          :id     id
+          :event  [:increment-timer-duration id]}})
 
 (defn trigger-start-timer [{:keys [db] :as cofx} [_ id]]
   (let [[_ socket] (:conn db)]
@@ -137,7 +137,14 @@
      (fn [{:keys [action id event]}]
        (if (= action :start)
          (do
-           (swap! live-intervals assoc id (js/setInterval #(rf/dispatch event) 1000)))
+           (swap! live-intervals
+                  (fn [m timer-id]
+                    (if-not (get m timer-id)
+                      (assoc m timer-id
+                             (js/setInterval #(rf/dispatch event) 1000))
+                      (do (timbre/debug "Tried to start setInterval twice for " timer-id)
+                          @live-intervals)))
+                  id))
          (do
            (js/clearInterval (get @live-intervals id))
            (swap! live-intervals dissoc id)))))))
