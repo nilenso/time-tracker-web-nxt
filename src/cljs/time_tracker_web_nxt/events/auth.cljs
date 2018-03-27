@@ -11,9 +11,16 @@
   (let [user-profile (auth/user-profile user)
         token        (:token user-profile)]
     {:db         (-> db
-                    (assoc :user user-profile)
-                    (assoc :active-panel :timers))
+                     (assoc :user user-profile)
+                     (assoc :active-panel :timers))
      :dispatch-n [[:get-user-details token]
+                  [:get-projects token]
+                  [:get-timers token (t-coerce/from-date (:timer-date db))]]}))
+
+(defn fetch-data
+  [{:keys [db]} [_]]
+  (let [token (get-in db [:user :token])]
+    {:dispatch-n [[:get-user-details token]
                   [:get-projects token]
                   [:get-timers token (t-coerce/from-date (:timer-date db))]]}))
 
@@ -31,4 +38,5 @@
    [db-spec-inspector ->local-store]
    login)
 
-  (rf/reg-event-fx :log-out logout))
+  (rf/reg-event-fx :log-out logout)
+  (rf/reg-event-fx :fetch-data fetch-data))

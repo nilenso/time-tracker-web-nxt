@@ -18,19 +18,6 @@
     {:send      [{:command  "start-timer"
                   :timer-id id} socket]}))
 
-(defn tick-running-timer [{:keys [db] :as cofx} _]
-  (let [running?         (fn [timer] (= :running (:state timer)))
-        running-timer-id (first
-                          (for [[k v] (:timers db)
-                                :when (running? v)]
-                            k))
-        fx-map           {:db (assoc db :boot-from-local-storage? false)}]
-    (if running-timer-id
-      (assoc fx-map :tick {:action :start
-                           :id     running-timer-id
-                           :event  [:increment-timer-duration running-timer-id]})
-      fx-map)))
-
 (defn update-timer
   [{:keys [db] :as cofx} [_ timer-id {:keys [elapsed-hh elapsed-mm elapsed-ss notes] :as new}]]
   (let [elapsed    (utils/->seconds elapsed-hh elapsed-mm elapsed-ss)
@@ -106,10 +93,6 @@
    :trigger-start-timer
    [->local-store]
    trigger-start-timer)
-
-  (rf/reg-event-fx
-   :tick-running-timer
-   tick-running-timer)
 
   (tt-reg-event-fx
    :update-timer
