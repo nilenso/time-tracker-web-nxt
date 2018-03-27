@@ -12,12 +12,13 @@
 
 (defn ws-receive
   [{:keys [id started-time duration type] :as data}]
+  ;; In response to a "create-and-start-timer" message, the websocket
+  ;; receives two messages- one "create" and one "update". We only
+  ;; dispatch :start-timer after receiving the "update".
   (case type
     "create" (do
                (timbre/info "Create: " data)
-               (rf/dispatch [:add-timer-to-db (dissoc data :type)])
-               (timbre/debug "Starting timer: " id)
-               (rf/dispatch [:start-timer (dissoc data :type)]))
+               (rf/dispatch [:add-timer-to-db (dissoc data :type)]))
     "update" (do
                (timbre/info "Update: " data)
                (if (and (nil? started-time) (> duration 0))
