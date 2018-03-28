@@ -119,7 +119,7 @@
        [:button
         {:on-click (fn []
                      (reset! edit-timer? false)
-                     (rf/dispatch [:update-timer id @changes]))}
+                     (rf/dispatch [:trigger-update-timer id @changes]))}
         "Update"]])))
 
 (defn timer-row [{:keys [id elapsed project-id notes]}]

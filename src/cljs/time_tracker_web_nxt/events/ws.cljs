@@ -23,7 +23,7 @@
                (timbre/info "Update: " data)
                (if (and (nil? started-time) (> duration 0))
                  (do (timbre/debug "Stopping timer: " id)
-                     (rf/dispatch [:stop-timer data]))
+                     (rf/dispatch [:stop-or-update-timer data]))
                  (do  (timbre/debug "Received start timer message")
                       (rf/dispatch [:start-timer (dissoc data :type)]))))
     (timbre/debug "Unknown Action: " data)))

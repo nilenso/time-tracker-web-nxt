@@ -18,22 +18,11 @@
     {:send      [{:command  "start-timer"
                   :timer-id id} socket]}))
 
-(defn update-timer
+(defn trigger-update-timer
   [{:keys [db] :as cofx} [_ timer-id {:keys [elapsed-hh elapsed-mm elapsed-ss notes] :as new}]]
   (let [elapsed    (utils/->seconds elapsed-hh elapsed-mm elapsed-ss)
-        new        (assoc new :elapsed elapsed)
-        ori        (-> db
-                       :timers
-                       (get timer-id)
-                       (select-keys [:notes :elapsed]))
-        new-map    (merge ori new)
         [_ socket] (:conn db)]
-    {:db      (-> db
-                  (assoc-in [:timers timer-id :elapsed]
-                            (:elapsed new-map))
-                  (assoc-in [:timers timer-id :notes]
-                            (:notes new-map)))
-     :send [{:command  "update-timer"
+    {:send [{:command  "update-timer"
              :timer-id timer-id
              :duration elapsed
              :notes    notes} socket]}))
@@ -43,13 +32,14 @@
     {:send [{:command "stop-timer"
              :timer-id id} socket]}))
 
-(defn stop-timer [{:keys [db] :as cofx} [_ {:keys [id duration]}]]
-  (let [[_ socket]  (:conn db)]
-    {:db   (-> db
-               (assoc-in [:timers id :state] :paused)
-               (assoc-in [:timers id :duration] duration)
-               (assoc-in [:timers id :elapsed] duration))
-     :tick {:action :stop :id id}}))
+(defn stop-or-update-timer
+  [{:keys [db] :as cofx} [_ {:keys [id duration notes]}]]
+  {:db   (-> db
+             (assoc-in [:timers id :state] :paused)
+             (assoc-in [:timers id :duration] duration)
+             (assoc-in [:timers id :elapsed] duration)
+             (assoc-in [:timers id :notes] notes))
+   :tick {:action :stop :id id}})
 
 (defn timer-date-changed
   [{:keys [db] :as cofx} [_ key date]]
@@ -95,9 +85,9 @@
    trigger-start-timer)
 
   (tt-reg-event-fx
-   :update-timer
+   :trigger-update-timer
    [db-spec-inspector ->local-store]
-   update-timer)
+   trigger-update-timer)
 
   (tt-reg-event-fx
    :trigger-stop-timer
@@ -105,9 +95,9 @@
    trigger-stop-timer)
 
   (tt-reg-event-fx
-   :stop-timer
+   :stop-or-update-timer
    [db-spec-inspector ->local-store]
-   stop-timer)
+   stop-or-update-timer)
 
   (rf/reg-event-fx
    :timer-date-changed
