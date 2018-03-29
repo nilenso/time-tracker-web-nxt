@@ -52,10 +52,19 @@
   [{:keys [duration] :as timer}]
   (if (= 0 duration) :running :paused))
 
+(defn timer-elapsed
+  [{:keys [duration started-time]}]
+  (let [now-seconds (int (/ (.getTime (js/Date.)) 1000))]
+    (if started-time
+      (+ duration
+         (- now-seconds started-time))
+      duration)))
+
 (defn ->timer-map [timers]
-  (reduce #(assoc %1
-                  (:id %2)
-                  (-> %2
-                     (assoc :state (timer-state %2))
-                     (assoc :elapsed (:duration %2))))
-          {} timers))
+  (reduce (fn [acc timer]
+            (assoc acc (:id timer)
+                   (-> timer
+                       (assoc :state (timer-state timer))
+                       (assoc :elapsed (timer-elapsed timer)))))
+          {}
+          timers))

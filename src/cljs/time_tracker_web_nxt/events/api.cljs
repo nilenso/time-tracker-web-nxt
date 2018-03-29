@@ -53,6 +53,8 @@
 
 
 (defn timers-retrieved [db [_ timers]]
+  (when-let [running-timer (first (filter :started-time timers))]
+    (rf/dispatch [:start-timer (select-keys running-timer [:id])]))
   (assoc db :timers (utils/->timer-map timers)))
 
 (defn clients-retrieved [db [_ clients]]

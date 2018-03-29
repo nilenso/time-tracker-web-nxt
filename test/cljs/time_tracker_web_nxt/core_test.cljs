@@ -94,7 +94,7 @@
           timers   (rf/subscribe [:timers])]
       (rf/dispatch [:add-timer-to-db timer])
       (rf/dispatch [:start-timer timer])
-      (rf/dispatch [:stop-timer timer])
+      (rf/dispatch [:stop-or-update-timer timer])
       (is (= :paused (get-in @timers [2 :state]))))))
 
 (deftest create-and-start-timer-test
@@ -121,19 +121,12 @@
 (deftest update-timer-test
   (testing "user can only update a stopped timer"
     (let [timer    (helpers/make-timer {:id 2})
-          elapsed1 {:elapsed-hh 0 :elapsed-mm 0 :elapsed-ss 10}
-          elapsed2 {:elapsed-hh 0 :elapsed-mm 5 :elapsed-ss 10}
-          elapsed3 {:elapsed-hh 2 :elapsed-mm 5 :elapsed-ss 10}
-          notes    "....."
+          duration 400
+          notes    "some note"
           timer-id (:id timer)
           timers   (rf/subscribe [:timers])]
       (rf/dispatch [:add-timer-to-db timer])
 
-      (rf/dispatch [:update-timer timer-id elapsed1 notes])
-      (is (= 10 (get-in @timers [timer-id :elapsed])))
-
-      (rf/dispatch [:update-timer timer-id elapsed2 notes])
-      (is (= (+ 10 (* 5 60)) (get-in @timers [timer-id :elapsed])))
-
-      (rf/dispatch [:update-timer timer-id elapsed3 notes])
-      (is (= (+ 10 (* 5 60) (* 2 60 60)) (get-in @timers [timer-id :elapsed]))))))
+      (rf/dispatch [:stop-or-update-timer {:id timer-id :duration duration :notes notes}])
+      (is (= duration (get-in @timers [timer-id :elapsed])))
+      (is (= notes (get-in @timers [timer-id :notes]))))))

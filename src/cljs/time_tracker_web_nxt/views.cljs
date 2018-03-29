@@ -119,7 +119,7 @@
        [:button
         {:on-click (fn []
                      (reset! edit-timer? false)
-                     (rf/dispatch [:update-timer id @changes]))}
+                     (rf/dispatch [:trigger-update-timer id @changes]))}
         "Update"]])))
 
 (defn timer-row [{:keys [id elapsed project-id notes]}]
@@ -238,16 +238,11 @@
      [user-menu]]))
 
 (defn timers-panel []
-  (let [user     (rf/subscribe [:user])
-        boot-ls? (rf/subscribe [:boot-from-local-storage?])]
-    ;; If loading data from localstorage, start ticking a running timer if any.
-    ;; FIXME: Figure out a better way to do this
-    (if @boot-ls?
-      (rf/dispatch [:tick-running-timer])
-      (do (rf/dispatch [:create-ws-connection (:token @user)])
-          [:div.page
-           [header]
-           [main]]))))
+  (let [user     (rf/subscribe [:user])]
+    (rf/dispatch [:create-ws-connection (:token @user)])
+    [:div.page
+     [header]
+     [main]]))
 
 (defn about-panel []
   [:div.page
@@ -400,4 +395,6 @@
 
 (defn app []
   (let [active-panel (rf/subscribe [:active-panel])]
+    (when (= @active-panel :timers)
+      (rf/dispatch [:fetch-data]))
     [(panels @active-panel)]))

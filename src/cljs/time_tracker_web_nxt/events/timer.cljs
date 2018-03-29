@@ -4,49 +4,25 @@
    [re-frame.core :as rf]
    [time-tracker-web-nxt.events.ws :as ws-events]
    [time-tracker-web-nxt.interceptors :refer [db-spec-inspector ->local-store tt-reg-event-db tt-reg-event-fx]]
-   [time-tracker-web-nxt.utils :as utils]))
+   [time-tracker-web-nxt.utils :as utils]
+   [taoensso.timbre :as timbre]))
 
 (defn start-timer [{:keys [db] :as cofx} [_ {:keys [id]}]]
-  (when-not (= (get-in db [:timers id :state]) :running)
-    {:db   (assoc-in db [:timers id :state] :running)
-     :tick {:action :start
-            :id     id
-            :event  [:increment-timer-duration id]}}))
+  {:db   (assoc-in db [:timers id :state] :running)
+   :tick {:action :start
+          :id     id
+          :event  [:increment-timer-duration id]}})
 
 (defn trigger-start-timer [{:keys [db] :as cofx} [_ id]]
   (let [[_ socket] (:conn db)]
     {:send      [{:command  "start-timer"
                   :timer-id id} socket]}))
 
-(defn tick-running-timer [{:keys [db] :as cofx} _]
-  (let [running?         (fn [timer] (= :running (:state timer)))
-        running-timer-id (first
-                          (for [[k v] (:timers db)
-                                :when (running? v)]
-                            k))
-        fx-map           {:db (assoc db :boot-from-local-storage? false)}]
-    (if running-timer-id
-      (assoc fx-map :tick {:action :start
-                           :id     running-timer-id
-                           :event  [:increment-timer-duration running-timer-id]})
-      fx-map)))
-
-(defn update-timer
+(defn trigger-update-timer
   [{:keys [db] :as cofx} [_ timer-id {:keys [elapsed-hh elapsed-mm elapsed-ss notes] :as new}]]
   (let [elapsed    (utils/->seconds elapsed-hh elapsed-mm elapsed-ss)
-        new        (assoc new :elapsed elapsed)
-        ori        (-> db
-                       :timers
-                       (get timer-id)
-                       (select-keys [:notes :elapsed]))
-        new-map    (merge ori new)
         [_ socket] (:conn db)]
-    {:db      (-> db
-                  (assoc-in [:timers timer-id :elapsed]
-                            (:elapsed new-map))
-                  (assoc-in [:timers timer-id :notes]
-                            (:notes new-map)))
-     :send [{:command  "update-timer"
+    {:send [{:command  "update-timer"
              :timer-id timer-id
              :duration elapsed
              :notes    notes} socket]}))
@@ -56,13 +32,14 @@
     {:send [{:command "stop-timer"
              :timer-id id} socket]}))
 
-(defn stop-timer [{:keys [db] :as cofx} [_ {:keys [id duration]}]]
-  (let [[_ socket]  (:conn db)]
-    {:db   (-> db
-               (assoc-in [:timers id :state] :paused)
-               (assoc-in [:timers id :duration] duration)
-               (assoc-in [:timers id :elapsed] duration))
-     :tick {:action :stop :id id}}))
+(defn stop-or-update-timer
+  [{:keys [db] :as cofx} [_ {:keys [id duration notes]}]]
+  {:db   (-> db
+             (assoc-in [:timers id :state] :paused)
+             (assoc-in [:timers id :duration] duration)
+             (assoc-in [:timers id :elapsed] duration)
+             (assoc-in [:timers id :notes] notes))
+   :tick {:action :stop :id id}})
 
 (defn timer-date-changed
   [{:keys [db] :as cofx} [_ key date]]
@@ -107,14 +84,10 @@
    [->local-store]
    trigger-start-timer)
 
-  (rf/reg-event-fx
-   :tick-running-timer
-   tick-running-timer)
-
   (tt-reg-event-fx
-   :update-timer
+   :trigger-update-timer
    [db-spec-inspector ->local-store]
-   update-timer)
+   trigger-update-timer)
 
   (tt-reg-event-fx
    :trigger-stop-timer
@@ -122,9 +95,9 @@
    trigger-stop-timer)
 
   (tt-reg-event-fx
-   :stop-timer
+   :stop-or-update-timer
    [db-spec-inspector ->local-store]
-   stop-timer)
+   stop-or-update-timer)
 
   (rf/reg-event-fx
    :timer-date-changed
@@ -137,7 +110,14 @@
      (fn [{:keys [action id event]}]
        (if (= action :start)
          (do
-           (swap! live-intervals assoc id (js/setInterval #(rf/dispatch event) 1000)))
+           (swap! live-intervals
+                  (fn [m timer-id]
+                    (if-not (get m timer-id)
+                      (assoc m timer-id
+                             (js/setInterval #(rf/dispatch event) 1000))
+                      (do (timbre/debug "Tried to start setInterval twice for " timer-id)
+                          @live-intervals)))
+                  id))
          (do
            (js/clearInterval (get @live-intervals id))
            (swap! live-intervals dissoc id)))))))
