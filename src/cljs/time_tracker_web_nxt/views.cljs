@@ -1,7 +1,6 @@
 (ns time-tracker-web-nxt.views
   (:require
    [cljs-pikaday.reagent :as pikaday]
-   [hodgepodge.core :refer [get-item local-storage]]
    [re-frame.core :as rf]
    [re-frame-datatable.core :as rdt]
    [re-frame-datatable.views :as rdt-views]

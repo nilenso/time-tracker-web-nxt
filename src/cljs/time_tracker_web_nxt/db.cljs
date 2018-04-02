@@ -49,5 +49,4 @@
    :conn []
    :app-user-id nil
    :show-create-timer-widget? false
-   :show-user-menu? false
-   :boot-from-local-storage? false})
+   :show-user-menu? false})

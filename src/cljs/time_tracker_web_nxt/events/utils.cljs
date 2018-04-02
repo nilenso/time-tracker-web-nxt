@@ -14,11 +14,7 @@
    :local-store-app-db
    (fn [cofx _]
      (let [db (-> local-storage (get-item "db") cljs.reader/read-string)]
-       (assoc cofx
-              :local-store-app-db
-              (if db
-                (assoc db :boot-from-local-storage? true)
-                nil)))))
+       (assoc cofx :local-store-app-db db))))
 
   (rf/reg-fx
    :clear-local-storage

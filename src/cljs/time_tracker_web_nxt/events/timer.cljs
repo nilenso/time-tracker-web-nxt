@@ -3,7 +3,7 @@
    [cljs-time.coerce :as t-coerce]
    [re-frame.core :as rf]
    [time-tracker-web-nxt.events.ws :as ws-events]
-   [time-tracker-web-nxt.interceptors :refer [db-spec-inspector ->local-store tt-reg-event-db tt-reg-event-fx]]
+   [time-tracker-web-nxt.interceptors :refer [db-spec-inspector tt-reg-event-db tt-reg-event-fx]]
    [time-tracker-web-nxt.utils :as utils]
    [taoensso.timbre :as timbre]))
 
@@ -50,7 +50,6 @@
 (defn init []
   (rf/reg-event-db
    :increment-timer-duration
-   [->local-store]
    (fn [db [_ timer-id]]
      (if (= :running (get-in db [:timers timer-id :state]))
        (update-in db [:timers timer-id :elapsed] inc)
@@ -58,50 +57,49 @@
 
   (rf/reg-event-db
    :add-interval
-   [db-spec-inspector ->local-store]
+   [db-spec-inspector]
    (fn [db [_ timer-id interval-id]]
      (assoc-in db [:intervals timer-id] interval-id)))
 
   (rf/reg-event-db
    :add-timer-to-db
-   [db-spec-inspector ->local-store]
+   [db-spec-inspector]
    (fn [db [_ timer]]
      (-> db (assoc-in [:timers (:id timer)]
                       (assoc timer :state (utils/timer-state timer))))))
 
   (tt-reg-event-fx
    :create-and-start-timer
-   [(rf/inject-cofx :current-timestamp) ->local-store]
+   [(rf/inject-cofx :current-timestamp)]
    ws-events/ws-create-and-start-timer)
 
   (tt-reg-event-fx
    :start-timer
-   [db-spec-inspector ->local-store]
+   [db-spec-inspector]
    start-timer)
 
   (rf/reg-event-fx
    :trigger-start-timer
-   [->local-store]
    trigger-start-timer)
 
   (tt-reg-event-fx
    :trigger-update-timer
-   [db-spec-inspector ->local-store]
+   [db-spec-inspector]
    trigger-update-timer)
 
   (tt-reg-event-fx
    :trigger-stop-timer
-   [db-spec-inspector ->local-store]
+   [db-spec-inspector]
    trigger-stop-timer)
 
   (tt-reg-event-fx
    :stop-or-update-timer
-   [db-spec-inspector ->local-store]
+   [db-spec-inspector]
    stop-or-update-timer)
 
   (rf/reg-event-fx
    :timer-date-changed
-   [db-spec-inspector ->local-store]
+   [db-spec-inspector]
    timer-date-changed)
 
   (rf/reg-fx

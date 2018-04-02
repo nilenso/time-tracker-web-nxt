@@ -139,27 +139,27 @@
 
   (intr/tt-reg-event-db
    :projects-retrieved
-   [intr/db-spec-inspector intr/->local-store]
+   [intr/db-spec-inspector]
    projects-retrieved)
 
   (intr/tt-reg-event-db
    :timers-retrieved
-   [intr/db-spec-inspector intr/->local-store]
+   [intr/db-spec-inspector]
    timers-retrieved)
 
   (intr/tt-reg-event-db
    :user-details-retrieved
-   [intr/db-spec-inspector intr/->local-store]
+   [intr/db-spec-inspector]
    user-details-retrieved)
 
   (intr/tt-reg-event-db
    :clients-retrieved
-   [intr/db-spec-inspector intr/->local-store]
+   [intr/db-spec-inspector]
    clients-retrieved)
 
   (intr/tt-reg-event-fx
    :client-updated
-   [intr/db-spec-inspector intr/->local-store]
+   [intr/db-spec-inspector]
    client-updated)
 
   (intr/tt-reg-event-fx :client-update-failed client-update-failed)

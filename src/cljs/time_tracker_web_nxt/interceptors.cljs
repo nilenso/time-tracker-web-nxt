@@ -25,7 +25,7 @@
   [app-db]
   ;; Remove websocket and response channel
   (let [new-db (assoc app-db :conn [])]
-    (set-item local-storage "db" (str new-db))))
+    (set-item local-storage "db" (str (select-keys new-db [:user])))))
 
 ;; This interceptor persists the rf db to local-storage
 (def ->local-store (rf/after db->local-store))
