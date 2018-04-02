@@ -126,7 +126,9 @@
 (defn get-poc [{:keys [db]} [_ client]])
 
 (defn http-failure [_ [_ e]]
-  {:error e})
+  (cond
+    (#{401 403} (:status e)) {:notify-error "Could not authenticate"}
+    :else {:notify-error "Could not connect to server"}))
 
 (defn init []
   (rf/reg-event-fx :request-failed http-failure)

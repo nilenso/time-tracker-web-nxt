@@ -23,7 +23,7 @@
                   :positionClass "toast-top-center"
                   :preventDuplicates true
                   :onclick nil
-                  :showDuration "300"
+                  :showDuration "20000"
                   :hideDuration "1000"
                   :timeOut "1500"
                   :extendedTimeOut "1000"
