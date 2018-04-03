@@ -47,11 +47,6 @@
                           (tcore/seconds (tcore/second now-datetime)))]
     (tcoerce/to-epoch created-datetime)))
 
-
-(defn timer-state
-  [{:keys [duration] :as timer}]
-  (if (= 0 duration) :running :paused))
-
 (defn timer-elapsed
   [{:keys [duration started-time]}]
   (let [now-seconds (int (/ (.getTime (js/Date.)) 1000))]
@@ -64,7 +59,7 @@
   (reduce (fn [acc timer]
             (assoc acc (:id timer)
                    (-> timer
-                       (assoc :state (timer-state timer))
+                       (assoc :state (if (:started-time timer) :running :paused))
                        (assoc :elapsed (timer-elapsed timer)))))
           {}
           timers))

@@ -44,7 +44,7 @@
                                    (reset-elements!))
             start-handler        (fn []
                                    (rf/dispatch
-                                    [:create-and-start-timer
+                                    [:trigger-create-timer
                                      (if (:id @selected-project)
                                        @selected-project
                                        default-selected)
