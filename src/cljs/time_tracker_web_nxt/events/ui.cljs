@@ -2,7 +2,7 @@
   (:require
    [cljsjs.toastr]
    [re-frame.core :as rf]
-   [time-tracker-web-nxt.interceptors :refer [db-spec-inspector ->local-store tt-reg-event-db]]))
+   [time-tracker-web-nxt.interceptors :refer [db-spec-inspector tt-reg-event-db]]))
 
 
 (defn set-active-panel-handler [db [_ panel]]
@@ -34,7 +34,7 @@
 
   (tt-reg-event-db
    :show-widget
-   [db-spec-inspector ->local-store]
+   [db-spec-inspector]
    (fn [db _]
      (assoc db :show-create-timer-widget? true)))
 

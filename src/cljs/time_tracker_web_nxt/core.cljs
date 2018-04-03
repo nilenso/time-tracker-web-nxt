@@ -33,7 +33,7 @@
   ;; Register all events
   (events/init)
   ;; Put an initial value into app-db.
-  ;; The event handler for `:initialise-db` can be found in `events.cljs`
+  ;; The event handler for `:initialize-db` can be found in `events.cljs`
   ;; Using the sync version of dispatch means that value is in
   ;; place before we go onto the next step.
   (re-frame/dispatch-sync [:initialize-db])
