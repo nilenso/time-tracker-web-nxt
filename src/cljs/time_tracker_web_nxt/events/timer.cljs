@@ -14,14 +14,16 @@
           :event  [:increment-timer-duration id]}})
 
 (defn trigger-create-timer
-  [{:keys [db current-timestamp] :as cofx} [_ timer-project timer-note]]
+  [{:keys [db current-timestamp] :as cofx} [_ timer-project {:keys [elapsed-hh elapsed-mm elapsed-ss notes] :as data}]]
   (let [[_ socket] (:conn db)
-        timer-date (str (:timer-date db))]
+        timer-date (str (:timer-date db))
+        elapsed    (utils/->seconds elapsed-hh elapsed-mm elapsed-ss)]
     {:db (assoc db :show-create-timer-widget? false)
      :send [{:command "create-timer"
              :project-id (js/parseInt (:id timer-project) 10)
              :created-time (utils/datepicker-date->epoch timer-date current-timestamp)
-             :notes timer-note} socket]}))
+             :notes notes
+             :duration elapsed} socket]}))
 
 
 (defn trigger-start-timer [{:keys [db] :as cofx} [_ id]]
@@ -77,7 +79,9 @@
    [db-spec-inspector]
    (fn [db [_ timer]]
      (-> db (assoc-in [:timers (:id timer)]
-                      (assoc timer :state :paused)))))
+                      (assoc timer
+                             :state :paused
+                             :elapsed (:duration timer))))))
 
   (tt-reg-event-fx
    :trigger-create-timer

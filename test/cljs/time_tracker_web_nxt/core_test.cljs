@@ -24,7 +24,7 @@
 (defn after-handler [context]
   (let [event (-> context :coeffects :event first)]
     (case event
-      :create-and-start-timer
+      :trigger-create-timer
       (update-in context [:effects] dissoc :send)
       :start-timer
       (update-in context [:effects] dissoc :set-clock)
@@ -97,21 +97,24 @@
       (rf/dispatch [:stop-or-update-timer timer])
       (is (= :paused (get-in @timers [2 :state]))))))
 
-(deftest create-and-start-timer-test
+(deftest create-timer-test
   (testing "user can create a new timer"
     (let [project      {:id 12}
-          notes        "My notes for this timer"
+          data          {:notes "My notes for this timer"
+                         :elapsed-hh 0
+                         :elapsed-mm 0
+                         :elapsed-ss 0}
           ws-response  {:id           1
                         :project-id   (:id project)
                         :started-time nil
                         :duration     0
                         :time-created (utils/datepicker-date->epoch (str (js/Date.)) (t-core/now))
-                        :notes        notes
+                        :notes        (:notes data)
                         :type         "create"}
           show-widget? (rf/subscribe [:show-create-timer-widget?])
           timers       (rf/subscribe [:timers])
-          expected     (-> ws-response (dissoc :type) (assoc :state :running))]
-      (rf/dispatch [:create-and-start-timer project notes])
+          expected     (-> ws-response (dissoc :type) (assoc :state :paused))]
+      (rf/dispatch [:trigger-create-timer project data])
       (is (= false @show-widget?))
       ;; Assuming websocket sends response as expected
       (ws-events/ws-receive ws-response)
