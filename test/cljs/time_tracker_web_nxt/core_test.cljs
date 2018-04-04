@@ -70,8 +70,7 @@
                      :duration     10
                      :time-created 1508095069
                      :notes        "dddd"
-                     :state        :paused
-                     :elapsed      10}]
+                     :state        :paused}]
 
       (rf/dispatch [:add-timer-to-db new-timer])
 
@@ -131,5 +130,5 @@
       (rf/dispatch [:add-timer-to-db timer])
 
       (rf/dispatch [:stop-or-update-timer {:id timer-id :duration duration :notes notes}])
-      (is (= duration (get-in @timers [timer-id :elapsed])))
+      (is (= duration (get-in @timers [timer-id :duration])))
       (is (= notes (get-in @timers [timer-id :notes]))))))

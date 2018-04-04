@@ -33,14 +33,14 @@
 
 (defn trigger-update-timer
   [{:keys [db] :as cofx} [_ timer-id {:keys [elapsed-hh elapsed-mm elapsed-ss notes] :as new}]]
-  (let [elapsed    (utils/->seconds elapsed-hh elapsed-mm elapsed-ss)
+  (let [duration    (utils/->seconds elapsed-hh elapsed-mm elapsed-ss)
         [_ socket] (:conn db)]
     {:send [{:command  "update-timer"
              :timer-id timer-id
-             :duration elapsed
+             :duration duration
              :notes    notes} socket]}))
 
-(defn trigger-stop-timer [{:keys [db] :as cofx} [_ {:keys [id duration]}]]
+(defn trigger-stop-timer [{:keys [db] :as cofx} [_ {:keys [id]}]]
   (let [[_ socket]  (:conn db)]
     {:send [{:command "stop-timer"
              :timer-id id} socket]}))
@@ -50,7 +50,6 @@
   {:db   (-> db
              (assoc-in [:timers id :state] :paused)
              (assoc-in [:timers id :duration] duration)
-             (assoc-in [:timers id :elapsed] duration)
              (assoc-in [:timers id :notes] notes))
    :tick {:action :stop :id id}})
 
@@ -65,7 +64,7 @@
    :increment-timer-duration
    (fn [db [_ timer-id]]
      (if (= :running (get-in db [:timers timer-id :state]))
-       (update-in db [:timers timer-id :elapsed] inc)
+       (update-in db [:timers timer-id :duration] inc)
        db)))
 
   (rf/reg-event-db
@@ -80,8 +79,7 @@
    (fn [db [_ timer]]
      (-> db (assoc-in [:timers (:id timer)]
                       (assoc timer
-                             :state :paused
-                             :elapsed (:duration timer))))))
+                             :state :paused)))))
 
   (tt-reg-event-fx
    :trigger-create-timer

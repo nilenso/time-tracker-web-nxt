@@ -84,14 +84,14 @@
     (.join (.split p "|") " : ")))
 
 (defn timer-display
-  [{:keys [id elapsed project state notes edit-timer?] :as timer}]
+  [{:keys [id duration project state notes edit-timer?] :as timer}]
   [:tr
    [:td.timer-column
     [:span.timer-project (format-project-name (:name project))]
     [:p.timer-notes notes]
     ]
    [:td.time-column {:style {:border "none"}}
-    [:span.time-display (utils/format-time (:hh elapsed) (:mm elapsed) (:ss elapsed))]]
+    [:span.time-display (utils/format-time (:hh duration) (:mm duration) (:ss duration))]]
    [:td.time-column {:style {:border "none"}}
     (case state
       :paused
@@ -113,11 +113,11 @@
    ])
 
 (defn timer-edit
-  [{:keys [elapsed notes]}]
+  [{:keys [duration notes]}]
   (let [changes                 (reagent/atom {:notes      notes
-                                               :elapsed-hh (:hh elapsed)
-                                               :elapsed-mm (:mm elapsed)
-                                               :elapsed-ss (:ss elapsed)})
+                                               :elapsed-hh (:hh duration)
+                                               :elapsed-mm (:mm duration)
+                                               :elapsed-ss (:ss duration)})
         duration-change-handler (fn [key event]
                                   (let [val    (element-value event)
                                         parsed (if (empty? val) 0 (js/parseInt val 10))]
@@ -137,14 +137,14 @@
                      (rf/dispatch [:trigger-update-timer id @changes]))}
         "Update"]])))
 
-(defn timer-row [{:keys [id elapsed project-id notes]}]
+(defn timer-row [{:keys [id duration project-id notes]}]
   (let [edit-timer? (reagent/atom false)]
-    (fn [{:keys [id elapsed state project notes]}]
-      (let [elapsed       (utils/->hh-mm-ss elapsed)
+    (fn [{:keys [id duration state project notes]}]
+      (let [elapsed       (utils/->hh-mm-ss duration)
             projects      @(rf/subscribe [:projects])
             get-by-id     (fn [p id] (some #(when (= id (:id %)) %) p))
             timer-options {:id          id
-                           :elapsed     elapsed
+                           :duration    elapsed
                            :project     {:id   project-id
                                          :name (:name (get-by-id projects project-id))}
                            :state       state

@@ -60,6 +60,6 @@
             (assoc acc (:id timer)
                    (-> timer
                        (assoc :state (if (:started-time timer) :running :paused))
-                       (assoc :elapsed (timer-elapsed timer)))))
+                       (assoc :duration (timer-elapsed timer)))))
           {}
           timers))
