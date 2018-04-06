@@ -130,3 +130,17 @@
       (rf/dispatch [:stop-or-update-timer {:id timer-id :duration duration :notes notes}])
       (is (= duration (get-in @timers [timer-id :elapsed])))
       (is (= notes (get-in @timers [timer-id :notes]))))))
+
+(deftest delete-timer-test
+  (testing "user can delete a timer"
+    (let [timer    (helpers/make-timer {:id 2})
+          duration 400
+          notes    "some note"
+          timer-id (:id timer)
+          timers   (rf/subscribe [:timers])]
+      (rf/dispatch [:add-timer-to-db timer])
+
+      (is (not-empty (get @timers timer-id)))
+
+      (rf/dispatch [:delete-timer {:id timer-id}])
+      (is (nil? (get @timers timer-id))))))

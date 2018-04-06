@@ -13,17 +13,17 @@
           :id     id
           :event  [:increment-timer-duration id]}})
 
-(defn trigger-start-timer [{:keys [db] :as cofx} [_ id]]
+(defn trigger-start-timer [{:keys [db] :as cofx} [_ {:keys [id]}]]
   (let [[_ socket] (:conn db)]
     {:send      [{:command  "start-timer"
                   :timer-id id} socket]}))
 
 (defn trigger-update-timer
-  [{:keys [db] :as cofx} [_ timer-id {:keys [elapsed-hh elapsed-mm elapsed-ss notes] :as new}]]
+  [{:keys [db] :as cofx} [_ {:keys [id elapsed-hh elapsed-mm elapsed-ss notes] :as new}]]
   (let [elapsed    (utils/->seconds elapsed-hh elapsed-mm elapsed-ss)
         [_ socket] (:conn db)]
     {:send [{:command  "update-timer"
-             :timer-id timer-id
+             :timer-id id
              :duration elapsed
              :notes    notes} socket]}))
 
@@ -40,6 +40,15 @@
              (assoc-in [:timers id :elapsed] duration)
              (assoc-in [:timers id :notes] notes))
    :tick {:action :stop :id id}})
+
+(defn trigger-delete-timer [{:keys [db] :as cofx} [_ {:keys [id]}]]
+  (let [[_ socket]  (:conn db)]
+    {:send [{:command "delete-timer"
+             :timer-id id} socket]}))
+
+(defn delete-timer
+  [{:keys [db] :as cofx} [_ {:keys [id]}]]
+  {:db (update-in db [:timers] dissoc id)})
 
 (defn timer-date-changed
   [{:keys [db] :as cofx} [_ key date]]
@@ -96,6 +105,16 @@
    :stop-or-update-timer
    [db-spec-inspector]
    stop-or-update-timer)
+
+  (tt-reg-event-fx
+   :trigger-delete-timer
+   [db-spec-inspector]
+   trigger-delete-timer)
+
+  (tt-reg-event-fx
+   :delete-timer
+   [db-spec-inspector]
+   delete-timer)
 
   (rf/reg-event-fx
    :timer-date-changed
