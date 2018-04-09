@@ -31,51 +31,67 @@
   (let [projects         (rf/subscribe [:projects])
         default          {:id (:id (first @projects))}
         selected-project (reagent/atom default)
-        notes            (reagent/atom "")
+        data            (reagent/atom {:notes ""
+                                       :elapsed-hh 0
+                                       :elapsed-mm 0
+                                       :elapsed-ss 0})
         show?            (rf/subscribe [:show-create-timer-widget?])]
     (fn []
       (let [default-selected     {:id (:id (first @projects))}
-            notes-change-handler #(reset! notes (element-value %))
+            notes-handler #(swap! data assoc :notes (element-value %))
+            duration-handler (fn [key event]
+                                      (let [val    (element-value event)
+                                            parsed (if (empty? val) 0 (js/parseInt val 10))]
+                                        (swap! data assoc key parsed)))
+            partial-duration-handler #(partial duration-handler %)
             reset-elements!      (fn []
                                    (reset! selected-project default-selected)
-                                   (reset! notes ""))
+                                   (reset! data {:notes ""
+                                                 :elapsed-hh 0
+                                                 :elapsed-mm 0
+                                                 :elapsed-ss 0}))
             cancel-handler       (fn []
                                    (rf/dispatch [:hide-widget])
                                    (reset-elements!))
-            start-handler        (fn []
+            create-handler        (fn []
                                    (rf/dispatch
-                                    [:create-and-start-timer
+                                    [:trigger-create-timer
                                      (if (:id @selected-project)
                                        @selected-project
                                        default-selected)
-                                     @notes])
+                                     @data])
                                    (reset-elements!))]
         [:div.new-timer-popup {:style (if @show? {} {:display "none"})}
          [project-dropdown @projects selected-project]
          [:textarea.project-notes {:placeholder "Add notes"
-                                   :value       @notes
-                                   :on-change   notes-change-handler}]
+                                   :value       (:notes @data)
+                                   :on-change   notes-handler}]
+         [:div
+          [:input {:value (:elapsed-hh @data) :on-change (partial-duration-handler :elapsed-hh)}]
+          [:input {:value (:elapsed-mm @data) :on-change (partial-duration-handler :elapsed-mm)}]
+          [:input {:value (:elapsed-ss @data) :on-change (partial-duration-handler :elapsed-ss)}]]
+
          [:div.button-group
           [:button.btn.btn-secondary
            {:type "input" :on-click cancel-handler}
            "Cancel"]
           [:button.btn.btn-primary
-           {:type "input" :on-click start-handler}
-           "Start"]]]))))
+           {:type "input" :on-click create-handler}
+           "Create"]]]))))
 
 (defn format-project-name [p]
   (when-not (empty? p)
     (.join (.split p "|") " : ")))
 
 (defn timer-display
-  [{:keys [id elapsed project state notes edit-timer?] :as timer}]
+  [{:keys [id duration project state notes edit-timer?] :as timer}]
   [:tr
    [:td.timer-column
     [:span.timer-project (format-project-name (:name project))]
     [:p.timer-notes notes]
     ]
    [:td.time-column {:style {:border "none"}}
-    [:span.time-display (utils/format-time (:hh elapsed) (:mm elapsed) (:ss elapsed))]]
+    [:span.time-display (utils/format-time (:hh duration) (:mm duration) (:ss duration))]]
    [:td.time-column {:style {:border "none"}}
     (case state
       :paused
@@ -100,11 +116,11 @@
    ])
 
 (defn timer-edit
-  [{:keys [elapsed notes]}]
+  [{:keys [duration notes]}]
   (let [changes                 (reagent/atom {:notes      notes
-                                               :elapsed-hh (:hh elapsed)
-                                               :elapsed-mm (:mm elapsed)
-                                               :elapsed-ss (:ss elapsed)})
+                                               :elapsed-hh (:hh duration)
+                                               :elapsed-mm (:mm duration)
+                                               :elapsed-ss (:ss duration)})
         duration-change-handler (fn [key event]
                                   (let [val    (element-value event)
                                         parsed (if (empty? val) 0 (js/parseInt val 10))]
@@ -124,14 +140,14 @@
                      (rf/dispatch [:trigger-update-timer (assoc @changes :id id)]))}
         "Update"]])))
 
-(defn timer-row [{:keys [id elapsed project-id notes]}]
+(defn timer-row [{:keys [id duration project-id notes]}]
   (let [edit-timer? (reagent/atom false)]
-    (fn [{:keys [id elapsed state project notes]}]
-      (let [elapsed       (utils/->hh-mm-ss elapsed)
+    (fn [{:keys [id duration state project notes]}]
+      (let [elapsed       (utils/->hh-mm-ss duration)
             projects      @(rf/subscribe [:projects])
             get-by-id     (fn [p id] (some #(when (= id (:id %)) %) p))
             timer-options {:id          id
-                           :elapsed     elapsed
+                           :duration    elapsed
                            :project     {:id   project-id
                                          :name (:name (get-by-id projects project-id))}
                            :state       state

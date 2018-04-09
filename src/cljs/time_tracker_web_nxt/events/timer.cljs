@@ -13,6 +13,18 @@
           :id     id
           :event  [:increment-timer-duration id]}})
 
+(defn trigger-create-timer
+  [{:keys [db current-timestamp] :as cofx} [_ timer-project {:keys [elapsed-hh elapsed-mm elapsed-ss notes] :as data}]]
+  (let [[_ socket] (:conn db)
+        timer-date (str (:timer-date db))
+        elapsed    (utils/->seconds elapsed-hh elapsed-mm elapsed-ss)]
+    {:db (assoc db :show-create-timer-widget? false)
+     :send [{:command "create-timer"
+             :project-id (js/parseInt (:id timer-project) 10)
+             :created-time (utils/datepicker-date->epoch timer-date current-timestamp)
+             :notes notes
+             :duration elapsed} socket]}))
+
 (defn trigger-start-timer [{:keys [db] :as cofx} [_ {:keys [id]}]]
   (let [[_ socket] (:conn db)]
     {:send      [{:command  "start-timer"
@@ -20,14 +32,14 @@
 
 (defn trigger-update-timer
   [{:keys [db] :as cofx} [_ {:keys [id elapsed-hh elapsed-mm elapsed-ss notes] :as new}]]
-  (let [elapsed    (utils/->seconds elapsed-hh elapsed-mm elapsed-ss)
+  (let [duration   (utils/->seconds elapsed-hh elapsed-mm elapsed-ss)
         [_ socket] (:conn db)]
     {:send [{:command  "update-timer"
              :timer-id id
-             :duration elapsed
+             :duration duration
              :notes    notes} socket]}))
 
-(defn trigger-stop-timer [{:keys [db] :as cofx} [_ {:keys [id duration]}]]
+(defn trigger-stop-timer [{:keys [db] :as cofx} [_ {:keys [id]}]]
   (let [[_ socket]  (:conn db)]
     {:send [{:command "stop-timer"
              :timer-id id} socket]}))
@@ -37,7 +49,6 @@
   {:db   (-> db
              (assoc-in [:timers id :state] :paused)
              (assoc-in [:timers id :duration] duration)
-             (assoc-in [:timers id :elapsed] duration)
              (assoc-in [:timers id :notes] notes))
    :tick {:action :stop :id id}})
 
@@ -61,7 +72,7 @@
    :increment-timer-duration
    (fn [db [_ timer-id]]
      (if (= :running (get-in db [:timers timer-id :state]))
-       (update-in db [:timers timer-id :elapsed] inc)
+       (update-in db [:timers timer-id :duration] inc)
        db)))
 
   (rf/reg-event-db
@@ -75,12 +86,13 @@
    [db-spec-inspector]
    (fn [db [_ timer]]
      (-> db (assoc-in [:timers (:id timer)]
-                      (assoc timer :state (utils/timer-state timer))))))
+                      (assoc timer
+                             :state :paused)))))
 
   (tt-reg-event-fx
-   :create-and-start-timer
+   :trigger-create-timer
    [(rf/inject-cofx :current-timestamp)]
-   ws-events/ws-create-and-start-timer)
+   trigger-create-timer)
 
   (tt-reg-event-fx
    :start-timer

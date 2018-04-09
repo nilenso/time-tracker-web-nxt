@@ -34,16 +34,6 @@
 (defn ws-send [[data socket]]
   (ws/send socket (clj->js data) fmt/json))
 
-(defn ws-create-and-start-timer
-  [{:keys [db current-timestamp] :as cofx} [_ timer-project timer-note]]
-  (let [[_ socket] (:conn db)
-        timer-date (str (:timer-date db))]
-    {:db (assoc db :show-create-timer-widget? false)
-     :send [{:command "create-and-start-timer"
-             :project-id (js/parseInt (:id timer-project) 10)
-             :created-time (utils/datepicker-date->epoch timer-date current-timestamp)
-             :notes timer-note} socket]}))
-
 (defn ws-create [goog-auth-id]
   (let [response-chan (chan)
         handlers {:on-message #(do
