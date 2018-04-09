@@ -26,6 +26,9 @@
                      (rf/dispatch [:stop-or-update-timer data]))
                  (do  (timbre/debug "Received start timer message")
                       (rf/dispatch [:start-timer (dissoc data :type)]))))
+    "delete" (do
+               (timbre/info "Delete: " data)
+               (rf/dispatch [:delete-timer data]))
     (timbre/debug "Unknown Action: " data)))
 
 (defn ws-send [[data socket]]

@@ -97,11 +97,14 @@
       :paused
       [:span
        [:button.btn.btn-primary
-        {:style {:margin-right 10} :on-click #(rf/dispatch [:trigger-start-timer id])}
+        {:style {:margin-right 10} :on-click #(rf/dispatch [:trigger-start-timer {:id id}])}
         "Start"]
        [:button.btn.btn-secondary
-        {:on-click #(reset! edit-timer? true)}
-        "Edit"]]
+        {:style {:margin-right 10} :on-click #(reset! edit-timer? true)}
+        "Edit"]
+       [:button.btn.btn-secondary
+        {:on-click #(rf/dispatch [:trigger-delete-timer {:id id}])}
+        "Delete"]]
 
       :running
       [:span
@@ -134,7 +137,7 @@
        [:button
         {:on-click (fn []
                      (reset! edit-timer? false)
-                     (rf/dispatch [:trigger-update-timer id @changes]))}
+                     (rf/dispatch [:trigger-update-timer (assoc @changes :id id)]))}
         "Update"]])))
 
 (defn timer-row [{:keys [id duration project-id notes]}]
