@@ -27,4 +27,6 @@
   (pushy/pushy dispatch-route parse-url))
 
 ;; Start event listeners
-(pushy/start! (pushy/pushy dispatch-route parse-url))
+(defn routes-init
+  []
+  (pushy/start! (pushy/pushy dispatch-route parse-url)))
