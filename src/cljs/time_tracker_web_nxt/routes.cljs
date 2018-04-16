@@ -7,6 +7,7 @@
 
 
 (def routes ["/" {""         :timers
+                  "sign-in"  :sign-in
                   "about"    :about
                   "clients/" {""    :clients
                               "new" :create-client}}])
@@ -21,12 +22,20 @@
                  :handler
                  name
                  keyword)]
-    (rf/dispatch [:set-active-panel panel])))
+    (timbre/info "dispatch-route called with" matched-route)
+    (rf/dispatch [:set-active-panel panel])
+    nil))
 
-(defn dispatch-url [k]
+(def history
   (pushy/pushy dispatch-route parse-url))
 
+(defn goto [_ [_ route-name]]
+  (let [url (url-for route-name)]
+    (pushy/set-token! history url)
+    (dispatch-route (parse-url url))
+    {}))
+
 ;; Start event listeners
-(defn routes-init
-  []
-  (pushy/start! (pushy/pushy dispatch-route parse-url)))
+(defn init []
+  (rf/reg-event-fx :goto goto)
+  (pushy/start! history))

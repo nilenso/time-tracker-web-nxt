@@ -9,11 +9,16 @@
    [time-tracker-web-nxt.events.ui :as ui-events]
    [time-tracker-web-nxt.events.ws :as ws-events]))
 
+(defn signed-in? [local-store-app-db]
+  ;; FIXME: We assume that the existance of localstorage means that the user is logged in.
+  (some? local-store-app-db))
+
 (defn initialize-db [{:keys [db local-store-app-db]} cofx]
-  (if local-store-app-db
-    ;; FIXME: We assume that the existance of localstorage means that the user is logged in.
-    {:db (assoc (merge db/default-db local-store-app-db) :active-panel :timers)}
-    {:db db/default-db}))
+  (if (signed-in? local-store-app-db)
+    {:db (merge db/default-db local-store-app-db)}
+    {:db db/default-db
+     :dispatch [:goto :sign-in]}))
+
 
 (defn init []
   (rf/reg-event-fx

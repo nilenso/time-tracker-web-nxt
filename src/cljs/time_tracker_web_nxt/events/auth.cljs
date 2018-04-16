@@ -10,12 +10,12 @@
   [{:keys [db] :as cofx} [_ user]]
   (let [user-profile (auth/user-profile user)
         token        (:token user-profile)]
-    {:db         (-> db
-                     (assoc :user user-profile)
-                     (assoc :active-panel :timers))
+    (taoensso.timbre/info "login called")
+    {:db         (assoc db :user user-profile)
      :dispatch-n [[:get-user-details token]
                   [:get-projects token]
-                  [:get-timers token (t-coerce/from-date (:timer-date db))]]}))
+                  [:get-timers token (t-coerce/from-date (:timer-date db))]
+                  [:goto :timers]]}))
 
 (defn fetch-data
   [{:keys [db]} [_]]
@@ -29,7 +29,8 @@
   (let [[_ socket] (:conn db)]
     {:db db/default-db
      :close socket
-     :clear-local-storage nil}))
+     :clear-local-storage nil
+     :dispatch [:goto :sign-in]}))
 
 
 (defn init []

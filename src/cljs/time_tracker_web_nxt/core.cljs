@@ -37,9 +37,9 @@
   ;; The event handler for `:initialize-db` can be found in `events.cljs`
   ;; Using the sync version of dispatch means that value is in
   ;; place before we go onto the next step.
+  (routes/init)
   (re-frame/dispatch-sync [:initialize-db])
-  (routes/routes-init)
   (dev-setup)
-  (go (when-let [c (<! (auth/init!))])
-      (mount-root))
+  (go (when-let [c (<! (auth/init!))]
+        (mount-root)))
   (loading))

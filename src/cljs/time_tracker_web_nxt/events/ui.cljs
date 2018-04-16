@@ -6,10 +6,9 @@
 
 
 (defn set-active-panel-handler [db [_ panel]]
-  (let [status (:show-user-menu? db)]
-    (-> db
-       (assoc :active-panel panel)
-       (assoc :show-user-menu? false))))
+  (-> db
+      (assoc :active-panel panel)
+      (assoc :show-user-menu? false)))
 
 (defn init []
 

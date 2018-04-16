@@ -196,9 +196,8 @@
     [:div.splash-screen
      [:h1.splash-screen-title "Time Tracker"]
      [:a.sign-in {:href     "#"
-                  :on-click (fn [_] (-> (.signIn (auth/auth-instance))
-                                      (.then
-                                       #(rf/dispatch [:log-in %]))))}
+                  :on-click (fn [_] (-> (.signIn (auth/auth-instance)) ;; FIX: handle error cases
+                                        (.then #(rf/dispatch [:log-in %]))))}
       [:img.google-sign-in
        {:src "images/btn_google_signin_light_normal_web@2x.png"
         :alt "Sign in with Google"}]]]))
