@@ -54,7 +54,7 @@
                     :output-dir           "resources/public/js/compiled/out"
                     :closure-defines      {time-tracker-web-nxt.config.debug? true
                                            "re_frame.trace.trace_enabled_QMARK_" true}
-                    :asset-path           "js/compiled/out"
+                    :asset-path           "/js/compiled/out"
                     :source-map-timestamp true
                     :preloads             [devtools.preload
                                            re-frisk.preload
