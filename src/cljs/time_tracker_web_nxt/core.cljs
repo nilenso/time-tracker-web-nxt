@@ -10,7 +10,8 @@
             [time-tracker-web-nxt.subs]
             [time-tracker-web-nxt.views :as views]
             [time-tracker-web-nxt.config :as config]
-            [time-tracker-web-nxt.auth :as auth]))
+            [time-tracker-web-nxt.auth :as auth]
+            [time-tracker-web-nxt.routes :as routes]))
 
 (defn dev-setup []
   "Does specific development related setup."
@@ -36,8 +37,9 @@
   ;; The event handler for `:initialize-db` can be found in `events.cljs`
   ;; Using the sync version of dispatch means that value is in
   ;; place before we go onto the next step.
+  (routes/init)
   (re-frame/dispatch-sync [:initialize-db])
   (dev-setup)
-  (go (when-let [c (<! (auth/init!))])
-      (mount-root))
+  (go (when-let [c (<! (auth/init!))]
+        (mount-root)))
   (loading))

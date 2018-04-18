@@ -19,12 +19,11 @@
 ;; ENTIRE state of the application after each event handler runs.  All of it.
   (rf/after (partial check-and-throw :time-tracker-web-nxt.db/db)))
 
-
 (defn db->local-store
   "Persists app db to local storage"
   [app-db]
   ;; Remove websocket and response channel
-  (let [new-db (assoc app-db :conn [])]
+  (let [new-db (assoc app-db :conn [])] ;; FIX ME: use dissoc to be more explicit about removing conns
     (set-item local-storage "db" (str (select-keys new-db [:user])))))
 
 ;; This interceptor persists the rf db to local-storage

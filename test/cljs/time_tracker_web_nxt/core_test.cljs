@@ -6,6 +6,7 @@
             [time-tracker-web-nxt.core :as core]
             [time-tracker-web-nxt.db :as db]
             [time-tracker-web-nxt.events.core :as e]
+            [time-tracker-web-nxt.routes :as routes]
             [time-tracker-web-nxt.events.ws :as ws-events]
             [time-tracker-web-nxt.interceptors :as interceptors]
             [time-tracker-web-nxt.test-helpers :as helpers]
@@ -48,12 +49,13 @@
      (assoc db :user user)))
 
   (rf/dispatch [:initialize-db])
-  (rf/dispatch [:add-user test-user]))
+  (rf/dispatch [:add-user user]))
 
 (defn fixtures [f]
   (rf-test/run-test-sync
    (with-redefs [interceptors/standard-interceptor stubbed-interceptor]
      (e/init)
+     (routes/init)
      (test-fixtures)
      (f))))
 

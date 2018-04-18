@@ -33,8 +33,8 @@
   (let [c (chan)]
     ;; TODO: Add timeout
     (.load js/gapi "auth2" (fn [] (-> (.init (object/get js/gapi "auth2")
-                                            (clj->js {"client_id" (:client-id config/env)
-                                                      "scope"     (:scope config/env)}))
-                                     (.then #(go (>! c true))
-                                            #(go (>! c false))))))
+                                             (clj->js {"client_id" (:client-id config/env)
+                                                       "scope"     (:scope config/env)}))
+                                      (.then #(go (>! c true))
+                                             #(go (>! c false))))))
     c))
