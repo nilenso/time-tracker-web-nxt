@@ -230,7 +230,9 @@
 (defn header []
   (let [active-panel  (rf/subscribe [:active-panel])
         timers-panel? (= :timers @active-panel)
-        about-panel?  (= :about @active-panel)]
+        about-panel?  (= :about @active-panel)
+        clients-panel? (= :clients @active-panel)
+        user (rf/subscribe [:user])]
     [:div.header.pure-menu.pure-menu-horizontal
      [:p#logo
       {:href "#"} "Time Tracker"]
@@ -245,7 +247,13 @@
         [:a.nav-link
          {:href     (routes/url-for :about)
           :on-click #(rf/dispatch [:set-active-panel :about])}
-         "About"]]]]
+         "About"]]
+       (if (= "admin" (:role @user))
+         [:li.header-link {:class (if clients-panel? "active" "")}
+          [:a.nav-link
+           {:href     (routes/url-for :clients)
+            :on-click #(rf/dispatch [:set-active-panel :clients])}
+           "Clients"]])]]
      [:a.user-profile-link
       {:href     "javascript:void(0)"
        :on-click #(rf/dispatch [:toggle-user-menu])}
@@ -379,7 +387,7 @@
    [:div.panel
     [:button.btn.btn-primary
      {:type     "input"
-      :on-click #(rf/dispatch [:set-active-panel :create-client])}
+      :on-click #(rf/dispatch [:goto :create-client])}
      "+ Add Client"]
     [rdt/datatable
      :client-datatable
@@ -411,7 +419,8 @@
    :edit-client   edit-client-panel})
 
 (defn app []
-  (let [active-panel (rf/subscribe [:active-panel])]
-    (when (= @active-panel :timers)
+  (let [active-panel (rf/subscribe [:active-panel])
+        user (rf/subscribe [:user])]
+    (when (:signed-in? @user)
       (rf/dispatch [:fetch-data]))
     [(panels @active-panel)]))
