@@ -21,14 +21,14 @@
 
 ;; Timer
 (s/def ::id int?)
-(s/def ::project-id int?)
+(s/def ::task-id int?)
 (s/def ::duration (s/nilable int?))
 (s/def ::state keyword?)
 (s/def ::time-created int?)
 (s/def ::notes string?)
 (s/def ::app-user-id (s/nilable int?))
 (s/def ::started-time (s/nilable int?))
-(s/def ::timer (s/keys :req-un [::id ::project-id ::duration
+(s/def ::timer (s/keys :req-un [::id ::task-id ::duration
                                 ::state ::time-created ::notes
                                 ::started-time]
                        :opt-un [::app-user-id]))

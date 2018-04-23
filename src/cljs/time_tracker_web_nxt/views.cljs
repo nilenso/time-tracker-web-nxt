@@ -17,35 +17,40 @@
 (defn element-value [event]
   (-> event .-target .-value))
 
-(defn project-dropdown [projects selected]
-  (let [selected-id (:id @selected)]
-    [:select.project-dropdown
-     {:value (or selected-id "")
-      :on-change #(reset! selected {:id (-> % .-target .-value)})}
-     (for [{:keys [id name]} projects]
-       ^{:key id} [:option (if (= selected-id id)
-                             {:value id :label name}
-                             {:value id :label name}) name])]))
+(defn dropdown-widget [items selected-id event]
+  [:select.project-dropdown
+   {:value (or selected-id "")
+    :on-change (fn [val]
+                 (rf/dispatch [event (-> val .-target .-value int)]))}
+   (for [{:keys [id name]} items]
+     ^{:key id} [:option (if (= selected-id id)
+                           {:value id :label name}
+                           {:value id :label name}) name])])
 
 (defn create-timer-widget []
-  (let [projects         (rf/subscribe [:projects])
-        default          {:id (:id (first @projects))}
-        selected-project (reagent/atom default)
-        data            (reagent/atom {:notes ""
+  (let [data            (reagent/atom {:notes ""
                                        :elapsed-hh 0
                                        :elapsed-mm 0
-                                       :elapsed-ss 0})
-        show?            (rf/subscribe [:show-create-timer-widget?])]
+                                       :elapsed-ss 0})]
     (fn []
-      (let [default-selected     {:id (:id (first @projects))}
+      (let [show?            (rf/subscribe [:show-create-timer-widget?])
+            clients @(rf/subscribe [:clients])
+            selected-client @(rf/subscribe [:selected-client])
+            all-projects @(rf/subscribe [:projects])
+            projects        (filter #(= (:client_id %) selected-client) all-projects)
+            selected-project @(rf/subscribe [:selected-project])
+
+            all-tasks            @(rf/subscribe [:tasks])
+            tasks (filter #(= (:project_id %) selected-project) all-tasks)
+            selected-task @(rf/subscribe [:selected-task])
             notes-handler #(swap! data assoc :notes (element-value %))
             duration-handler (fn [key event]
-                                      (let [val    (element-value event)
-                                            parsed (if (empty? val) 0 (js/parseInt val 10))]
-                                        (swap! data assoc key parsed)))
+                               (let [val    (element-value event)
+                                     parsed (if (empty? val) 0 (js/parseInt val 10))]
+                                 (swap! data assoc key parsed)))
             partial-duration-handler #(partial duration-handler %)
             reset-elements!      (fn []
-                                   (reset! selected-project default-selected)
+                                   (rf/dispatch [:select-client (:id (first clients))])
                                    (reset! data {:notes ""
                                                  :elapsed-hh 0
                                                  :elapsed-mm 0
@@ -54,40 +59,40 @@
                                    (rf/dispatch [:hide-widget])
                                    (reset-elements!))
             create-handler        (fn []
-                                   (rf/dispatch
-                                    [:trigger-create-timer
-                                     (if (:id @selected-project)
-                                       @selected-project
-                                       default-selected)
-                                     @data])
-                                   (reset-elements!))]
-        [:div.new-timer-popup {:style (if @show? {} {:display "none"})}
-         [project-dropdown @projects selected-project]
-         [:textarea.project-notes {:placeholder "Add notes"
-                                   :value       (:notes @data)
-                                   :on-change   notes-handler}]
-         [:div
-          [:input {:value (:elapsed-hh @data) :on-change (partial-duration-handler :elapsed-hh)}]
-          [:input {:value (:elapsed-mm @data) :on-change (partial-duration-handler :elapsed-mm)}]
-          [:input {:value (:elapsed-ss @data) :on-change (partial-duration-handler :elapsed-ss)}]]
+                                    (rf/dispatch
+                                     [:trigger-create-timer
+                                      {:id selected-task}
+                                      @data])
+                                    (reset-elements!))]
+             [:div.new-timer-popup {:style (if @show? {} {:display "none"})}
+              [dropdown-widget clients selected-client :select-client]
+              [dropdown-widget projects selected-project :select-project]
+              [dropdown-widget tasks selected-task :select-task]
+              [:textarea.project-notes {:placeholder "Add notes"
+                                        :value       (:notes @data)
+                                        :on-change   notes-handler}]
+              [:div
+               [:input {:value (:elapsed-hh @data) :on-change (partial-duration-handler :elapsed-hh)}]
+               [:input {:value (:elapsed-mm @data) :on-change (partial-duration-handler :elapsed-mm)}]
+               [:input {:value (:elapsed-ss @data) :on-change (partial-duration-handler :elapsed-ss)}]]
 
-         [:div.button-group
-          [:button.btn.btn-secondary
-           {:type "input" :on-click cancel-handler}
-           "Cancel"]
-          [:button.btn.btn-primary
-           {:type "input" :on-click create-handler}
-           "Create"]]]))))
-
-(defn format-project-name [p]
-  (when-not (empty? p)
-    (.join (.split p "|") " : ")))
+              [:div.button-group
+               [:button.btn.btn-secondary
+                {:type "input" :on-click cancel-handler}
+                "Cancel"]
+               [:button.btn.btn-primary
+                {:type "input" :on-click create-handler}
+                "Create"]]]))))
 
 (defn timer-display
-  [{:keys [id duration project state notes edit-timer?] :as timer}]
+  [{:keys [id duration client project task state notes edit-timer?] :as timer}]
   [:tr
    [:td.timer-column
-    [:span.timer-project (format-project-name (:name project))]
+    [:span.timer-project (:name client)]
+    [:span " > "]
+    [:span.timer-project (:name project)]
+    [:span " > "]
+    [:span.timer-project (:name task)]
     [:p.timer-notes notes]
     ]
    [:td.time-column {:style {:border "none"}}
@@ -112,8 +117,7 @@
         {:on-click #(rf/dispatch [:trigger-stop-timer timer])}
         "Stop"]]
 
-      nil)]
-   ])
+      nil)]])
 
 (defn timer-edit
   [{:keys [duration notes]}]
@@ -140,16 +144,23 @@
                      (rf/dispatch [:trigger-update-timer (assoc @changes :id id)]))}
         "Update"]])))
 
-(defn timer-row [{:keys [id duration project-id notes]}]
+(defn timer-row [{:keys [id duration task-id notes]}]
   (let [edit-timer? (reagent/atom false)]
-    (fn [{:keys [id duration state project notes]}]
+    (fn [{:keys [id duration state task notes]}]
       (let [elapsed       (utils/->hh-mm-ss duration)
+            clients       @(rf/subscribe [:clients])
             projects      @(rf/subscribe [:projects])
+            tasks         @(rf/subscribe [:tasks])
             get-by-id     (fn [p id] (some #(when (= id (:id %)) %) p))
+
+            task (get-by-id tasks task-id)
+            project (get-by-id projects (:project_id task))
+            client (get-by-id clients (:client_id project))
             timer-options {:id          id
                            :duration    elapsed
-                           :project     {:id   project-id
-                                         :name (:name (get-by-id projects project-id))}
+                           :client client
+                           :project project
+                           :task task
                            :state       state
                            :notes       notes
                            :edit-timer? edit-timer?}]

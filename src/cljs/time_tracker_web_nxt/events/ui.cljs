@@ -63,7 +63,25 @@
    :cancel-form-and-return
    (fn [db [_ {:keys [remove-db-key panel]}]]
      (-> (if remove-db-key (dissoc db remove-db-key) db)
-        (set-active-panel-handler [:set-active-panel panel]))))
+         (set-active-panel-handler [:set-active-panel panel]))))
+
+  (rf/reg-event-fx
+   :select-client
+   (fn [{:keys [db] :as cofx} [_ id]]
+     (.log js/console "select-client called with id:" id)
+     {:db (assoc db :selected-client id)
+      :dispatch [:select-project (:id (first (filter #(= (:client_id %) id) (:projects db))))]}))
+
+  (rf/reg-event-fx
+   :select-project
+   (fn [{:keys [db] :as cofx} [_ id]]
+     {:db (assoc db :selected-project id)
+      :dispatch [:select-task (:id (first (filter #(= (:project_id %) id) (:tasks db))))]}))
+
+  (rf/reg-event-db
+   :select-task
+   (fn [db [_ id]]
+     (assoc db :selected-task id)))
 
   (rf/reg-event-fx
    :show-notification

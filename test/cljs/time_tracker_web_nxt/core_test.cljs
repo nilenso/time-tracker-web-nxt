@@ -67,7 +67,7 @@
   (testing "adding a new timer to db"
     (let [timers    (rf/subscribe [:timers])
           new-timer {:id           1
-                     :project-id   1
+                     :task-id   1
                      :started-time nil
                      :duration     10
                      :time-created 1508095069
@@ -100,13 +100,13 @@
 
 (deftest create-timer-test
   (testing "user can create a new timer"
-    (let [project      {:id 12}
+    (let [task      {:id 12}
           data          {:notes "My notes for this timer"
                          :elapsed-hh 0
                          :elapsed-mm 0
                          :elapsed-ss 0}
           ws-response  {:id           1
-                        :project-id   (:id project)
+                        :task-id   (:id task)
                         :started-time nil
                         :duration     0
                         :time-created (utils/datepicker-date->epoch (str (js/Date.)) (t-core/now))
@@ -115,7 +115,7 @@
           show-widget? (rf/subscribe [:show-create-timer-widget?])
           timers       (rf/subscribe [:timers])
           expected     (-> ws-response (dissoc :type) (assoc :state :paused))]
-      (rf/dispatch [:trigger-create-timer project data])
+      (rf/dispatch [:trigger-create-timer task data])
       (is (= false @show-widget?))
       ;; Assuming websocket sends response as expected
       (ws-events/ws-receive ws-response)
