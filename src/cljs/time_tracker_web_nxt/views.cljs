@@ -21,7 +21,7 @@
   [:select.project-dropdown
    {:value (or selected-id "")
     :on-change (fn [val]
-                 (rf/dispatch [event (-> val .-target .-value int)]))}
+                 (rf/dispatch [event (-> val element-value int)]))}
    (for [{:keys [id name]} items]
      ^{:key id} [:option (if (= selected-id id)
                            {:value id :label name}
@@ -130,7 +130,7 @@
                                         parsed (if (empty? val) 0 (js/parseInt val 10))]
                                     (swap! changes assoc key parsed)))
         handler                 #(partial duration-change-handler %)]
-    (fn [{:keys [id project edit-timer?]}]
+    (fn [{:keys [id edit-timer?]}]
       [:div
        [:input {:value (:elapsed-hh @changes) :on-change (handler :elapsed-hh)}]
        [:input {:value (:elapsed-mm @changes) :on-change (handler :elapsed-mm)}]
@@ -210,7 +210,7 @@
                   :on-click (fn [_] (-> (.signIn (auth/auth-instance)) ;; FIX: handle error cases
                                         (.then #(rf/dispatch [:log-in %]))))}
       [:img.google-sign-in
-       {:src "images/btn_google_signin_light_normal_web@2x.png"
+       {:src "/images/btn_google_signin_light_normal_web@2x.png"
         :alt "Sign in with Google"}]]]))
 
 (defn user-profile []
