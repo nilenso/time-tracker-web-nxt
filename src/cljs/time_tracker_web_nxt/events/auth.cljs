@@ -12,7 +12,8 @@
         token        (:token user-profile)]
     (taoensso.timbre/info "login called")
     {:db         (assoc db :user user-profile)
-     :dispatch-n [[:get-user-details token]
+     :dispatch-n [[:create-ws-connection token]
+                  [:get-user-details token]
                   [:get-projects token]
                   [:get-timers token (t-coerce/from-date (:timer-date db))]
                   [:goto :timers]]}))

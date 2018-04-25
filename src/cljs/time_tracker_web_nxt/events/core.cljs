@@ -15,7 +15,8 @@
 
 (defn initialize-db [{:keys [db local-store-app-db]} cofx]
   (if (signed-in? local-store-app-db)
-    {:db (merge db/default-db local-store-app-db)}
+    {:db (merge db/default-db local-store-app-db)
+     :dispatch [:create-ws-connection (get-in local-store-app-db [:user :token])]}
     {:db db/default-db
      :dispatch [:goto :sign-in]}))
 

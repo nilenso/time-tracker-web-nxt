@@ -23,7 +23,7 @@
 (create-subscription :show-create-timer-widget?)
 (create-subscription :show-user-menu?)
 (create-subscription :clients)
-(create-subscription :client)
+(create-subscription :client) ;; TODO: check if we are using this subscription anywhere
 (create-subscription :selected-client)
 (create-subscription :selected-project)
 (create-subscription :selected-task)

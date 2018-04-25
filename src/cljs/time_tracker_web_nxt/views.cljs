@@ -275,7 +275,6 @@
 
 (defn timers-panel []
   (let [user     (rf/subscribe [:user])]
-    (rf/dispatch [:create-ws-connection (:token @user)])
     [:div.page
      [header]
      [main]]))
