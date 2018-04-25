@@ -32,8 +32,21 @@
                 :on-success [:projects-retrieved]
                 :on-failure [:request-failed]}})
 
+(defn get-tasks [cofx [_ auth-token]]
+  {:http-xhrio {:method :get
+                :uri "/api/tasks/"
+                :timeout 8000
+                :response-format (ajax/json-response-format {:keywords? true})
+                :headers {"Authorization" (str "Bearer " auth-token)
+                          "Access-Control-Allow-Origin" "*"}
+                :on-success [:tasks-retrieved]
+                :on-failure [:request-failed]}})
+
 (defn projects-retrieved [db [_ projects]]
   (assoc db :projects projects))
+
+(defn tasks-retrieved [db [_ tasks]]
+  (assoc db :tasks tasks))
 
 (defn get-timers [cofx [_ auth-token timer-date]]
   (let [start-epoch (t-coerce/to-epoch timer-date)
@@ -57,17 +70,17 @@
     (rf/dispatch [:start-timer (select-keys running-timer [:id])]))
   (assoc db :timers (utils/->timer-map timers)))
 
-(defn clients-retrieved [db [_ clients]]
+(defn clients-retrieved [{:keys [db] :as cofx} [_ clients]]
   (let [transform (fn [{:keys [points-of-contact]}]
                     (zipmap (range) points-of-contact))]
-    (assoc db
-           :clients
-           (map #(assoc % :points-of-contact (transform %))
-              clients))))
+    {:db (assoc db
+                :clients
+                (map #(assoc % :points-of-contact (transform %))
+                     clients))
+     :dispatch [:select-client (:id (first clients))]}))
 
 (defn get-all-clients [{:keys [db] :as cofx} [_ auth-token]]
-  {:db (ui-events/set-active-panel-handler db [:set-active-panel :clients])
-   :http-xhrio {:method :get
+  {:http-xhrio {:method :get
                 :uri "/api/clients/"
                 :timeout 5000
                 :response-format (ajax/json-response-format {:keywords? true})
@@ -133,6 +146,7 @@
 (defn init []
   (rf/reg-event-fx :request-failed http-failure)
   (rf/reg-event-fx :get-projects get-projects)
+  (rf/reg-event-fx :get-tasks get-tasks)
   (rf/reg-event-fx :get-timers get-timers)
   (rf/reg-event-fx :get-all-clients get-all-clients)
   (rf/reg-event-fx :create-client create-client)
@@ -145,6 +159,11 @@
    projects-retrieved)
 
   (intr/tt-reg-event-db
+   :tasks-retrieved
+   [intr/db-spec-inspector]
+   tasks-retrieved)
+
+  (intr/tt-reg-event-db
    :timers-retrieved
    [intr/db-spec-inspector]
    timers-retrieved)
@@ -154,7 +173,7 @@
    [intr/db-spec-inspector]
    user-details-retrieved)
 
-  (intr/tt-reg-event-db
+  (intr/tt-reg-event-fx
    :clients-retrieved
    [intr/db-spec-inspector]
    clients-retrieved)

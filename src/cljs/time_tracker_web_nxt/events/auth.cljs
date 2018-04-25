@@ -21,7 +21,9 @@
   [{:keys [db]} [_]]
   (let [token (get-in db [:user :token])]
     {:dispatch-n [[:get-user-details token]
+                  [:get-all-clients token]
                   [:get-projects token]
+                  [:get-tasks token]
                   [:get-timers token (t-coerce/from-date (:timer-date db))]]}))
 
 (defn logout

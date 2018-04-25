@@ -11,7 +11,7 @@
   (let [now (t-core/now)
         created-at (utils/datepicker-date->epoch (str (js/Date.)) now)
         default {:id 1
-                 :project-id 1
+                 :task-id 1
                  :started-time nil
                  :duration 0
                  :time-created created-at
