@@ -40,11 +40,11 @@
                     :opt-un [::intervals ::timer-date]))
 
 (def default-db
-  {:app-name "the future Time Tracker"
-   :timers {}
-   :timer-date (js/Date. (.setHours (js/Date.) 0 0 0 0))
-   :projects []
-   :conn []
-   :app-user-id nil
+  {:app-name                  "the future Time Tracker"
+   :timers                    {}
+   :timer-date                (js/Date. (.setHours (js/Date.) 0 0 0 0))
+   :projects                  []
+   :conn                      []
+   :app-user-id               nil
    :show-create-timer-widget? false
-   :show-user-menu? false})
+   :show-user-menu?           false})

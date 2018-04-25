@@ -18,17 +18,17 @@
   (let [[_ socket] (:conn db)
         timer-date (str (:timer-date db))
         elapsed    (utils/->seconds elapsed-hh elapsed-mm elapsed-ss)]
-    {:db (assoc db :show-create-timer-widget? false)
-     :send [{:command "create-timer"
-             :task-id (js/parseInt (:id timer-task) 10)
+    {:db   (assoc db :show-create-timer-widget? false)
+     :send [{:command      "create-timer"
+             :task-id      (js/parseInt (:id timer-task) 10)
              :created-time (utils/datepicker-date->epoch timer-date current-timestamp)
-             :notes notes
-             :duration elapsed} socket]}))
+             :notes        notes
+             :duration     elapsed} socket]}))
 
 (defn trigger-start-timer [{:keys [db] :as cofx} [_ {:keys [id]}]]
   (let [[_ socket] (:conn db)]
-    {:send      [{:command  "start-timer"
-                  :timer-id id} socket]}))
+    {:send [{:command  "start-timer"
+             :timer-id id} socket]}))
 
 (defn trigger-update-timer
   [{:keys [db] :as cofx} [_ {:keys [id elapsed-hh elapsed-mm elapsed-ss notes] :as new}]]
@@ -40,8 +40,8 @@
              :notes    notes} socket]}))
 
 (defn trigger-stop-timer [{:keys [db] :as cofx} [_ {:keys [id]}]]
-  (let [[_ socket]  (:conn db)]
-    {:send [{:command "stop-timer"
+  (let [[_ socket] (:conn db)]
+    {:send [{:command  "stop-timer"
              :timer-id id} socket]}))
 
 (defn stop-or-update-timer
@@ -53,8 +53,8 @@
    :tick {:action :stop :id id}})
 
 (defn trigger-delete-timer [{:keys [db] :as cofx} [_ {:keys [id]}]]
-  (let [[_ socket]  (:conn db)]
-    {:send [{:command "delete-timer"
+  (let [[_ socket] (:conn db)]
+    {:send [{:command  "delete-timer"
              :timer-id id} socket]}))
 
 (defn delete-timer

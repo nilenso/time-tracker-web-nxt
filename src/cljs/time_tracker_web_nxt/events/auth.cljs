@@ -30,10 +30,10 @@
 (defn logout
   [{:keys [db] :as cofx} [_ user]]
   (let [[_ socket] (:conn db)]
-    {:db db/default-db
-     :close socket
+    {:db                  db/default-db
+     :close               socket
      :clear-local-storage nil
-     :dispatch [:goto :sign-in]}))
+     :dispatch            [:goto :sign-in]}))
 
 
 (defn init []

@@ -15,21 +15,21 @@
   ;; Set options for Toastr.js notifications
   (aset js/toastr
         "options"
-        (clj->js {:closeButton false
-                  :debug false
-                  :newestOnTop true
-                  :progressBar false
-                  :positionClass "toast-top-center"
+        (clj->js {:closeButton       false
+                  :debug             false
+                  :newestOnTop       true
+                  :progressBar       false
+                  :positionClass     "toast-top-center"
                   :preventDuplicates true
-                  :onclick nil
-                  :showDuration "20000"
-                  :hideDuration "1000"
-                  :timeOut "1500"
-                  :extendedTimeOut "1000"
-                  :showEasing "swing"
-                  :hideEasing "linear"
-                  :showMethod "fadeIn"
-                  :hideMethod "fadeOut"}))
+                  :onclick           nil
+                  :showDuration      "20000"
+                  :hideDuration      "1000"
+                  :timeOut           "1500"
+                  :extendedTimeOut   "1000"
+                  :showEasing        "swing"
+                  :hideEasing        "linear"
+                  :showMethod        "fadeIn"
+                  :hideMethod        "fadeOut"}))
 
   (tt-reg-event-db
    :show-widget
@@ -69,13 +69,13 @@
    :select-client
    (fn [{:keys [db] :as cofx} [_ id]]
      (.log js/console "select-client called with id:" id)
-     {:db (assoc db :selected-client id)
+     {:db       (assoc db :selected-client id)
       :dispatch [:select-project (:id (first (filter #(= (:client_id %) id) (:projects db))))]}))
 
   (rf/reg-event-fx
    :select-project
    (fn [{:keys [db] :as cofx} [_ id]]
-     {:db (assoc db :selected-project id)
+     {:db       (assoc db :selected-project id)
       :dispatch [:select-task (:id (first (filter #(= (:project_id %) id) (:tasks db))))]}))
 
   (rf/reg-event-db

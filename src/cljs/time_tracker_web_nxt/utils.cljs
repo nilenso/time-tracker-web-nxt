@@ -10,7 +10,7 @@
   (+ (* 60 60 hh) (* 60 mm) ss))
 
 (defn ->hh-mm-ss [duration]
-  (let [hours (quot duration (* 60 60))
+  (let [hours   (quot duration (* 60 60))
         minutes (- (quot duration 60) (* hours 60))
         seconds (- duration (* hours 60 60) (* minutes 60))]
     {:hh hours :mm minutes :ss seconds}))
@@ -31,13 +31,13 @@
   "Takes a date of the form 'Tue Oct 10 2017 11:30:21 GMT+0530 (IST)'
   and returns a corresponding Unix epoch"
   [timer-date now-datetime]
-  (let [timer-format "E MMM dd yyyy HH:mm:ss"
+  (let [timer-format     "E MMM dd yyyy HH:mm:ss"
         ;; Timer date in db is of the form "Tue Oct 10 2017 11:30:21 GMT+0530 (IST)"
         ;; We choose a format to extract the date in UTC midnight
         ;; To match it with formatter we have to drop the last 15 chars
-        timer-datetime (tformat/parse
-                        (tformat/formatter timer-format)
-                        (clojure.string/join (drop-last 15 timer-date)))
+        timer-datetime   (tformat/parse
+                          (tformat/formatter timer-format)
+                          (clojure.string/join (drop-last 15 timer-date)))
         ;; Timer date stores 00:00:00 for HH:mm:ss
         ;; so we need to advance it by a Period corresponding to now
         created-datetime (tcore/plus
