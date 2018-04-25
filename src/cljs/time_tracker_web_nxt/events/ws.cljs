@@ -36,10 +36,10 @@
 
 (defn ws-create [goog-auth-id]
   (let [response-chan (chan)
-        handlers {:on-message #(do
-                                 (ws-receive (fmt/read fmt/json (.-data %)))
-                                 (put! response-chan (fmt/read fmt/json (.-data %))))}
-        conn (ws/create (:conn-url config/env) handlers)]
+        handlers      {:on-message #(do
+                                      (ws-receive (fmt/read fmt/json (.-data %)))
+                                      (put! response-chan (fmt/read fmt/json (.-data %))))}
+        conn          (ws/create (:conn-url config/env) handlers)]
     (go
       (let [data (<! response-chan)]
         (if (= "ready" (:type data))
@@ -70,7 +70,7 @@
   (rf/reg-event-fx
    :save-connection
    (fn [{:keys [db] :as cofx} [_ sock]]
-     {:db (assoc db :conn sock)
+     {:db   (assoc db :conn sock)
       :ping sock}))
 
   (rf/reg-fx :send ws-send)

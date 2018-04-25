@@ -19,9 +19,9 @@
 
 (defn dispatch-route [matched-route]
   (let [panel (-> matched-route
-                 :handler
-                 name
-                 keyword)]
+                  :handler
+                  name
+                  keyword)]
     (timbre/info "dispatch-route called with" matched-route)
     (rf/dispatch [:set-active-panel panel])
     nil))

@@ -19,7 +19,7 @@
 
 (defn dropdown-widget [items selected-id event]
   [:select.project-dropdown
-   {:value (or selected-id "")
+   {:value     (or selected-id "")
     :on-change (fn [val]
                  (rf/dispatch [event (-> val element-value int)]))}
    (for [{:keys [id name]} items]
@@ -28,61 +28,60 @@
                            {:value id :label name}) name])])
 
 (defn create-timer-widget []
-  (let [data            (reagent/atom {:notes ""
-                                       :elapsed-hh 0
-                                       :elapsed-mm 0
-                                       :elapsed-ss 0})]
+  (let [data (reagent/atom {:notes      ""
+                            :elapsed-hh 0
+                            :elapsed-mm 0
+                            :elapsed-ss 0})]
     (fn []
-      (let [show?            (rf/subscribe [:show-create-timer-widget?])
-            clients @(rf/subscribe [:clients])
-            selected-client @(rf/subscribe [:selected-client])
-            all-projects @(rf/subscribe [:projects])
-            projects        (filter #(= (:client_id %) selected-client) all-projects)
-            selected-project @(rf/subscribe [:selected-project])
-
-            all-tasks            @(rf/subscribe [:tasks])
-            tasks (filter #(= (:project_id %) selected-project) all-tasks)
-            selected-task @(rf/subscribe [:selected-task])
-            notes-handler #(swap! data assoc :notes (element-value %))
-            duration-handler (fn [key event]
-                               (let [val    (element-value event)
-                                     parsed (if (empty? val) 0 (js/parseInt val 10))]
-                                 (swap! data assoc key parsed)))
+      (let [show?                    (rf/subscribe [:show-create-timer-widget?])
+            clients                  @(rf/subscribe [:clients])
+            selected-client          @(rf/subscribe [:selected-client])
+            all-projects             @(rf/subscribe [:projects])
+            projects                 (filter #(= (:client_id %) selected-client) all-projects)
+            selected-project         @(rf/subscribe [:selected-project])
+            all-tasks                @(rf/subscribe [:tasks])
+            tasks                    (filter #(= (:project_id %) selected-project) all-tasks)
+            selected-task            @(rf/subscribe [:selected-task])
+            notes-handler            #(swap! data assoc :notes (element-value %))
+            duration-handler         (fn [key event]
+                                       (let [val    (element-value event)
+                                             parsed (if (empty? val) 0 (js/parseInt val 10))]
+                                         (swap! data assoc key parsed)))
             partial-duration-handler #(partial duration-handler %)
-            reset-elements!      (fn []
-                                   (rf/dispatch [:select-client (:id (first clients))])
-                                   (reset! data {:notes ""
-                                                 :elapsed-hh 0
-                                                 :elapsed-mm 0
-                                                 :elapsed-ss 0}))
-            cancel-handler       (fn []
-                                   (rf/dispatch [:hide-widget])
-                                   (reset-elements!))
-            create-handler        (fn []
-                                    (rf/dispatch
-                                     [:trigger-create-timer
-                                      {:id selected-task}
-                                      @data])
-                                    (reset-elements!))]
-             [:div.new-timer-popup {:style (if @show? {} {:display "none"})}
-              [dropdown-widget clients selected-client :select-client]
-              [dropdown-widget projects selected-project :select-project]
-              [dropdown-widget tasks selected-task :select-task]
-              [:textarea.project-notes {:placeholder "Add notes"
-                                        :value       (:notes @data)
-                                        :on-change   notes-handler}]
-              [:div
-               [:input {:value (:elapsed-hh @data) :on-change (partial-duration-handler :elapsed-hh)}]
-               [:input {:value (:elapsed-mm @data) :on-change (partial-duration-handler :elapsed-mm)}]
-               [:input {:value (:elapsed-ss @data) :on-change (partial-duration-handler :elapsed-ss)}]]
+            reset-elements!          (fn []
+                                       (rf/dispatch [:select-client (:id (first clients))])
+                                       (reset! data {:notes      ""
+                                                     :elapsed-hh 0
+                                                     :elapsed-mm 0
+                                                     :elapsed-ss 0}))
+            cancel-handler           (fn []
+                                       (rf/dispatch [:hide-widget])
+                                       (reset-elements!))
+            create-handler           (fn []
+                                       (rf/dispatch
+                                        [:trigger-create-timer
+                                         {:id selected-task}
+                                         @data])
+                                       (reset-elements!))]
+        [:div.new-timer-popup {:style (if @show? {} {:display "none"})}
+         [dropdown-widget clients selected-client :select-client]
+         [dropdown-widget projects selected-project :select-project]
+         [dropdown-widget tasks selected-task :select-task]
+         [:textarea.project-notes {:placeholder "Add notes"
+                                   :value       (:notes @data)
+                                   :on-change   notes-handler}]
+         [:div
+          [:input {:value (:elapsed-hh @data) :on-change (partial-duration-handler :elapsed-hh)}]
+          [:input {:value (:elapsed-mm @data) :on-change (partial-duration-handler :elapsed-mm)}]
+          [:input {:value (:elapsed-ss @data) :on-change (partial-duration-handler :elapsed-ss)}]]
 
-              [:div.button-group
-               [:button.btn.btn-secondary
-                {:type "input" :on-click cancel-handler}
-                "Cancel"]
-               [:button.btn.btn-primary
-                {:type "input" :on-click create-handler}
-                "Create"]]]))))
+         [:div.button-group
+          [:button.btn.btn-secondary
+           {:type "input" :on-click cancel-handler}
+           "Cancel"]
+          [:button.btn.btn-primary
+           {:type "input" :on-click create-handler}
+           "Create"]]]))))
 
 (defn timer-display
   [{:keys [id duration client project task state notes edit-timer?] :as timer}]
@@ -152,15 +151,14 @@
             projects      @(rf/subscribe [:projects])
             tasks         @(rf/subscribe [:tasks])
             get-by-id     (fn [p id] (some #(when (= id (:id %)) %) p))
-
-            task (get-by-id tasks task-id)
-            project (get-by-id projects (:project_id task))
-            client (get-by-id clients (:client_id project))
+            task          (get-by-id tasks task-id)
+            project       (get-by-id projects (:project_id task))
+            client        (get-by-id clients (:client_id project))
             timer-options {:id          id
                            :duration    elapsed
-                           :client client
-                           :project project
-                           :task task
+                           :client      client
+                           :project     project
+                           :task        task
                            :state       state
                            :notes       notes
                            :edit-timer? edit-timer?}]
@@ -226,24 +224,24 @@
      [:li.user-menu-header (str "Signed in as ")
       [:span.user-menu-username [:strong (:name @user)]]]
      [:li.dropdown-divider]
-     [:a {:href (routes/url-for :clients)
-          :style {:display (if (= "admin" (:role @user))
-                             "block"
-                             "none")}
+     [:a {:href     (routes/url-for :clients)
+          :style    {:display (if (= "admin" (:role @user))
+                                "block"
+                                "none")}
           :on-click #(rf/dispatch [:get-all-clients])}
       [:li.user-menu-link "Manage Clients"]]
-     [:a {:href "javascript:void(0)"
+     [:a {:href     "javascript:void(0)"
           :on-click (fn [_] (-> (.signOut (auth/auth-instance))
-                              (.then
-                               #(rf/dispatch [:log-out]))))}
+                                (.then
+                                 #(rf/dispatch [:log-out]))))}
       [:li.user-menu-link "Sign out"]]]))
 
 (defn header []
-  (let [active-panel  (rf/subscribe [:active-panel])
-        timers-panel? (= :timers @active-panel)
-        about-panel?  (= :about @active-panel)
+  (let [active-panel   (rf/subscribe [:active-panel])
+        timers-panel?  (= :timers @active-panel)
+        about-panel?   (= :about @active-panel)
         clients-panel? (= :clients @active-panel)
-        user (rf/subscribe [:user])]
+        user           (rf/subscribe [:user])]
     [:div.header.pure-menu.pure-menu-horizontal
      [:p#logo
       {:href "#"} "Time Tracker"]
@@ -274,7 +272,7 @@
      [user-menu]]))
 
 (defn timers-panel []
-  (let [user     (rf/subscribe [:user])]
+  (let [user (rf/subscribe [:user])]
     [:div.page
      [header]
      [main]]))
@@ -295,28 +293,28 @@
        [:div.poc-child
         [:label.cclabel "Name: "]
         [:input.poc-input
-         {:type "text"
-          :name (str "poc-name-" id)
-          :value (:name data)
+         {:type      "text"
+          :name      (str "poc-name-" id)
+          :value     (:name data)
           :on-change #(update-poc [id :name] (element-value %))}]
         [:label.cclabel "Phone: "]
         [:input.poc-input
-         {:type "text"
-          :name (str "poc-phone-" id)
-          :value (:phone data)
+         {:type      "text"
+          :name      (str "poc-phone-" id)
+          :value     (:phone data)
           :on-change #(update-poc [id :phone] (element-value %))}]
         [:label.cclabel "Email: "]
         [:input.poc-input
-         {:type "text"
-          :name (str "poc-email-" id)
-          :value (:email data)
+         {:type      "text"
+          :name      (str "poc-email-" id)
+          :value     (:email data)
           :on-change #(update-poc [id :email] (element-value %))}]])
      [:a.link.link-primary
-      {:href "javascript:void(0)"
-       :on-click #(rf/dispatch [:add-point-of-contact {:name ""
-                                                       :phone ""
-                                                       :email ""
-                                                       :action "insert"
+      {:href     "javascript:void(0)"
+       :on-click #(rf/dispatch [:add-point-of-contact {:name      ""
+                                                       :phone     ""
+                                                       :email     ""
+                                                       :action    "insert"
                                                        :client_id (:id client)}])}
       [:i.fa.fa-plus-square {:aria-hidden "true"}]
       [:span "Point of Contact"]])))
@@ -407,11 +405,11 @@
       {::rdt/column-key [:address] ::rdt/column-label "Address"}
       {::rdt/column-key [:gstin] ::rdt/column-label "GSTIN"}
       {::rdt/column-key [:pan] ::rdt/column-label "PAN"}
-      {::rdt/column-key []
+      {::rdt/column-key   []
        ::rdt/column-label ""
        ::rdt/render-fn
        (fn [client]
-         [:a {:href "javascript:void(0)"
+         [:a {:href     "javascript:void(0)"
               :on-click #(rf/dispatch [:show-edit-client-form client])}
           [:i.fa.fa-pencil-square-o {:aria-hidden "true"}]])}]
      {::rdt/pagination {::rdt/enabled? true
@@ -430,7 +428,7 @@
 
 (defn app []
   (let [active-panel (rf/subscribe [:active-panel])
-        user (rf/subscribe [:user])]
+        user         (rf/subscribe [:user])]
     (when (:signed-in? @user)
       (rf/dispatch [:fetch-data]))
     [(panels @active-panel)]))

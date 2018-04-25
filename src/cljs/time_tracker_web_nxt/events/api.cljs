@@ -13,34 +13,34 @@
   (assoc-in db [:user :role] (:role user)))
 
 (defn get-user-details [cofx [_ auth-token]]
-  {:http-xhrio {:method :get
-                :uri "/api/users/me/"
-                :timeout 5000
+  {:http-xhrio {:method          :get
+                :uri             "/api/users/me/"
+                :timeout         5000
                 :response-format (ajax/json-response-format {:keywords? true})
-                :headers {"Authorization" (str "Bearer " auth-token)
-                          "Access-Control-Allow-Origin" "*"}
-                :on-success [:user-details-retrieved]
-                :on-failure [:request-failed]}})
+                :headers         {"Authorization"               (str "Bearer " auth-token)
+                                  "Access-Control-Allow-Origin" "*"}
+                :on-success      [:user-details-retrieved]
+                :on-failure      [:request-failed]}})
 
 (defn get-projects [cofx [_ auth-token]]
-  {:http-xhrio {:method :get
-                :uri "/api/projects/"
-                :timeout 8000
+  {:http-xhrio {:method          :get
+                :uri             "/api/projects/"
+                :timeout         8000
                 :response-format (ajax/json-response-format {:keywords? true})
-                :headers {"Authorization" (str "Bearer " auth-token)
-                          "Access-Control-Allow-Origin" "*"}
-                :on-success [:projects-retrieved]
-                :on-failure [:request-failed]}})
+                :headers         {"Authorization"               (str "Bearer " auth-token)
+                                  "Access-Control-Allow-Origin" "*"}
+                :on-success      [:projects-retrieved]
+                :on-failure      [:request-failed]}})
 
 (defn get-tasks [cofx [_ auth-token]]
-  {:http-xhrio {:method :get
-                :uri "/api/tasks/"
-                :timeout 8000
+  {:http-xhrio {:method          :get
+                :uri             "/api/tasks/"
+                :timeout         8000
                 :response-format (ajax/json-response-format {:keywords? true})
-                :headers {"Authorization" (str "Bearer " auth-token)
-                          "Access-Control-Allow-Origin" "*"}
-                :on-success [:tasks-retrieved]
-                :on-failure [:request-failed]}})
+                :headers         {"Authorization"               (str "Bearer " auth-token)
+                                  "Access-Control-Allow-Origin" "*"}
+                :on-success      [:tasks-retrieved]
+                :on-failure      [:request-failed]}})
 
 (defn projects-retrieved [db [_ projects]]
   (assoc db :projects projects))
@@ -51,15 +51,15 @@
 (defn get-timers [cofx [_ auth-token timer-date]]
   (let [start-epoch (t-coerce/to-epoch timer-date)
         end-epoch   (-> timer-date
-                       (t-core/plus (t-core/days 1))
-                       t-coerce/to-epoch)]
+                        (t-core/plus (t-core/days 1))
+                        t-coerce/to-epoch)]
     {:http-xhrio {:method          :get
                   :uri             "/api/timers/"
                   :params          {:start start-epoch
                                     :end   end-epoch}
                   :timeout         8000
                   :response-format (ajax/json-response-format {:keywords? true})
-                  :headers         {"Authorization" (str "Bearer " auth-token)
+                  :headers         {"Authorization"               (str "Bearer " auth-token)
                                     "Access-Control-Allow-Origin" "*"}
                   :on-success      [:timers-retrieved]
                   :on-failure      [:request-failed]}}))
@@ -73,18 +73,18 @@
 (defn clients-retrieved [{:keys [db] :as cofx} [_ clients]]
   (let [transform (fn [{:keys [points-of-contact]}]
                     (zipmap (range) points-of-contact))]
-    {:db (assoc db
-                :clients
-                (map #(assoc % :points-of-contact (transform %))
-                     clients))
+    {:db       (assoc db
+                      :clients
+                      (map #(assoc % :points-of-contact (transform %))
+                           clients))
      :dispatch [:select-client (:id (first clients))]}))
 
 (defn get-all-clients [{:keys [db] :as cofx} [_ auth-token]]
-  {:http-xhrio {:method :get
-                :uri "/api/clients/"
-                :timeout 5000
+  {:http-xhrio {:method          :get
+                :uri             "/api/clients/"
+                :timeout         5000
                 :response-format (ajax/json-response-format {:keywords? true})
-                :headers         {"Authorization" (str "Bearer " auth-token)
+                :headers         {"Authorization"               (str "Bearer " auth-token)
                                   "Access-Control-Allow-Origin" "*"}
                 :on-success      [:clients-retrieved]
                 :on-failure      [:request-failed]}})
@@ -95,7 +95,7 @@
         data  (assoc data :points-of-contact pocs)]
     {:http-xhrio {:method          :post
                   :uri             "/api/clients/"
-                  :headers         {"Authorization" (str "Bearer " token)
+                  :headers         {"Authorization"               (str "Bearer " token)
                                     "Access-Control-Allow-Origin" "*"}
                   :params          data
                   :timeout         5000
@@ -105,21 +105,21 @@
                   :on-failure      [:client-creation-failed]}}))
 
 (defn client-created [{:keys [db]}]
-  {:dispatch-n [[:get-all-clients (get-in db [:user :token])]
-                [:set-active-panel :clients]]
+  {:dispatch-n     [[:get-all-clients (get-in db [:user :token])]
+                    [:set-active-panel :clients]]
    :notify-success "Client created successfully."})
 
 (defn client-creation-failed [{:keys [db]}]
   {:notify-error "Failed to create client"})
 
 (defn update-client [{:keys [db] :as cofx} [_ data]]
-  (let [token (get-in db [:user :token])
+  (let [token     (get-in db [:user :token])
         client-id (:id data)
-        pocs (or (vals (:points-of-contact data)) [])
-        data (assoc data :points-of-contact pocs)]
+        pocs      (or (vals (:points-of-contact data)) [])
+        data      (assoc data :points-of-contact pocs)]
     {:http-xhrio {:method          :put
                   :uri             (str "/api/clients/" client-id "/")
-                  :headers         {"Authorization" (str "Bearer " token)
+                  :headers         {"Authorization"               (str "Bearer " token)
                                     "Access-Control-Allow-Origin" "*"}
                   :params          data
                   :timeout         5000
@@ -129,8 +129,8 @@
                   :on-failure      [:client-update-failed]}}))
 
 (defn client-updated [{:keys [db]}]
-  {:dispatch-n [[:get-all-clients (get-in db [:user :token])]
-                [:set-active-panel :clients]]
+  {:dispatch-n     [[:get-all-clients (get-in db [:user :token])]
+                    [:set-active-panel :clients]]
    :notify-success "Client updated successfully."})
 
 (defn client-update-failed [{:keys [db]}]
@@ -141,7 +141,7 @@
 (defn http-failure [_ [_ e]]
   (cond
     (#{401 403} (:status e)) {:notify-error "Could not authenticate"}
-    :else {:notify-error "Could not connect to server"}))
+    :else                    {:notify-error "Could not connect to server"}))
 
 (defn init []
   (rf/reg-event-fx :request-failed http-failure)
