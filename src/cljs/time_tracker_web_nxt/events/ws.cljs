@@ -58,8 +58,8 @@
       (ws/send sock (clj->js {:command "ping"}) fmt/json))))
 
 (defn ws-close [socket]
-  (.log js/console "Closing websocket connection")
-  (ws/close socket))
+  (when socket
+    (ws/close socket)))
 
 (defn init []
   (rf/reg-event-fx
