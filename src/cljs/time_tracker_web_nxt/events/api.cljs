@@ -45,6 +45,29 @@
 (defn projects-retrieved [db [_ projects]]
   (assoc db :projects projects))
 
+(defn project-created [{:keys [db]}]
+  {:dispatch-n     [[:get-all-projects (get-in db [:user :token])]
+                    ;; TODO: redirect to :projects
+                    [:set-active-panel :create-project]]
+   :notify-success "Project created successfully."})
+
+(defn project-creation-failed [{:keys [db]}]
+  {:notify-error "Failed to create project"})
+
+(defn create-project
+  [{:keys [db] :as cofx} [_ data]]
+  (let [token (get-in db [:user :token])]
+    {:http-xhrio {:method          :post
+                  :uri             "/api/projects/"
+                  :headers         {"Authorization"               (str "Bearer " token)
+                                    "Access-Control-Allow-Origin" "*"}
+                  :params          data
+                  :timeout         5000
+                  :format          (ajax/json-request-format)
+                  :response-format (ajax/json-response-format {:keywords? true})
+                  :on-success      [:project-created]
+                  :on-failure      [:project-creation-failed]}}))
+
 (defn tasks-retrieved [db [_ tasks]]
   (assoc db :tasks tasks))
 
@@ -146,6 +169,7 @@
 (defn init []
   (rf/reg-event-fx :request-failed http-failure)
   (rf/reg-event-fx :get-projects get-projects)
+  (rf/reg-event-fx :create-project create-project)
   (rf/reg-event-fx :get-tasks get-tasks)
   (rf/reg-event-fx :get-timers get-timers)
   (rf/reg-event-fx :get-all-clients get-all-clients)
@@ -185,4 +209,7 @@
 
   (intr/tt-reg-event-fx :client-update-failed client-update-failed)
   (intr/tt-reg-event-fx :client-created client-created)
-  (intr/tt-reg-event-fx :client-creation-failed client-creation-failed))
+  (intr/tt-reg-event-fx :client-creation-failed client-creation-failed)
+
+  (intr/tt-reg-event-fx :project-created project-created)
+  (intr/tt-reg-event-fx :project-creation-failed project-creation-failed))

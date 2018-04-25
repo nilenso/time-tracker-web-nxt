@@ -339,6 +339,17 @@ td.timer-column {
     margin-bottom: 1.5em;
 }
 
+.create-project-form {
+    margin: 0 auto;
+    margin-top: 100px;
+    width: 700px;
+}
+
+.create-project-form div {
+    margin-bottom: 1.5em;
+}
+
+
 .ccinput {
     width: 100%;
     border: 1px solid rgba(0,0,0,.12);

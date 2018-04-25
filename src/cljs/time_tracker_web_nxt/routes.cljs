@@ -10,7 +10,8 @@
                   "sign-in"  :sign-in
                   "about"    :about
                   "clients/" {""    :clients
-                              "new" :create-client}}])
+                              "new" :create-client}
+                  "projects/" {"new" :create-project}}])
 
 (def url-for (partial bidi/path-for routes))
 
