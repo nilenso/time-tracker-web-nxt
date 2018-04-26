@@ -91,15 +91,14 @@
         cancel-handler #(rf/dispatch [:cancel-form-and-return
                                       {:panel         :clients
                                        :remove-db-key :client}])]
-    (fn []
-      [:div.page
-       [common/header]
-       (client-form {:source           client
-                     :source-update-fn update-fn
-                     :submit           {:name    "Create"
-                                        :handler submit-handler}
-                     :cancel           {:name    "Cancel"
-                                        :handler cancel-handler}})])))
+    [:div.page
+     [common/header]
+     [client-form {:source           client
+                   :source-update-fn update-fn
+                   :submit           {:name    "Create"
+                                      :handler submit-handler}
+                   :cancel           {:name    "Cancel"
+                                      :handler cancel-handler}}]]))
 
 (defn edit-client-panel []
   (let [client         (rf/subscribe [:client])
@@ -109,15 +108,14 @@
         cancel-handler #(rf/dispatch [:cancel-form-and-return
                                       {:panel         :clients
                                        :remove-db-key :client}])]
-    (fn []
-      [:div.page
-       [common/header]
-       (client-form {:source           client
-                     :source-update-fn update-fn
-                     :submit           {:name    "Update"
-                                        :handler submit-handler}
-                     :cancel           {:name    "Cancel"
-                                        :handler cancel-handler}})])))
+    [:div.page
+     [common/header]
+     [client-form {:source           client
+                    :source-update-fn update-fn
+                    :submit           {:name    "Update"
+                                       :handler submit-handler}
+                    :cancel           {:name    "Cancel"
+                                       :handler cancel-handler}}]]))
 
 (defn clients-panel []
   [:div.page
