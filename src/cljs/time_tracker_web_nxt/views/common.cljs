@@ -11,6 +11,16 @@
 (defn element-value [event]
   (-> event .-target .-value))
 
+(defn wrap-event-value
+  [on-change-fn]
+  (fn [event]
+    (on-change-fn (element-value event))))
+
+(defn input
+  [{:keys [on-change] :as attrs}]
+  [:input (assoc attrs
+                 :on-change (wrap-event-value on-change))])
+
 (defn dropdown-widget [items selected-id event]
   [:select.project-dropdown
    {:value     (or selected-id "")

@@ -14,10 +14,11 @@
        [:h2 "Create a project"]
        [:div
         [:label.cclabel "Name: "]
-        [:input.ccinput {:type      "text"
-                         :name      "name"
-                         :value     @project-name
-                         :on-change #(reset! project-name (common/element-value %))}]]
+        [common/input {:type      "text"
+                       :name      "name"
+                       :value     @project-name
+                       :class     "ccinput"
+                       :on-change #(reset! project-name %)}]]
        [common/dropdown-widget @clients @selected-client :select-client]
        [:div.button-group.actions
         [:button.btn.btn-primary

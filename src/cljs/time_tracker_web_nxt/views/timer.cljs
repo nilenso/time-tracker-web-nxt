@@ -5,6 +5,14 @@
    [time-tracker-web-nxt.views.common :as common]
    [time-tracker-web-nxt.utils :as utils]))
 
+(defn- duration-handler
+  [data key]
+  (fn [val]
+    (let [parsed (if (empty? val)
+                   0
+                   (js/parseInt val 10))]
+      (swap! data assoc key parsed))))
+
 (defn create-timer-widget []
   (let [data (reagent/atom {:notes      ""
                             :elapsed-hh 0
@@ -21,11 +29,6 @@
             tasks                    (filter #(= (:project_id %) selected-project) all-tasks)
             selected-task            @(rf/subscribe [:selected-task])
             notes-handler            #(swap! data assoc :notes (common/element-value %))
-            duration-handler         (fn [key event]
-                                       (let [val    (common/element-value event)
-                                             parsed (if (empty? val) 0 (js/parseInt val 10))]
-                                         (swap! data assoc key parsed)))
-            partial-duration-handler #(partial duration-handler %)
             reset-elements!          (fn []
                                        (rf/dispatch [:select-client (:id (first clients))])
                                        (reset! data {:notes      ""
@@ -49,9 +52,24 @@
                                    :value       (:notes @data)
                                    :on-change   notes-handler}]
          [:div
-          [:input {:value (:elapsed-hh @data) :on-change (partial-duration-handler :elapsed-hh)}]
-          [:input {:value (:elapsed-mm @data) :on-change (partial-duration-handler :elapsed-mm)}]
-          [:input {:value (:elapsed-ss @data) :on-change (partial-duration-handler :elapsed-ss)}]]
+          [:label
+           "Hours"
+           [common/input {:value     (:elapsed-hh @data)
+                          :type      "number"
+                          :on-change (duration-handler data :elapsed-hh)}]
+           [:br]]
+          [:label
+           "Minutes"
+           [common/input {:value     (:elapsed-mm @data)
+                          :type      "number"
+                          :on-change (duration-handler data :elapsed-mm)}]
+           [:br]]
+          [:label
+           "Seconds"
+           [common/input {:value     (:elapsed-ss @data)
+                          :type      "number"
+                          :on-change (duration-handler data :elapsed-ss)}]
+           [:br]]]
 
          [:div.button-group
           [:button.btn.btn-secondary
@@ -100,17 +118,18 @@
   (let [changes                 (reagent/atom {:notes      notes
                                                :elapsed-hh (:hh duration)
                                                :elapsed-mm (:mm duration)
-                                               :elapsed-ss (:ss duration)})
-        duration-change-handler (fn [key event]
-                                  (let [val    (common/element-value event)
-                                        parsed (if (empty? val) 0 (js/parseInt val 10))]
-                                    (swap! changes assoc key parsed)))
-        handler                 #(partial duration-change-handler %)]
+                                               :elapsed-ss (:ss duration)})]
     (fn [{:keys [id edit-timer?]}]
       [:div
-       [:input {:value (:elapsed-hh @changes) :on-change (handler :elapsed-hh)}]
-       [:input {:value (:elapsed-mm @changes) :on-change (handler :elapsed-mm)}]
-       [:input {:value (:elapsed-ss @changes) :on-change (handler :elapsed-ss)}]
+       [common/input {:value     (:elapsed-hh @changes)
+                      :type      "number"
+                      :on-change (duration-handler changes :elapsed-hh)}]
+       [common/input {:value     (:elapsed-mm @changes)
+                      :type      "number"
+                      :on-change (duration-handler changes :elapsed-mm)}]
+       [common/input {:value     (:elapsed-ss @changes)
+                      :type      "number"
+                      :on-change (duration-handler changes :elapsed-ss)}]
        [:textarea {:value     (:notes @changes)
                    :on-change #(swap! changes assoc :notes (common/element-value %))}]
        [:button {:on-click #(reset! edit-timer? false)} "Cancel"]
@@ -151,8 +170,7 @@
        [:colgroup
         [:col {:style {:width "60%"}}]
         [:col {:style {:width "20%"}}]
-        [:col {:style {:width "20%"}}]
-        ]
+        [:col {:style {:width "20%"}}]]
        [:tbody
         (for [t sorted-timers]
           ^{:key (:id t)} [timer-row t])]])))

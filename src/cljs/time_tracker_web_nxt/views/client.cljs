@@ -16,23 +16,26 @@
        ^{:key id}
        [:div.poc-child
         [:label.cclabel "Name: "]
-        [:input.poc-input
+        [common/input
          {:type      "text"
           :name      (str "poc-name-" id)
           :value     (:name data)
-          :on-change #(update-poc [id :name] (common/element-value %))}]
+          :class     "poc-input"
+          :on-change #(update-poc [id :name] %)}]
         [:label.cclabel "Phone: "]
-        [:input.poc-input
+        [common/input
          {:type      "text"
           :name      (str "poc-phone-" id)
           :value     (:phone data)
-          :on-change #(update-poc [id :phone] (common/element-value %))}]
+          :class     "poc-input"
+          :on-change #(update-poc [id :phone] %)}]
         [:label.cclabel "Email: "]
-        [:input.poc-input
+        [common/input
          {:type      "text"
           :name      (str "poc-email-" id)
           :value     (:email data)
-          :on-change #(update-poc [id :email] (common/element-value %))}]])
+          :class     "poc-input"
+          :on-change #(update-poc [id :email] %)}]])
      [:a.link.link-primary
       {:href     "javascript:void(0)"
        :on-click #(rf/dispatch [:add-point-of-contact {:name      ""
@@ -47,10 +50,11 @@
   [:div.create-client-form
    [:div
     [:label.cclabel "Name: "]
-    [:input.ccinput {:type      "text"
-                     :name      "name"
-                     :value     (:name @source)
-                     :on-change #(source-update-fn :name (common/element-value %))}]]
+    [common/input {:type      "text"
+                   :name      "name"
+                   :value     (:name @source)
+                   :class     "ccinput"
+                   :on-change #(source-update-fn :name %)}]]
    [:div
     [:label.cclabel "Address: "]
     [:textarea.cctextarea {:name      "address"
@@ -58,16 +62,18 @@
                            :on-change #(source-update-fn :address (common/element-value %))}]]
    [:div
     [:label.cclabel "GSTIN: "]
-    [:input.ccinput {:type      "text"
-                     :name      "gstin"
-                     :value     (:gstin @source)
-                     :on-change #(source-update-fn :gstin (common/element-value %))}]]
+    [common/input {:type      "text"
+                   :name      "gstin"
+                   :value     (:gstin @source)
+                   :class     "ccinput"
+                   :on-change #(source-update-fn :gstin %)}]]
    [:div
     [:label.cclabel "PAN: "]
-    [:input.ccinput {:type      "text"
-                     :name      "pan"
-                     :value     (:pan @source)
-                     :on-change #(source-update-fn :pan (common/element-value %))}]]
+    [common/input {:type      "text"
+                   :name      "pan"
+                   :value     (:pan @source)
+                   :class     "ccinput"
+                   :on-change #(source-update-fn :pan %)}]]
    [points-of-contact @source]
    [:div.button-group.actions
     [:button.btn.btn-primary
