@@ -31,13 +31,11 @@
    :about          about-panel
    :sign-in        sign-in-panel
    :clients        client-views/clients-panel
+   :client         client-views/client-panel
    :create-client  client-views/create-client-panel
-   :edit-client    client-views/edit-client-panel
-   :create-project project-views/create-project-panel})
+   :edit-client    client-views/edit-client-panel})
 
 (defn app []
   (let [active-panel (rf/subscribe [:active-panel])
         user         (rf/subscribe [:user])]
-    (when (:signed-in? @user)
-      (rf/dispatch [:fetch-data]))
     [(panels @active-panel)]))

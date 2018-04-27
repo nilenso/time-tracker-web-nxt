@@ -23,9 +23,60 @@
 (create-subscription :show-create-timer-widget?)
 (create-subscription :show-user-menu?)
 (create-subscription :clients)
-(create-subscription :client) ;; TODO: check if we are using this subscription anywhere
-(create-subscription :selected-client)
-(create-subscription :selected-project)
-(create-subscription :selected-task)
-(create-subscription :projects)
-(create-subscription :tasks)
+(create-subscription :client)
+
+(rf/reg-sub
+ :all-projects
+ (fn [db]
+   (:projects db)))
+
+(rf/reg-sub
+ :projects
+ :<- [:all-projects]
+ :<- [:selected-client]
+ (fn [[all-projects selected-client] _]
+   (filter #(= (:client_id %) selected-client) all-projects)))
+
+(rf/reg-sub
+ :all-tasks
+ (fn [db]
+   (:tasks db)))
+
+(rf/reg-sub
+ :tasks
+ :<- [:all-tasks]
+ :<- [:selected-project]
+ (fn [[all-tasks selected-project] _]
+   (filter #(= (:project_id %) selected-project) all-tasks)))
+
+(rf/reg-sub
+ :db-selected-project
+ (fn [db]
+   (:selected-project db)))
+
+(rf/reg-sub
+ :db-selected-task
+ (fn [db]
+   (:selected-task db)))
+
+(rf/reg-sub
+ :selected-client
+ (fn [db]
+   (or (:selected-client db)
+       (:id (first (:clients db))))))
+
+(rf/reg-sub
+ :selected-project
+ :<- [:projects]
+ :<- [:db-selected-project]
+ (fn [[projects db-selected-project] _]
+   (or db-selected-project
+       (:id (first projects)))))
+
+(rf/reg-sub
+ :selected-task
+ :<- [:tasks]
+ :<- [:db-selected-task]
+ (fn [[tasks db-selected-task] _]
+   (or db-selected-task
+       (:id (first tasks)))))

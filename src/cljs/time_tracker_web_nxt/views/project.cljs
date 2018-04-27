@@ -5,11 +5,17 @@
    [time-tracker-web-nxt.views.common :as common]))
 
 
-(defn project-form
-  [{:keys [project-name submit cancel]}]
-  (let [clients         (rf/subscribe [:clients])
-        selected-client (rf/subscribe [:selected-client])]
-    (fn [{:keys [project-name submit cancel] :as foo}]
+(defn project-form []
+  (let [project-name   (reagent/atom "")
+        clients         (rf/subscribe [:clients])
+        selected-client (rf/subscribe [:selected-client])
+        submit {:name "Create"
+                :handler (fn [m]
+                           (rf/dispatch [:create-project m]))}
+        ;; TODO: Cancel should just hide the form
+        cancel {:name "Cancel"
+                :handler #(rf/dispatch [:goto [:client :id @selected-client]])}]
+    (fn []
       [:div.create-project-form
        [:h2 "Create a project"]
        [:div
@@ -19,7 +25,6 @@
                        :value     @project-name
                        :class     "ccinput"
                        :on-change #(reset! project-name %)}]]
-       [common/dropdown-widget @clients @selected-client :select-client]
        [:div.button-group.actions
         [:button.btn.btn-primary
          {:type "input" :on-click #((:handler submit) {:name      @project-name
@@ -28,19 +33,3 @@
         [:button.btn.btn-secondary
          {:type "input" :on-click (:handler cancel)}
          (:name cancel)]]])))
-
-(defn create-project-panel []
-  (let [project-name   (reagent/atom "")
-        submit-handler (fn [m]
-                         (rf/dispatch [:create-project m]))
-        ;; TODO: change to goto projects page after adding a projects
-        ;; page
-        cancel-handler #(rf/dispatch [:goto :timers])]
-    (fn []
-      [:div.page
-       [common/header]
-       [project-form {:project-name project-name
-                      :submit       {:name    "Create"
-                                     :handler submit-handler}
-                      :cancel       {:name    "Cancel"
-                                     :handler cancel-handler}}]])))

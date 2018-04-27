@@ -46,9 +46,7 @@
   (assoc db :projects projects))
 
 (defn project-created [{:keys [db]}]
-  {:dispatch-n     [[:get-all-projects (get-in db [:user :token])]
-                    ;; TODO: redirect to :projects
-                    [:set-active-panel :create-project]]
+  {:dispatch       [:get-projects (get-in db [:user :token])]
    :notify-success "Project created successfully."})
 
 (defn project-creation-failed [{:keys [db]}]
@@ -99,10 +97,9 @@
     {:db       (assoc db
                       :clients
                       (map #(assoc % :points-of-contact (transform %))
-                           clients))
-     :dispatch [:select-client (:id (first clients))]}))
+                           clients))}))
 
-(defn get-all-clients [{:keys [db] :as cofx} [_ auth-token]]
+(defn get-clients [{:keys [db] :as cofx} [_ auth-token]]
   {:http-xhrio {:method          :get
                 :uri             "/api/clients/"
                 :timeout         5000
@@ -128,8 +125,8 @@
                   :on-failure      [:client-creation-failed]}}))
 
 (defn client-created [{:keys [db]}]
-  {:dispatch-n     [[:get-all-clients (get-in db [:user :token])]
-                    [:set-active-panel :clients]]
+  {:dispatch-n     [[:get-clients (get-in db [:user :token])]
+                    [:goto [:clients]]]
    :notify-success "Client created successfully."})
 
 (defn client-creation-failed [{:keys [db]}]
@@ -152,7 +149,7 @@
                   :on-failure      [:client-update-failed]}}))
 
 (defn client-updated [{:keys [db]}]
-  {:dispatch-n     [[:get-all-clients (get-in db [:user :token])]
+  {:dispatch-n     [[:get-clients (get-in db [:user :token])]
                     [:set-active-panel :clients]]
    :notify-success "Client updated successfully."})
 
@@ -172,7 +169,7 @@
   (rf/reg-event-fx :create-project create-project)
   (rf/reg-event-fx :get-tasks get-tasks)
   (rf/reg-event-fx :get-timers get-timers)
-  (rf/reg-event-fx :get-all-clients get-all-clients)
+  (rf/reg-event-fx :get-clients get-clients)
   (rf/reg-event-fx :create-client create-client)
   (rf/reg-event-fx :update-client update-client)
   (rf/reg-event-fx :get-user-details get-user-details)

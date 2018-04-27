@@ -65,18 +65,15 @@
      (-> (if remove-db-key (dissoc db remove-db-key) db)
          (set-active-panel-handler [:set-active-panel panel]))))
 
-  (rf/reg-event-fx
+  (rf/reg-event-db
    :select-client
-   (fn [{:keys [db] :as cofx} [_ id]]
-     (.log js/console "select-client called with id:" id)
-     {:db       (assoc db :selected-client id)
-      :dispatch [:select-project (:id (first (filter #(= (:client_id %) id) (:projects db))))]}))
+   (fn [db [_ id]]
+     (assoc db :selected-client id)))
 
-  (rf/reg-event-fx
+  (rf/reg-event-db
    :select-project
-   (fn [{:keys [db] :as cofx} [_ id]]
-     {:db       (assoc db :selected-project id)
-      :dispatch [:select-task (:id (first (filter #(= (:project_id %) id) (:tasks db))))]}))
+   (fn [db [_ id]]
+     (assoc db :selected-project id)))
 
   (rf/reg-event-db
    :select-task

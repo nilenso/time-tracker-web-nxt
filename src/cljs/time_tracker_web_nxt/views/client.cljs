@@ -4,7 +4,8 @@
    [re-frame-datatable.core :as rdt]
    [re-frame-datatable.views :as rdt-views]
    [reagent.core :as reagent]
-   [time-tracker-web-nxt.views.common :as common]))
+   [time-tracker-web-nxt.views.common :as common]
+   [time-tracker-web-nxt.views.project :as project]))
 
 
 (defn points-of-contact [client]
@@ -117,19 +118,51 @@
                     :cancel           {:name    "Cancel"
                                        :handler cancel-handler}}]]))
 
+(defn client-panel []
+  (let [selected-client-id (rf/subscribe [:selected-client])
+        all-clients (rf/subscribe [:clients])
+        selected-client (first (filter #(= (:id %) @selected-client-id) @all-clients))]
+    (fn []
+      [:div.page
+       [common/header]
+       ;; TODO: Show name of client and other information nicely
+       [:h3 (:name selected-client)]
+       [project/project-form]
+       [:div.panel
+        #_[:button.btn.btn-primary
+         {:type     "input"
+          :on-click #(rf/dispatch [:goto [:create-project]])}
+         "+ Add Project"]
+        [rdt/datatable
+         :project-datatable
+         [:projects]
+         [{::rdt/column-key [:id] ::rdt/column-label "#" ::rdt/sorting {::rdt/enabled? true}}
+          {::rdt/column-key [:name] ::rdt/column-label "Name" ::rdt/sorting {::rdt/enabled? true}}]
+         {::rdt/pagination {::rdt/enabled? true
+                            ::rdt/per-page 10}}]
+        [rdt-views/default-pagination-controls
+         :project-datatable
+         [:projects]]]])))
+
 (defn clients-panel []
   [:div.page
    [common/header]
    [:div.panel
     [:button.btn.btn-primary
      {:type     "input"
-      :on-click #(rf/dispatch [:goto :create-client])}
+      :on-click #(rf/dispatch [:goto [:create-client]])}
      "+ Add Client"]
     [rdt/datatable
      :client-datatable
      [:clients]
      [{::rdt/column-key [:id] ::rdt/column-label "#" ::rdt/sorting {::rdt/enabled? true}}
-      {::rdt/column-key [:name] ::rdt/column-label "Name" ::rdt/sorting {::rdt/enabled? true}}
+      {::rdt/column-key []
+       ::rdt/column-label "Name"
+       ::rdt/sorting {::rdt/enabled? true}
+       ::rdt/render-fn
+       (fn [client]
+         [:a {:href (str "/clients/" (:id client))}
+          (:name client)])}
       {::rdt/column-key [:address] ::rdt/column-label "Address"}
       {::rdt/column-key [:gstin] ::rdt/column-label "GSTIN"}
       {::rdt/column-key [:pan] ::rdt/column-label "PAN"}

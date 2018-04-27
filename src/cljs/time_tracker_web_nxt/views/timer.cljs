@@ -19,31 +19,29 @@
                             :elapsed-mm 0
                             :elapsed-ss 0})]
     (fn []
-      (let [show?                    (rf/subscribe [:show-create-timer-widget?])
-            clients                  @(rf/subscribe [:clients])
-            selected-client          @(rf/subscribe [:selected-client])
-            all-projects             @(rf/subscribe [:projects])
-            projects                 (filter #(= (:client_id %) selected-client) all-projects)
-            selected-project         @(rf/subscribe [:selected-project])
-            all-tasks                @(rf/subscribe [:tasks])
-            tasks                    (filter #(= (:project_id %) selected-project) all-tasks)
-            selected-task            @(rf/subscribe [:selected-task])
-            notes-handler            #(swap! data assoc :notes (common/element-value %))
-            reset-elements!          (fn []
-                                       (rf/dispatch [:select-client (:id (first clients))])
-                                       (reset! data {:notes      ""
-                                                     :elapsed-hh 0
-                                                     :elapsed-mm 0
-                                                     :elapsed-ss 0}))
-            cancel-handler           (fn []
-                                       (rf/dispatch [:hide-widget])
-                                       (reset-elements!))
-            create-handler           (fn []
-                                       (rf/dispatch
-                                        [:trigger-create-timer
-                                         {:id selected-task}
-                                         @data])
-                                       (reset-elements!))]
+      (let [show?            (rf/subscribe [:show-create-timer-widget?])
+            clients          @(rf/subscribe [:clients])
+            selected-client  @(rf/subscribe [:selected-client])
+            projects         @(rf/subscribe [:projects])
+            selected-project @(rf/subscribe [:selected-project])
+            tasks            @(rf/subscribe [:tasks])
+            selected-task    @(rf/subscribe [:selected-task])
+            notes-handler    #(swap! data assoc :notes (common/element-value %))
+            reset-elements!  (fn []
+                               (rf/dispatch [:select-client (:id (first clients))])
+                               (reset! data {:notes      ""
+                                             :elapsed-hh 0
+                                             :elapsed-mm 0
+                                             :elapsed-ss 0}))
+            cancel-handler   (fn []
+                               (rf/dispatch [:hide-widget])
+                               (reset-elements!))
+            create-handler   (fn []
+                               (rf/dispatch
+                                [:trigger-create-timer
+                                 {:id selected-task}
+                                 @data])
+                               (reset-elements!))]
         [:div.new-timer-popup {:style (if @show? {} {:display "none"})}
          [common/dropdown-widget clients selected-client :select-client]
          [common/dropdown-widget projects selected-project :select-project]
@@ -115,10 +113,10 @@
 
 (defn timer-edit
   [{:keys [duration notes]}]
-  (let [changes                 (reagent/atom {:notes      notes
-                                               :elapsed-hh (:hh duration)
-                                               :elapsed-mm (:mm duration)
-                                               :elapsed-ss (:ss duration)})]
+  (let [changes (reagent/atom {:notes      notes
+                               :elapsed-hh (:hh duration)
+                               :elapsed-mm (:mm duration)
+                               :elapsed-ss (:ss duration)})]
     (fn [{:keys [id edit-timer?]}]
       [:div
        [common/input {:value     (:elapsed-hh @changes)
@@ -144,8 +142,8 @@
     (fn [{:keys [id duration state task notes]}]
       (let [elapsed       (utils/->hh-mm-ss duration)
             clients       @(rf/subscribe [:clients])
-            projects      @(rf/subscribe [:projects])
-            tasks         @(rf/subscribe [:tasks])
+            projects      @(rf/subscribe [:all-projects])
+            tasks         @(rf/subscribe [:all-tasks])
             get-by-id     (fn [p id] (some #(when (= id (:id %)) %) p))
             task          (get-by-id tasks task-id)
             project       (get-by-id projects (:project_id task))
