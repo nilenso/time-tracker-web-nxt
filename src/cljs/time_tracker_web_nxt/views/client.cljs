@@ -121,23 +121,25 @@
 (defn client-panel []
   (let [selected-client-id (rf/subscribe [:selected-client])
         all-clients (rf/subscribe [:clients])
-        selected-client (first (filter #(= (:id %) @selected-client-id) @all-clients))]
+        selected-client (first (filter #(= (:id %) @selected-client-id) @all-clients))
+        show-project-form? (reagent/atom false)]
     (fn []
       [:div.page
        [common/header]
        ;; TODO: Show name of client and other information nicely
        [:h3 (:name selected-client)]
-       [project/project-form]
+       [project/project-form show-project-form?]
        [:div.panel
-        #_[:button.btn.btn-primary
+        [:button.btn.btn-primary
          {:type     "input"
-          :on-click #(rf/dispatch [:goto [:create-project]])}
+          :on-click #(reset! show-project-form? true)
+          :style (if-not @show-project-form? {} {:display "none"})}
          "+ Add Project"]
         [rdt/datatable
          :project-datatable
          [:projects]
          [{::rdt/column-key [:id] ::rdt/column-label "#" ::rdt/sorting {::rdt/enabled? true}}
-          {::rdt/column-key [:name] ::rdt/column-label "Name" ::rdt/sorting {::rdt/enabled? true}}]
+          {::rdt/column-key [:name] ::rdt/column-label "Project Name" ::rdt/sorting {::rdt/enabled? true}}]
          {::rdt/pagination {::rdt/enabled? true
                             ::rdt/per-page 10}}]
         [rdt-views/default-pagination-controls

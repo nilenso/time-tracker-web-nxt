@@ -5,18 +5,22 @@
    [time-tracker-web-nxt.views.common :as common]))
 
 
-(defn project-form []
+(defn project-form [show?]
   (let [project-name   (reagent/atom "")
         clients         (rf/subscribe [:clients])
         selected-client (rf/subscribe [:selected-client])
         submit {:name "Create"
                 :handler (fn [m]
-                           (rf/dispatch [:create-project m]))}
+                           (rf/dispatch [:create-project m])
+                           (reset! show? false)
+                           (reset! project-name ""))}
         ;; TODO: Cancel should just hide the form
         cancel {:name "Cancel"
-                :handler #(rf/dispatch [:goto [:client :id @selected-client]])}]
-    (fn []
-      [:div.create-project-form
+                :handler (fn []
+                           (reset! show? false)
+                           (reset! project-name ""))}]
+    (fn [show?]
+      [:div.create-project-form {:style (if @show? {} {:display "none"})}
        [:h2 "Create a project"]
        [:div
         [:label.cclabel "Name: "]
