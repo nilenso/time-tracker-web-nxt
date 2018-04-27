@@ -127,9 +127,11 @@
       [:div.page
        [common/header]
        ;; TODO: Show name of client and other information nicely
-       [:h3 (:name selected-client)]
-       [project/project-form show-project-form?]
        [:div.panel
+        [:h2 (:name selected-client)]
+        [:hr]
+        [:br]
+        [project/project-form show-project-form?]
         [:button.btn.btn-primary
          {:type     "input"
           :on-click #(reset! show-project-form? true)
