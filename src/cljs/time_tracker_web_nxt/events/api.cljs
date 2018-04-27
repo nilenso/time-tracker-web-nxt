@@ -149,8 +149,7 @@
                   :on-failure      [:client-update-failed]}}))
 
 (defn client-updated [{:keys [db]}]
-  {:dispatch-n     [[:get-clients (get-in db [:user :token])]
-                    [:set-active-panel :clients]]
+  {:dispatch     [:get-clients (get-in db [:user :token])]
    :notify-success "Client updated successfully."})
 
 (defn client-update-failed [{:keys [db]}]

@@ -56,8 +56,7 @@
    :show-edit-client-form
    (fn [db [_ client]]
      (-> db
-        (assoc :client client)
-        (set-active-panel-handler [:set-active-panel :edit-client]))))
+        (assoc :client client))))
 
   (rf/reg-event-db
    :cancel-form-and-return
