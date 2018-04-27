@@ -53,19 +53,6 @@
        (assoc db :show-user-menu? (not status)))))
 
   (rf/reg-event-db
-   :show-edit-client-form
-   (fn [db [_ client]]
-     (-> db
-        (assoc :client client)
-        (set-active-panel-handler [:set-active-panel :edit-client]))))
-
-  (rf/reg-event-db
-   :cancel-form-and-return
-   (fn [db [_ {:keys [remove-db-key panel]}]]
-     (-> (if remove-db-key (dissoc db remove-db-key) db)
-         (set-active-panel-handler [:set-active-panel panel]))))
-
-  (rf/reg-event-db
    :select-client
    (fn [db [_ id]]
      (assoc db :selected-client id)))

@@ -7,48 +7,60 @@
    [time-tracker-web-nxt.views.common :as common]
    [time-tracker-web-nxt.views.project :as project]))
 
+(def ^:private empty-client
+  {:name    ""
+   :address ""
+   :gstin   ""
+   :pan     ""
+   :points-of-contact {}})
 
 (defn points-of-contact [client]
-  (let [update-poc (fn [path val]
-                     (rf/dispatch [:update-point-of-contact path val]))]
-    (conj
-     [:div.poc-parent]
-     (for [[id data] (:points-of-contact client)]
-       ^{:key id}
-       [:div.poc-child
-        [:label.cclabel "Name: "]
-        [common/input
-         {:type      "text"
-          :name      (str "poc-name-" id)
-          :value     (:name data)
-          :class     "poc-input"
-          :on-change #(update-poc [id :name] %)}]
-        [:label.cclabel "Phone: "]
-        [common/input
-         {:type      "text"
-          :name      (str "poc-phone-" id)
-          :value     (:phone data)
-          :class     "poc-input"
-          :on-change #(update-poc [id :phone] %)}]
-        [:label.cclabel "Email: "]
-        [common/input
-         {:type      "text"
-          :name      (str "poc-email-" id)
-          :value     (:email data)
-          :class     "poc-input"
-          :on-change #(update-poc [id :email] %)}]])
-     [:a.link.link-primary
-      {:href     "javascript:void(0)"
-       :on-click #(rf/dispatch [:add-point-of-contact {:name      ""
-                                                       :phone     ""
-                                                       :email     ""
-                                                       :action    "insert"
-                                                       :client_id (:id client)}])}
-      [:i.fa.fa-plus-square {:aria-hidden "true"}]
-      [:span "Point of Contact"]])))
+  (let [poc (reagent/atom (:points-of-contact @client))
+        update-poc (fn [path v]
+                     (swap! poc assoc-in path v)
+                     (swap! client assoc :points-of-contact @poc))]
+    (fn []
+      (conj
+       [:div.poc-parent]
+       (for [[id data] (:points-of-contact @client)]
+         ^{:key id}
+         [:div.poc-child
+          [:label.cclabel "Name: "]
+          [common/input
+           {:type      "text"
+            :name      (str "poc-name-" id)
+            :value     (:name data)
+            :class     "poc-input"
+            :on-change #(update-poc [id :name] %)}]
+          [:label.cclabel "Phone: "]
+          [common/input
+           {:type      "text"
+            :name      (str "poc-phone-" id)
+            :value     (:phone data)
+            :class     "poc-input"
+            :on-change #(update-poc [id :phone] %)}]
+          [:label.cclabel "Email: "]
+          [common/input
+           {:type      "text"
+            :name      (str "poc-email-" id)
+            :value     (:email data)
+            :class     "poc-input"
+            :on-change #(update-poc [id :email] %)}]])
+       [:a.link.link-primary
+        {:href     "javascript:void(0)"
+         :on-click (fn []
+                     (let [k (inc (count @poc))]
+                       (swap! poc assoc k {:name      ""
+                                           :phone     ""
+                                           :email     ""
+                                           :action    "insert"
+                                           :client_id (:id @client)})
+                       (swap! client assoc :points-of-contact @poc)))}
+        [:i.fa.fa-plus-square {:aria-hidden "true"}]
+        [:span "Point of Contact"]]))))
 
-(defn client-form [{:keys [source source-update-fn submit cancel]}]
-  [:div.create-client-form
+(defn client-form [{:keys [source source-update-fn submit cancel show?]}]
+  [:div.create-client-form {:style (if @show? {} {:display "none"})}
    [:div
     [:label.cclabel "Name: "]
     [common/input {:type      "text"
@@ -75,7 +87,7 @@
                    :value     (:pan @source)
                    :class     "ccinput"
                    :on-change #(source-update-fn :pan %)}]]
-   [points-of-contact @source]
+   [points-of-contact source]
    [:div.button-group.actions
     [:button.btn.btn-primary
      {:type "input" :on-click (:handler submit)}
@@ -85,13 +97,12 @@
      (:name cancel)]]])
 
 (defn create-client-panel []
-  (let [client         (rf/subscribe [:client])
+  (let [client         (reagent/atom empty-client)
         update-fn      (fn [k v]
-                         (rf/dispatch [:update-client-details k v]))
+                         (swap! client assoc k v))
         submit-handler #(rf/dispatch [:create-client @client])
-        cancel-handler #(rf/dispatch [:cancel-form-and-return
-                                      {:panel         :clients
-                                       :remove-db-key :client}])]
+        cancel-handler #(reset! client empty-client)
+        show?          (reagent/atom true)]
     [:div.page
      [common/header]
      [client-form {:source           client
@@ -99,44 +110,54 @@
                    :submit           {:name    "Create"
                                       :handler submit-handler}
                    :cancel           {:name    "Cancel"
-                                      :handler cancel-handler}}]]))
+                                      :handler cancel-handler}
+                   :show?            show?}]]))
 
-(defn edit-client-panel []
-  (let [client         (rf/subscribe [:client])
-        update-fn      (fn [k v]
-                         (rf/dispatch [:update-client-details k v]))
-        submit-handler #(rf/dispatch [:update-client @client])
-        cancel-handler #(rf/dispatch [:cancel-form-and-return
-                                      {:panel         :clients
-                                       :remove-db-key :client}])]
-    [:div.page
-     [common/header]
-     [client-form {:source           client
-                    :source-update-fn update-fn
-                    :submit           {:name    "Update"
-                                       :handler submit-handler}
-                    :cancel           {:name    "Cancel"
-                                       :handler cancel-handler}}]]))
+(defn edit-client-form [show? client]
+  (let [update-fn      (fn [k v]
+                         (swap! client assoc k v))
+        submit-handler (fn []
+                         (rf/dispatch [:update-client @client])
+                         (reset! show? false))
+        cancel-handler (fn []
+                         (reset! show? false))]
+    [client-form {:source           client
+                  :source-update-fn update-fn
+                  :submit           {:name    "Update"
+                                     :handler submit-handler}
+                  :cancel           {:name    "Cancel"
+                                     :handler cancel-handler}
+                  :show?            show?}]))
 
 (defn client-panel []
-  (let [selected-client-id (rf/subscribe [:selected-client])
-        all-clients (rf/subscribe [:clients])
-        selected-client (first (filter #(= (:id %) @selected-client-id) @all-clients))
-        show-project-form? (reagent/atom false)]
+  (let [selected-client-id     (rf/subscribe [:selected-client])
+        all-clients            (rf/subscribe [:clients])
+        selected-client        (reagent/atom (first (filter #(= (:id %) @selected-client-id) @all-clients)))
+        show-project-form?     (reagent/atom false)
+        show-edit-client-form? (reagent/atom false)]
     (fn []
       [:div.page
        [common/header]
        ;; TODO: Show name of client and other information nicely
        [:div.panel
-        [:h2 (:name selected-client)]
+        [:h2 (:name @selected-client)]
         [:hr]
         [:br]
         [project/project-form show-project-form?]
+        [edit-client-form show-edit-client-form? selected-client]
         [:button.btn.btn-primary
          {:type     "input"
           :on-click #(reset! show-project-form? true)
-          :style (if-not @show-project-form? {} {:display "none"})}
+          :style    (if-not @show-project-form? {} {:display "none"})}
          "+ Add Project"]
+        [:button.btn.btn-primary
+         {:type     "input"
+          :on-click (fn []
+                      (reset! show-edit-client-form? true)
+                      (.log js/console "selected-client" @selected-client)
+                      (rf/dispatch [:show-edit-client-form @selected-client]))
+          :style    (if-not @show-edit-client-form? {} {:display "none"})}
+         "Edit Client"]
         [rdt/datatable
          :project-datatable
          [:projects]
@@ -160,9 +181,9 @@
      :client-datatable
      [:clients]
      [{::rdt/column-key [:id] ::rdt/column-label "#" ::rdt/sorting {::rdt/enabled? true}}
-      {::rdt/column-key []
+      {::rdt/column-key   []
        ::rdt/column-label "Name"
-       ::rdt/sorting {::rdt/enabled? true}
+       ::rdt/sorting      {::rdt/enabled? true}
        ::rdt/render-fn
        (fn [client]
          [:a {:href (str "/clients/" (:id client))}
@@ -170,13 +191,13 @@
       {::rdt/column-key [:address] ::rdt/column-label "Address"}
       {::rdt/column-key [:gstin] ::rdt/column-label "GSTIN"}
       {::rdt/column-key [:pan] ::rdt/column-label "PAN"}
-      {::rdt/column-key   []
-       ::rdt/column-label ""
-       ::rdt/render-fn
-       (fn [client]
-         [:a {:href     "javascript:void(0)"
-              :on-click #(rf/dispatch [:show-edit-client-form client])}
-          [:i.fa.fa-pencil-square-o {:aria-hidden "true"}]])}]
+      #_{::rdt/column-key   []
+         ::rdt/column-label ""
+         ::rdt/render-fn
+         (fn [client]
+           [:a {:href     "javascript:void(0)"
+                :on-click #(rf/dispatch [:show-edit-client-form client])}
+            [:i.fa.fa-pencil-square-o {:aria-hidden "true"}]])}]
      {::rdt/pagination {::rdt/enabled? true
                         ::rdt/per-page 10}}]
     [rdt-views/default-pagination-controls
