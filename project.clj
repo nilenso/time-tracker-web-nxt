@@ -33,7 +33,6 @@
                    [com.cemerick/piggieback "0.2.2"]
                    [figwheel-sidecar "0.5.13"]
                    [pjstadig/humane-test-output "0.8.3"]
-                   [re-frisk "0.5.0"]
                    [day8.re-frame/re-frame-10x "0.2.1"]]
 
     :plugins [[lein-figwheel "0.5.13"]
@@ -57,7 +56,6 @@
                     :asset-path           "/js/compiled/out"
                     :source-map-timestamp true
                     :preloads             [devtools.preload
-                                           re-frisk.preload
                                            day8.re-frame-10x.preload]
                     :external-config      {:devtools/config {:features-to-install :all}}}}
 

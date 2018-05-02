@@ -53,30 +53,14 @@
        (assoc db :show-user-menu? (not status)))))
 
   (rf/reg-event-db
-   :show-edit-client-form
-   (fn [db [_ client]]
-     (-> db
-        (assoc :client client)
-        (set-active-panel-handler [:set-active-panel :edit-client]))))
+   :select-client
+   (fn [db [_ id]]
+     (assoc db :selected-client id)))
 
   (rf/reg-event-db
-   :cancel-form-and-return
-   (fn [db [_ {:keys [remove-db-key panel]}]]
-     (-> (if remove-db-key (dissoc db remove-db-key) db)
-         (set-active-panel-handler [:set-active-panel panel]))))
-
-  (rf/reg-event-fx
-   :select-client
-   (fn [{:keys [db] :as cofx} [_ id]]
-     (.log js/console "select-client called with id:" id)
-     {:db       (assoc db :selected-client id)
-      :dispatch [:select-project (:id (first (filter #(= (:client_id %) id) (:projects db))))]}))
-
-  (rf/reg-event-fx
    :select-project
-   (fn [{:keys [db] :as cofx} [_ id]]
-     {:db       (assoc db :selected-project id)
-      :dispatch [:select-task (:id (first (filter #(= (:project_id %) id) (:tasks db))))]}))
+   (fn [db [_ id]]
+     (assoc db :selected-project id)))
 
   (rf/reg-event-db
    :select-task

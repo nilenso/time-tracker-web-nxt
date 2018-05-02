@@ -339,6 +339,17 @@ td.timer-column {
     margin-bottom: 1.5em;
 }
 
+.create-project-form {
+    margin: 0 auto;
+    margin-top: 100px;
+    width: 700px;
+}
+
+.create-project-form div {
+    margin-bottom: 1.5em;
+}
+
+
 .ccinput {
     width: 100%;
     border: 1px solid rgba(0,0,0,.12);
@@ -495,7 +506,6 @@ li.user-menu-link:hover {
 .re-frame-datatable a {
     text-decoration: none;
     color: #eb5424;
-    font-size: 19px;
     vertical-align: middle;
 }
 
