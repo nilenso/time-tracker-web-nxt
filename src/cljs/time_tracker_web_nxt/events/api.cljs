@@ -69,6 +69,29 @@
 (defn tasks-retrieved [db [_ tasks]]
   (assoc db :tasks tasks))
 
+(defn task-created
+  [{:keys [db]}]
+  {:dispatch       [:get-tasks (get-in db [:user :token])]
+   :notify-success "Task created successfully."})
+
+(defn task-creation-failed
+  [cofx]
+  {:notify-error "Failed to create project"})
+
+(defn create-task
+  [{:keys [db] :as cofx} [_ data]]
+  (let [token (get-in db [:user :token])]
+    {:http-xhrio {:method          :post
+                  :uri             "/api/tasks/"
+                  :headers         {"Authorization"               (str "Bearer " token)
+                                    "Access-Control-Allow-Origin" "*"}
+                  :params          data
+                  :timeout         5000
+                  :format          (ajax/json-request-format)
+                  :response-format (ajax/json-response-format {:keywords? true})
+                  :on-success      [:task-created]
+                  :on-failure      [:task-creation-failed]}}))
+
 (defn get-timers [cofx [_ auth-token timer-date]]
   (let [start-epoch (t-coerce/to-epoch timer-date)
         end-epoch   (-> timer-date
@@ -162,13 +185,18 @@
 
 (defn init []
   (rf/reg-event-fx :request-failed http-failure)
-  (rf/reg-event-fx :get-projects get-projects)
-  (rf/reg-event-fx :create-project create-project)
-  (rf/reg-event-fx :get-tasks get-tasks)
-  (rf/reg-event-fx :get-timers get-timers)
+
   (rf/reg-event-fx :get-clients get-clients)
   (rf/reg-event-fx :create-client create-client)
   (rf/reg-event-fx :update-client update-client)
+
+  (rf/reg-event-fx :get-projects get-projects)
+  (rf/reg-event-fx :create-project create-project)
+
+  (rf/reg-event-fx :get-tasks get-tasks)
+  (rf/reg-event-fx :create-task create-task)
+
+  (rf/reg-event-fx :get-timers get-timers)
   (rf/reg-event-fx :get-user-details get-user-details)
 
   (intr/tt-reg-event-db
@@ -206,4 +234,7 @@
   (intr/tt-reg-event-fx :client-creation-failed client-creation-failed)
 
   (intr/tt-reg-event-fx :project-created project-created)
-  (intr/tt-reg-event-fx :project-creation-failed project-creation-failed))
+  (intr/tt-reg-event-fx :project-creation-failed project-creation-failed)
+
+  (intr/tt-reg-event-fx :task-created task-created)
+  (intr/tt-reg-event-fx :task-creation-failed task-creation-failed))

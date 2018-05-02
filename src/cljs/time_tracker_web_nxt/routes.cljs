@@ -9,6 +9,7 @@
 (def routes ["/" {""         :timers
                   "sign-in"  :sign-in
                   "about"    :about
+                  "projects/" {[:id] :project}
                   "clients/" {""    :clients
                               "new" :create-client
                               [:id] :client}}])

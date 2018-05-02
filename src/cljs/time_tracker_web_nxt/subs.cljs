@@ -22,6 +22,7 @@
 (create-subscription :timer-date)
 (create-subscription :show-create-timer-widget?)
 (create-subscription :show-user-menu?)
+(create-subscription :show-task-form?)
 (create-subscription :clients)
 (create-subscription :client)
 

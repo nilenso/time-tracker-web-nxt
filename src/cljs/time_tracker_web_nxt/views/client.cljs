@@ -162,7 +162,10 @@
          :project-datatable
          [:projects-for-client]
          [{::rdt/column-key [:id] ::rdt/column-label "#" ::rdt/sorting {::rdt/enabled? true}}
-          {::rdt/column-key [:name] ::rdt/column-label "Project Name" ::rdt/sorting {::rdt/enabled? true}}]
+          {::rdt/column-key [] ::rdt/column-label "Project Name" ::rdt/sorting {::rdt/enabled? true}
+           ::rdt/render-fn (fn [project]
+                             [:a {:href (str "/projects/" (:id project))}
+                              (:name project)])}]
          {::rdt/pagination {::rdt/enabled? true
                             ::rdt/per-page 10}}]
         [rdt-views/default-pagination-controls
