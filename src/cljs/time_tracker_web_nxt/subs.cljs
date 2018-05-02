@@ -31,7 +31,7 @@
    (:projects db)))
 
 (rf/reg-sub
- :projects
+ :projects-for-client
  :<- [:all-projects]
  :<- [:selected-client]
  (fn [[all-projects selected-client] _]
@@ -43,7 +43,7 @@
    (:tasks db)))
 
 (rf/reg-sub
- :tasks
+ :tasks-for-project
  :<- [:all-tasks]
  :<- [:selected-project]
  (fn [[all-tasks selected-project] _]
@@ -67,7 +67,7 @@
 
 (rf/reg-sub
  :selected-project
- :<- [:projects]
+ :<- [:projects-for-client]
  :<- [:db-selected-project]
  (fn [[projects db-selected-project] _]
    (or db-selected-project
@@ -75,7 +75,7 @@
 
 (rf/reg-sub
  :selected-task
- :<- [:tasks]
+ :<- [:tasks-for-project]
  :<- [:db-selected-task]
  (fn [[tasks db-selected-task] _]
    (or db-selected-task

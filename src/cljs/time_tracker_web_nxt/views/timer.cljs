@@ -19,33 +19,33 @@
                             :elapsed-mm 0
                             :elapsed-ss 0})]
     (fn []
-      (let [show?            (rf/subscribe [:show-create-timer-widget?])
-            clients          @(rf/subscribe [:clients])
-            selected-client  @(rf/subscribe [:selected-client])
-            projects         @(rf/subscribe [:projects])
-            selected-project @(rf/subscribe [:selected-project])
-            tasks            @(rf/subscribe [:tasks])
-            selected-task    @(rf/subscribe [:selected-task])
-            notes-handler    #(swap! data assoc :notes (common/element-value %))
-            reset-elements!  (fn []
-                               (rf/dispatch [:select-client (:id (first clients))])
-                               (reset! data {:notes      ""
-                                             :elapsed-hh 0
-                                             :elapsed-mm 0
-                                             :elapsed-ss 0}))
-            cancel-handler   (fn []
-                               (rf/dispatch [:hide-widget])
-                               (reset-elements!))
-            create-handler   (fn []
-                               (rf/dispatch
-                                [:trigger-create-timer
-                                 {:id selected-task}
-                                 @data])
-                               (reset-elements!))]
+      (let [show?               (rf/subscribe [:show-create-timer-widget?])
+            clients             @(rf/subscribe [:clients])
+            selected-client     @(rf/subscribe [:selected-client])
+            projects-for-client @(rf/subscribe [:projects-for-client])
+            selected-project    @(rf/subscribe [:selected-project])
+            tasks-for-project   @(rf/subscribe [:tasks-for-project])
+            selected-task       @(rf/subscribe [:selected-task])
+            notes-handler       #(swap! data assoc :notes (common/element-value %))
+            reset-elements!     (fn []
+                                  (rf/dispatch [:select-client (:id (first clients))])
+                                  (reset! data {:notes      ""
+                                                :elapsed-hh 0
+                                                :elapsed-mm 0
+                                                :elapsed-ss 0}))
+            cancel-handler      (fn []
+                                  (rf/dispatch [:hide-widget])
+                                  (reset-elements!))
+            create-handler      (fn []
+                                  (rf/dispatch
+                                   [:trigger-create-timer
+                                    {:id selected-task}
+                                    @data])
+                                  (reset-elements!))]
         [:div.new-timer-popup {:style (if @show? {} {:display "none"})}
          [common/dropdown-widget clients selected-client :select-client]
-         [common/dropdown-widget projects selected-project :select-project]
-         [common/dropdown-widget tasks selected-task :select-task]
+         [common/dropdown-widget projects-for-client selected-project :select-project]
+         [common/dropdown-widget tasks-for-project selected-task :select-task]
          [:textarea.project-notes {:placeholder "Add notes"
                                    :value       (:notes @data)
                                    :on-change   notes-handler}]
