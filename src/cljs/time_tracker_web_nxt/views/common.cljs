@@ -66,7 +66,8 @@
         timers-panel?  (= :timers @active-panel)
         about-panel?   (= :about @active-panel)
         clients-panel? (or (= :clients @active-panel)
-                           (= :client @active-panel))
+                           (= :client @active-panel)
+                           (= :project @active-panel))
         user           (rf/subscribe [:user])]
     [:div.header.pure-menu.pure-menu-horizontal
      [:p#logo
