@@ -33,7 +33,6 @@
    :sign-in       sign-in-panel
    :clients       client-views/clients-panel
    :client        client-views/client-panel
-   :create-client client-views/create-client-panel
    :project       project-views/project-panel})
 
 (defn app []
