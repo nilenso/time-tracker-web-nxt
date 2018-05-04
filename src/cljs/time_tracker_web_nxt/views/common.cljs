@@ -83,7 +83,7 @@
          {:href     (routes/url-for :about)
           :on-click #(rf/dispatch [:set-active-panel :about])}
          "About"]]
-       (if (= "admin" (:role @user))
+       (when (= "admin" (:role @user))
          [:li.header-link {:class (if clients-panel? "active" "")}
           [:a.nav-link
            {:href     (routes/url-for :clients)
@@ -96,3 +96,15 @@
        [user-profile]
        [:span.menu-arrow "▿"]]]
      [user-menu]]))
+
+(defn hierarchy-widget
+  [hierarchy]
+  (conj (reduce (fn [acc {:keys [href title]}]
+                  (conj acc
+                        [:button.btn.btn-secondary
+                         [:a {:href href} title]]
+                        " > "))
+                [:div]
+                (butlast hierarchy))
+        [:button.btn.btn-secondary
+         (:title (last hierarchy))]))

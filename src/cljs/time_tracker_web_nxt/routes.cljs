@@ -1,9 +1,8 @@
 (ns time-tracker-web-nxt.routes
-  (:require
-   [bidi.bidi :as bidi]
-   [pushy.core :as pushy]
-   [re-frame.core :as rf]
-   [taoensso.timbre :as timbre]))
+  (:require [bidi.bidi :as bidi]
+            [pushy.core :as pushy]
+            [re-frame.core :as rf]
+            [taoensso.timbre :as timbre]))
 
 
 (def routes ["/" {""         :timers
@@ -25,10 +24,14 @@
                   :handler
                   name
                   keyword)]
-    (when (= panel :client)
-      (rf/dispatch [:select-client (-> matched-route
-                                       (get-in [:route-params :client-id])
-                                       int)]))
+    (case panel
+      :client (rf/dispatch [:select-client (-> matched-route
+                                               (get-in [:route-params :client-id])
+                                               int)])
+      :project (rf/dispatch [:select-project (-> matched-route
+                                                 (get-in [:route-params :project-id])
+                                                 int)])
+      true)
     (timbre/info "dispatch-route called with" matched-route)
     (rf/dispatch [:set-active-panel panel])
     nil))

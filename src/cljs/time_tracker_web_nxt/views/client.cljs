@@ -1,11 +1,11 @@
 (ns time-tracker-web-nxt.views.client
-  (:require
-   [re-frame.core :as rf]
-   [re-frame-datatable.core :as rdt]
-   [re-frame-datatable.views :as rdt-views]
-   [reagent.core :as reagent]
-   [time-tracker-web-nxt.views.common :as common]
-   [time-tracker-web-nxt.views.project :as project]))
+  (:require [re-frame.core :as rf]
+            [re-frame-datatable.core :as rdt]
+            [re-frame-datatable.views :as rdt-views]
+            [reagent.core :as reagent]
+            [time-tracker-web-nxt.routes :as routes]
+            [time-tracker-web-nxt.views.common :as common]
+            [time-tracker-web-nxt.views.project :as project]))
 
 (def ^:private empty-client
   {:name    ""
@@ -140,7 +140,11 @@
       [:div.page
        [common/header]
        [:div.panel
-        [:h2 (:name @selected-client)]
+        [:h2 [common/hierarchy-widget [{:href (routes/url-for :clients)
+                                        :title "All Clients"}
+                                       {:href (routes/url-for :client
+                                                              :client-id (:id @selected-client))
+                                        :title (:name @selected-client)}]]]
         [:hr]
         [:br]
         [project/project-form show-project-form?]

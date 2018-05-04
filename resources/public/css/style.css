@@ -41,7 +41,6 @@
 .btn.btn-secondary {
     background-color: rgba(0,0,0,.20);
     color: black;
-    text-transform: uppercase;
 }
 
 .btn.btn-disabled {

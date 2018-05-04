@@ -3,6 +3,7 @@
             [reagent.core :as reagent]
             [time-tracker-web-nxt.views.common :as common]
             [time-tracker-web-nxt.views.task :as task-views]
+            [time-tracker-web-nxt.routes :as routes]
             [re-frame-datatable.core :as rdt]
             [re-frame-datatable.views :as rdt-views]))
 
@@ -40,14 +41,22 @@
 
 (defn project-panel []
   (let [selected-project-id     (rf/subscribe [:selected-project])
+        selected-client-id     (rf/subscribe [:selected-client])
         all-projects            (rf/subscribe [:projects-for-client])
-        show-task-form? (rf/subscribe [:show-task-form?])
-        selected-project        (reagent/atom (first (filter #(= (:id %) @selected-project-id) @all-projects)))]
+        all-clients             (rf/subscribe [:clients])
+        show-task-form?         (rf/subscribe [:show-task-form?])
+        selected-client         (first (filter #(= (:id %) @selected-client-id) @all-clients))
+        selected-project        (first (filter #(= (:id %) @selected-project-id) @all-projects))]
     (fn []
       [:div.page
        [common/header]
        [:div.panel
-        [:h2 (:name @selected-project)]
+        [:h2 [common/hierarchy-widget [{:href (routes/url-for :clients)
+                                        :title "All Clients"}
+                                       {:href (routes/url-for :client
+                                                              :client-id (:id selected-client))
+                                        :title (:name selected-client)}
+                                       {:title (:name selected-project)}]]]
         [:hr]
         [:br]
         [task-views/task-form]
