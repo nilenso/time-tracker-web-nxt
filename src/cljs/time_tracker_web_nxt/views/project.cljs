@@ -58,9 +58,8 @@
          "+ Add Task"]
         [rdt/datatable
          :project-datatable
-         [:tasks]
-         [{::rdt/column-key [:id] ::rdt/column-label "#" ::rdt/sorting {::rdt/enabled? true}}
-          {::rdt/column-key [:name] ::rdt/column-label "Task Name" ::rdt/sorting {::rdt/enabled? true}}]
+         [:tasks-for-project]
+         [{::rdt/column-key [:name] ::rdt/column-label "Task Name" ::rdt/sorting {::rdt/enabled? true}}]
          {::rdt/pagination {::rdt/enabled? true
                             ::rdt/per-page 10}}]
         [rdt-views/default-pagination-controls

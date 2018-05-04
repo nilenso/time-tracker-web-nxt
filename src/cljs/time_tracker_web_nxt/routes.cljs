@@ -9,10 +9,11 @@
 (def routes ["/" {""         :timers
                   "sign-in"  :sign-in
                   "about"    :about
-                  "projects/" {[:id] :project}
                   "clients/" {""    :clients
                               "new" :create-client
-                              [:id] :client}}])
+                              [:client-id "/"] {"" :client
+                                                "projects/" {"" :client
+                                                             [:project-id] :project}}}}])
 
 (def url-for (partial bidi/path-for routes))
 
@@ -26,7 +27,7 @@
                   keyword)]
     (when (= panel :client)
       (rf/dispatch [:select-client (-> matched-route
-                                       (get-in [:route-params :id])
+                                       (get-in [:route-params :client-id])
                                        int)]))
     (timbre/info "dispatch-route called with" matched-route)
     (rf/dispatch [:set-active-panel panel])

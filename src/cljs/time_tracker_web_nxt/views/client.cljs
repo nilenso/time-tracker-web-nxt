@@ -161,10 +161,10 @@
         [rdt/datatable
          :project-datatable
          [:projects-for-client]
-         [{::rdt/column-key [:id] ::rdt/column-label "#" ::rdt/sorting {::rdt/enabled? true}}
+         [#_{::rdt/column-key [:id] ::rdt/column-label "#" ::rdt/sorting {::rdt/enabled? true}}
           {::rdt/column-key [] ::rdt/column-label "Project Name" ::rdt/sorting {::rdt/enabled? true}
            ::rdt/render-fn (fn [project]
-                             [:a {:href (str "/projects/" (:id project))}
+                             [:a {:href (str "/clients/" @selected-client-id "/projects/" (:id project))}
                               (:name project)])}]
          {::rdt/pagination {::rdt/enabled? true
                             ::rdt/per-page 10}}]
@@ -189,18 +189,11 @@
        ::rdt/sorting      {::rdt/enabled? true}
        ::rdt/render-fn
        (fn [client]
-         [:a {:href (str "/clients/" (:id client))}
+         [:a {:href (str "/clients/" (:id client) "/")}
           (:name client)])}
       {::rdt/column-key [:address] ::rdt/column-label "Address"}
       {::rdt/column-key [:gstin] ::rdt/column-label "GSTIN"}
-      {::rdt/column-key [:pan] ::rdt/column-label "PAN"}
-      #_{::rdt/column-key   []
-         ::rdt/column-label ""
-         ::rdt/render-fn
-         (fn [client]
-           [:a {:href     "javascript:void(0)"
-                :on-click #(rf/dispatch [:show-edit-client-form client])}
-            [:i.fa.fa-pencil-square-o {:aria-hidden "true"}]])}]
+      {::rdt/column-key [:pan] ::rdt/column-label "PAN"}]
      {::rdt/pagination {::rdt/enabled? true
                         ::rdt/per-page 10}}]
     [rdt-views/default-pagination-controls
