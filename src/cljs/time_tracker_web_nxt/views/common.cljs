@@ -68,6 +68,7 @@
         clients-panel? (or (= :clients @active-panel)
                            (= :client @active-panel)
                            (= :project @active-panel))
+        manage-users-panel? (= :manage-users @active-panel)
         user           (rf/subscribe [:user])]
     [:div.header.pure-menu.pure-menu-horizontal
      [:p#logo
@@ -89,7 +90,13 @@
           [:a.nav-link
            {:href     (routes/url-for :clients)
             :on-click #(rf/dispatch [:set-active-panel :clients])}
-           "Clients"]])]]
+           "Clients"]])
+       (when (= "admin" (:role @user))
+         [:li.header-link {:class (if manage-users-panel? "active" "")}
+          [:a.nav-link
+           {:href     (routes/url-for :manage-users)
+            :on-click #(rf/dispatch [:set-active-panel :manage-users])}
+           "Manage Users"]])]]
      [:a.user-profile-link
       {:href     "javascript:void(0)"
        :on-click #(rf/dispatch [:toggle-user-menu])}

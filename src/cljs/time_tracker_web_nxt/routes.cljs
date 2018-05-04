@@ -8,6 +8,7 @@
 (def routes ["/" {""         :timers
                   "sign-in"  :sign-in
                   "about"    :about
+                  "manage-users"    :manage-users
                   "clients/" {""    :clients
                               "new" :create-client
                               [:client-id "/"] {"" :client

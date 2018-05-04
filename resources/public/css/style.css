@@ -349,6 +349,11 @@ td.timer-column {
     margin-bottom: 1.5em;
 }
 
+.invite-user-form {
+    margin: 0 auto;
+    margin-top: 20px;
+    width: 700px;
+}
 
 .ccinput {
     width: 100%;

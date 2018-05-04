@@ -6,6 +6,7 @@
    [time-tracker-web-nxt.views.client :as client-views]
    [time-tracker-web-nxt.views.project :as project-views]
    [time-tracker-web-nxt.views.task :as task-views]
+   [time-tracker-web-nxt.views.manage-users :as manage-users-views]
    [time-tracker-web-nxt.auth :as auth]))
 
 (defn sign-in-panel []
@@ -33,6 +34,7 @@
    :sign-in       sign-in-panel
    :clients       client-views/clients-panel
    :client        client-views/client-panel
+   :manage-users  manage-users-views/panel
    :project       project-views/project-panel})
 
 (defn app []
