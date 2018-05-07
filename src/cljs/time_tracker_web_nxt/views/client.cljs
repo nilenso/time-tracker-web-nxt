@@ -165,8 +165,7 @@
         [rdt/datatable
          :project-datatable
          [:projects-for-client]
-         [#_{::rdt/column-key [:id] ::rdt/column-label "#" ::rdt/sorting {::rdt/enabled? true}}
-          {::rdt/column-key [] ::rdt/column-label "Project Name" ::rdt/sorting {::rdt/enabled? true}
+         [{::rdt/column-key [] ::rdt/column-label "Project Name" ::rdt/sorting {::rdt/enabled? true}
            ::rdt/render-fn (fn [project]
                              [:a {:href (str "/clients/" @selected-client-id "/projects/" (:id project))}
                               (:name project)])}]
