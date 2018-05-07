@@ -76,7 +76,7 @@
 
 (defn task-creation-failed
   [cofx]
-  {:notify-error "Failed to create project"})
+  {:notify-error "Failed to create task"})
 
 (defn create-task
   [{:keys [db] :as cofx} [_ data]]
