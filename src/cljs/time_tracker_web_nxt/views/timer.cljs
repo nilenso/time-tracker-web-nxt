@@ -39,13 +39,13 @@
             create-handler      (fn []
                                   (rf/dispatch
                                    [:trigger-create-timer
-                                    {:id selected-task}
+                                    {:id (:id selected-task)}
                                     @data])
                                   (reset-elements!))]
         [:div.new-timer-popup {:style (if @show? {} {:display "none"})}
-         [common/dropdown-widget clients selected-client :select-client]
-         [common/dropdown-widget projects-for-client selected-project :select-project]
-         [common/dropdown-widget tasks-for-project selected-task :select-task]
+         [common/dropdown-widget clients (:id selected-client) :select-client]
+         [common/dropdown-widget projects-for-client (:id selected-project) :select-project]
+         [common/dropdown-widget tasks-for-project (:id selected-task) :select-task]
          [:textarea.project-notes {:placeholder "Add notes"
                                    :value       (:notes @data)
                                    :on-change   notes-handler}]

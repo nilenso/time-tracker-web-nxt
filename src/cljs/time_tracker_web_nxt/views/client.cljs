@@ -131,24 +131,23 @@
                   :show?            show?}]))
 
 (defn client-panel []
-  (let [selected-client-id     (rf/subscribe [:selected-client])
-        all-clients            (rf/subscribe [:clients])
-        selected-client        (reagent/atom (first (filter #(= (:id %) @selected-client-id) @all-clients)))
+  (let [selected-client        (rf/subscribe [:selected-client])
+        editable-client        (reagent/atom @selected-client)
         show-project-form?     (reagent/atom false)
         show-edit-client-form? (reagent/atom false)]
     (fn []
       [:div.page
        [common/header]
        [:div.panel
-        [:h2 [common/hierarchy-widget [{:href (routes/url-for :clients)
+        [:h2 [common/hierarchy-widget [{:href  (routes/url-for :clients)
                                         :title "All Clients"}
-                                       {:href (routes/url-for :client
-                                                              :client-id (:id @selected-client))
+                                       {:href  (routes/url-for :client
+                                                               :client-id (:id @selected-client))
                                         :title (:name @selected-client)}]]]
         [:hr]
         [:br]
         [project/project-form show-project-form?]
-        [edit-client-form show-edit-client-form? selected-client]
+        [edit-client-form show-edit-client-form? editable-client]
         [:button.btn.btn-primary
          {:type     "input"
           :on-click #(reset! show-project-form? true)
@@ -166,9 +165,11 @@
          :project-datatable
          [:projects-for-client]
          [{::rdt/column-key [] ::rdt/column-label "Project Name" ::rdt/sorting {::rdt/enabled? true}
-           ::rdt/render-fn (fn [project]
-                             [:a {:href (str "/clients/" @selected-client-id "/projects/" (:id project))}
-                              (:name project)])}]
+           ::rdt/render-fn  (fn [project]
+                              [:a {:href (routes/url-for :project
+                                                         :client-id (:id @selected-client)
+                                                         :project-id (:id project))}
+                               (:name project)])}]
          {::rdt/pagination {::rdt/enabled? true
                             ::rdt/per-page 10}}]
         [rdt-views/default-pagination-controls

@@ -9,7 +9,7 @@
    [time-tracker-web-nxt.auth :as auth]))
 
 (defn sign-in-panel []
-  (if-not (:signed-in? @(rf/subscribe [:user]))
+  (when-not (:signed-in? @(rf/subscribe [:user]))
     [:div.splash-screen
      [:h1.splash-screen-title "Time Tracker"]
      [:a.sign-in {:href     "#"

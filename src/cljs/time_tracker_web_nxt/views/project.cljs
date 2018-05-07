@@ -32,7 +32,7 @@
        [:div.button-group.actions
         [:button.btn.btn-primary
          {:type "input" :on-click #((:handler submit) {:name      @project-name
-                                                       :client-id @selected-client})}
+                                                       :client-id (:id @selected-client)})}
          (:name submit)]
         [:button.btn.btn-secondary
          {:type "input" :on-click (:handler cancel)}
@@ -40,13 +40,9 @@
 
 
 (defn project-panel []
-  (let [selected-project-id     (rf/subscribe [:selected-project])
-        selected-client-id     (rf/subscribe [:selected-client])
-        all-projects            (rf/subscribe [:projects-for-client])
-        all-clients             (rf/subscribe [:clients])
-        show-task-form?         (rf/subscribe [:show-task-form?])
-        selected-client         (first (filter #(= (:id %) @selected-client-id) @all-clients))
-        selected-project        (first (filter #(= (:id %) @selected-project-id) @all-projects))]
+  (let [show-task-form?         (rf/subscribe [:show-task-form?])
+        selected-project (rf/subscribe [:selected-project])
+        selected-client         (rf/subscribe [:selected-client])]
     (fn []
       [:div.page
        [common/header]
@@ -54,9 +50,9 @@
         [:h2 [common/hierarchy-widget [{:href (routes/url-for :clients)
                                         :title "All Clients"}
                                        {:href (routes/url-for :client
-                                                              :client-id (:id selected-client))
-                                        :title (:name selected-client)}
-                                       {:title (:name selected-project)}]]]
+                                                              :client-id (:id @selected-client))
+                                        :title (:name @selected-client)}
+                                       {:title (:name @selected-project)}]]]
         [:hr]
         [:br]
         [task-views/task-form]

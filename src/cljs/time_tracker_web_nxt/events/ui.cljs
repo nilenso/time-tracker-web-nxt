@@ -71,17 +71,17 @@
   (rf/reg-event-db
    :select-client
    (fn [db [_ id]]
-     (assoc db :selected-client id)))
+     (assoc db :selected-client-id id)))
 
   (rf/reg-event-db
    :select-project
    (fn [db [_ id]]
-     (assoc db :selected-project id)))
+     (assoc db :selected-project-id id)))
 
   (rf/reg-event-db
    :select-task
    (fn [db [_ id]]
-     (assoc db :selected-task id)))
+     (assoc db :selected-task-id id)))
 
   (rf/reg-event-fx
    :show-notification

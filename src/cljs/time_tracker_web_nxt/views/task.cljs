@@ -29,7 +29,7 @@
        [:div.button-group.actions
         [:button.btn.btn-primary
          {:type "input" :on-click #((:handler submit) {:name      @task-name
-                                                       :project-id @selected-project})}
+                                                       :project-id (:id @selected-project)})}
          (:name submit)]
         [:button.btn.btn-secondary
          {:type "input" :on-click (:handler cancel)}
