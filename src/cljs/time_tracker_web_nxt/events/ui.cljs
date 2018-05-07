@@ -10,6 +10,14 @@
       (assoc :active-panel panel)
       (assoc :show-user-menu? false)))
 
+(defn hide-task-form
+  [db _]
+  (assoc db :show-task-form? false))
+
+(defn show-task-form
+  [db _]
+  (assoc db :show-task-form? true))
+
 (defn init []
 
   ;; Set options for Toastr.js notifications
@@ -53,19 +61,27 @@
        (assoc db :show-user-menu? (not status)))))
 
   (rf/reg-event-db
+   :hide-task-form
+   hide-task-form)
+
+  (rf/reg-event-db
+   :show-task-form
+   show-task-form)
+
+  (rf/reg-event-db
    :select-client
    (fn [db [_ id]]
-     (assoc db :selected-client id)))
+     (assoc db :selected-client-id id)))
 
   (rf/reg-event-db
    :select-project
    (fn [db [_ id]]
-     (assoc db :selected-project id)))
+     (assoc db :selected-project-id id)))
 
   (rf/reg-event-db
    :select-task
    (fn [db [_ id]]
-     (assoc db :selected-task id)))
+     (assoc db :selected-task-id id)))
 
   (rf/reg-event-fx
    :show-notification

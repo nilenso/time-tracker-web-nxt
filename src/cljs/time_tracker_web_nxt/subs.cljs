@@ -22,6 +22,7 @@
 (create-subscription :timer-date)
 (create-subscription :show-create-timer-widget?)
 (create-subscription :show-user-menu?)
+(create-subscription :show-task-form?)
 (create-subscription :clients)
 (create-subscription :client)
 
@@ -35,7 +36,7 @@
  :<- [:all-projects]
  :<- [:selected-client]
  (fn [[all-projects selected-client] _]
-   (filter #(= (:client_id %) selected-client) all-projects)))
+   (filter #(= (:client_id %) (:id selected-client)) all-projects)))
 
 (rf/reg-sub
  :all-tasks
@@ -47,36 +48,39 @@
  :<- [:all-tasks]
  :<- [:selected-project]
  (fn [[all-tasks selected-project] _]
-   (filter #(= (:project_id %) selected-project) all-tasks)))
+   (filter #(= (:project_id %) (:id selected-project)) all-tasks)))
 
 (rf/reg-sub
- :db-selected-project
+ :db-selected-project-id
  (fn [db]
-   (:selected-project db)))
+   (:selected-project-id db)))
 
 (rf/reg-sub
- :db-selected-task
+ :db-selected-task-id
  (fn [db]
-   (:selected-task db)))
+   (:selected-task-id db)))
 
 (rf/reg-sub
  :selected-client
  (fn [db]
-   (or (:selected-client db)
-       (:id (first (:clients db))))))
+   (if-let [selected-client-id (:selected-client-id db)]
+     (first (filter #(= (:id %) selected-client-id) (:clients db)))
+     (first (:clients db)))))
 
 (rf/reg-sub
  :selected-project
  :<- [:projects-for-client]
- :<- [:db-selected-project]
- (fn [[projects db-selected-project] _]
-   (or db-selected-project
-       (:id (first projects)))))
+ :<- [:db-selected-project-id]
+ (fn [[projects-for-client db-selected-project-id] _]
+   (if db-selected-project-id
+     (first (filter #(= (:id %) db-selected-project-id) projects-for-client))
+     (first projects-for-client))))
 
 (rf/reg-sub
  :selected-task
  :<- [:tasks-for-project]
- :<- [:db-selected-task]
- (fn [[tasks db-selected-task] _]
-   (or db-selected-task
-       (:id (first tasks)))))
+ :<- [:db-selected-task-id]
+ (fn [[tasks-for-project db-selected-task-id] _]
+   (if db-selected-task-id
+     (first (filter #(= (:id %) db-selected-task-id) tasks-for-project))
+     (first tasks-for-project))))

@@ -66,7 +66,8 @@
         timers-panel?  (= :timers @active-panel)
         about-panel?   (= :about @active-panel)
         clients-panel? (or (= :clients @active-panel)
-                           (= :client @active-panel))
+                           (= :client @active-panel)
+                           (= :project @active-panel))
         user           (rf/subscribe [:user])]
     [:div.header.pure-menu.pure-menu-horizontal
      [:p#logo
@@ -83,7 +84,7 @@
          {:href     (routes/url-for :about)
           :on-click #(rf/dispatch [:set-active-panel :about])}
          "About"]]
-       (if (= "admin" (:role @user))
+       (when (= "admin" (:role @user))
          [:li.header-link {:class (if clients-panel? "active" "")}
           [:a.nav-link
            {:href     (routes/url-for :clients)
@@ -96,3 +97,15 @@
        [user-profile]
        [:span.menu-arrow "▿"]]]
      [user-menu]]))
+
+(defn hierarchy-widget
+  [hierarchy]
+  (conj (reduce (fn [acc {:keys [href title]}]
+                  (conj acc
+                        [:button.btn.btn-secondary
+                         [:a {:href href} title]]
+                        " > "))
+                [:div]
+                (butlast hierarchy))
+        [:button.btn.btn-secondary
+         (:title (last hierarchy))]))

@@ -5,10 +5,11 @@
    [time-tracker-web-nxt.views.timer :as timer-views]
    [time-tracker-web-nxt.views.client :as client-views]
    [time-tracker-web-nxt.views.project :as project-views]
+   [time-tracker-web-nxt.views.task :as task-views]
    [time-tracker-web-nxt.auth :as auth]))
 
 (defn sign-in-panel []
-  (if-not (:signed-in? @(rf/subscribe [:user]))
+  (when-not (:signed-in? @(rf/subscribe [:user]))
     [:div.splash-screen
      [:h1.splash-screen-title "Time Tracker"]
      [:a.sign-in {:href     "#"
@@ -27,12 +28,12 @@
 
 
 (def panels
-  {:timers         timer-views/timers-panel
-   :about          about-panel
-   :sign-in        sign-in-panel
-   :clients        client-views/clients-panel
-   :client         client-views/client-panel
-   :create-client  client-views/create-client-panel})
+  {:timers        timer-views/timers-panel
+   :about         about-panel
+   :sign-in       sign-in-panel
+   :clients       client-views/clients-panel
+   :client        client-views/client-panel
+   :project       project-views/project-panel})
 
 (defn app []
   (let [active-panel (rf/subscribe [:active-panel])

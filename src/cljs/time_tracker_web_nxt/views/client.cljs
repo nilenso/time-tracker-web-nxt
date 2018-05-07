@@ -1,11 +1,11 @@
 (ns time-tracker-web-nxt.views.client
-  (:require
-   [re-frame.core :as rf]
-   [re-frame-datatable.core :as rdt]
-   [re-frame-datatable.views :as rdt-views]
-   [reagent.core :as reagent]
-   [time-tracker-web-nxt.views.common :as common]
-   [time-tracker-web-nxt.views.project :as project]))
+  (:require [re-frame.core :as rf]
+            [re-frame-datatable.core :as rdt]
+            [re-frame-datatable.views :as rdt-views]
+            [reagent.core :as reagent]
+            [time-tracker-web-nxt.routes :as routes]
+            [time-tracker-web-nxt.views.common :as common]
+            [time-tracker-web-nxt.views.project :as project]))
 
 (def ^:private empty-client
   {:name    ""
@@ -96,15 +96,16 @@
      {:type "input" :on-click (:handler cancel)}
      (:name cancel)]]])
 
-(defn create-client-panel []
+(defn create-client-form [show?]
   (let [client         (reagent/atom empty-client)
         update-fn      (fn [k v]
                          (swap! client assoc k v))
         submit-handler #(rf/dispatch [:create-client @client])
-        cancel-handler #(reset! client empty-client)
-        show?          (reagent/atom true)]
-    [:div.page
-     [common/header]
+        cancel-handler (fn []
+                         (reset! show? false))]
+    [:div.create-client-form
+     {:style (if @show? {} {:display "none"})}
+     [:h2 "Create a client"]
      [client-form {:source           client
                    :source-update-fn update-fn
                    :submit           {:name    "Create"
@@ -130,21 +131,23 @@
                   :show?            show?}]))
 
 (defn client-panel []
-  (let [selected-client-id     (rf/subscribe [:selected-client])
-        all-clients            (rf/subscribe [:clients])
-        selected-client        (reagent/atom (first (filter #(= (:id %) @selected-client-id) @all-clients)))
+  (let [selected-client        (rf/subscribe [:selected-client])
+        editable-client        (reagent/atom @selected-client)
         show-project-form?     (reagent/atom false)
         show-edit-client-form? (reagent/atom false)]
     (fn []
       [:div.page
        [common/header]
-       ;; TODO: Show name of client and other information nicely
        [:div.panel
-        [:h2 (:name @selected-client)]
+        [:h2 [common/hierarchy-widget [{:href  (routes/url-for :clients)
+                                        :title "All Clients"}
+                                       {:href  (routes/url-for :client
+                                                               :client-id (:id @selected-client))
+                                        :title (:name @selected-client)}]]]
         [:hr]
         [:br]
         [project/project-form show-project-form?]
-        [edit-client-form show-edit-client-form? selected-client]
+        [edit-client-form show-edit-client-form? editable-client]
         [:button.btn.btn-primary
          {:type     "input"
           :on-click #(reset! show-project-form? true)
@@ -161,8 +164,12 @@
         [rdt/datatable
          :project-datatable
          [:projects-for-client]
-         [{::rdt/column-key [:id] ::rdt/column-label "#" ::rdt/sorting {::rdt/enabled? true}}
-          {::rdt/column-key [:name] ::rdt/column-label "Project Name" ::rdt/sorting {::rdt/enabled? true}}]
+         [{::rdt/column-key [] ::rdt/column-label "Project Name" ::rdt/sorting {::rdt/enabled? true}
+           ::rdt/render-fn  (fn [project]
+                              [:a {:href (routes/url-for :project
+                                                         :client-id (:id @selected-client)
+                                                         :project-id (:id project))}
+                               (:name project)])}]
          {::rdt/pagination {::rdt/enabled? true
                             ::rdt/per-page 10}}]
         [rdt-views/default-pagination-controls
@@ -170,36 +177,34 @@
          [:projects-for-client]]]])))
 
 (defn clients-panel []
-  [:div.page
-   [common/header]
-   [:div.panel
-    [:button.btn.btn-primary
-     {:type     "input"
-      :on-click #(rf/dispatch [:goto [:create-client]])}
-     "+ Add Client"]
-    [rdt/datatable
-     :client-datatable
-     [:clients]
-     [{::rdt/column-key [:id] ::rdt/column-label "#" ::rdt/sorting {::rdt/enabled? true}}
-      {::rdt/column-key   []
-       ::rdt/column-label "Name"
-       ::rdt/sorting      {::rdt/enabled? true}
-       ::rdt/render-fn
-       (fn [client]
-         [:a {:href (str "/clients/" (:id client))}
-          (:name client)])}
-      {::rdt/column-key [:address] ::rdt/column-label "Address"}
-      {::rdt/column-key [:gstin] ::rdt/column-label "GSTIN"}
-      {::rdt/column-key [:pan] ::rdt/column-label "PAN"}
-      #_{::rdt/column-key   []
-         ::rdt/column-label ""
-         ::rdt/render-fn
-         (fn [client]
-           [:a {:href     "javascript:void(0)"
-                :on-click #(rf/dispatch [:show-edit-client-form client])}
-            [:i.fa.fa-pencil-square-o {:aria-hidden "true"}]])}]
-     {::rdt/pagination {::rdt/enabled? true
-                        ::rdt/per-page 10}}]
-    [rdt-views/default-pagination-controls
-     :client-datatable
-     [:clients]]]])
+  (let [show-client-creation-form? (reagent/atom false)]
+    (fn []
+      [:div.page
+       [common/header]
+       [:div.panel
+        [:button.btn.btn-primary
+         {:type     "input"
+          :on-click #(reset! show-client-creation-form? true)
+          :style    (if-not @show-client-creation-form? {} {:display "none"})}
+         "+ Add Client"]
+        [create-client-form show-client-creation-form?]
+
+        [rdt/datatable
+         :client-datatable
+         [:clients]
+         [{::rdt/column-key [:id] ::rdt/column-label "#" ::rdt/sorting {::rdt/enabled? true}}
+          {::rdt/column-key   []
+           ::rdt/column-label "Name"
+           ::rdt/sorting      {::rdt/enabled? true}
+           ::rdt/render-fn
+           (fn [client]
+             [:a {:href (str "/clients/" (:id client) "/")}
+              (:name client)])}
+          {::rdt/column-key [:address] ::rdt/column-label "Address"}
+          {::rdt/column-key [:gstin] ::rdt/column-label "GSTIN"}
+          {::rdt/column-key [:pan] ::rdt/column-label "PAN"}]
+         {::rdt/pagination {::rdt/enabled? true
+                            ::rdt/per-page 10}}]
+        [rdt-views/default-pagination-controls
+         :client-datatable
+         [:clients]]]])))

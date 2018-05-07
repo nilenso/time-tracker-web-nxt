@@ -29,6 +29,7 @@
     border: none;
     border-radius: 4px;
     padding: 5px 10px;
+    margin-right: 5px;
 }
 
 .btn.btn-primary {
@@ -40,7 +41,6 @@
 .btn.btn-secondary {
     background-color: rgba(0,0,0,.20);
     color: black;
-    text-transform: uppercase;
 }
 
 .btn.btn-disabled {
@@ -331,7 +331,7 @@ td.timer-column {
 
 .create-client-form {
     margin: 0 auto;
-    margin-top: 100px;
+    margin-top: 20px;
     width: 700px;
 }
 
@@ -341,7 +341,7 @@ td.timer-column {
 
 .create-project-form {
     margin: 0 auto;
-    margin-top: 100px;
+    margin-top: 20px;
     width: 700px;
 }
 
