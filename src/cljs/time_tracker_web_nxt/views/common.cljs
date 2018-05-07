@@ -49,12 +49,6 @@
      [:li.user-menu-header (str "Signed in as ")
       [:span.user-menu-username [:strong (:name @user)]]]
      [:li.dropdown-divider]
-     [:a {:href     (routes/url-for :clients)
-          :style    {:display (if (= "admin" (:role @user))
-                                "block"
-                                "none")}
-          :on-click #(rf/dispatch [:get-clients])}
-      [:li.user-menu-link "Manage Clients"]]
      [:a {:href     "javascript:void(0)"
           :on-click (fn [_] (-> (.signOut (auth/auth-instance))
                                 (.then
