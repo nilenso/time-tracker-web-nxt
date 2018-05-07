@@ -66,7 +66,7 @@
           :style    (if-not @show-task-form? {} {:display "none"})}
          "+ Add Task"]
         [rdt/datatable
-         :project-datatable
+         :task-datatable
          [:tasks-for-project]
          [{::rdt/column-key [:name] ::rdt/column-label "Task Name" ::rdt/sorting {::rdt/enabled? true}}]
          {::rdt/pagination {::rdt/enabled? true
