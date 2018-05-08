@@ -22,8 +22,33 @@
                 :on-success      [:registered-users-retrieved]
                 :on-failure      [:request-failed]}})
 
-(defn user-details-retrieved [db [_ user]]
-  (assoc-in db [:user :role] (:role user)))
+(defn invited-users-retrieved [db [_ user-list]]
+  (assoc db :invited-users user-list))
+
+(defn get-invited-users [cofx [_ auth-token]]
+  {:http-xhrio {:method          :get
+                :uri             "/api/invited-users/"
+                :timeout         5000
+                :response-format (ajax/json-response-format {:keywords? true})
+                :headers         {"Authorization"               (str "Bearer " auth-token)
+                                  "Access-Control-Allow-Origin" "*"}
+                :on-success      [:invited-users-retrieved]
+                :on-failure      [:request-failed]}})
+
+(defn user-details-retrieved [{:keys [db] :as cofx} [_ user]]
+  (let [admin?        (= (:role user) "admin")
+        token         (get-in db [:user :token])
+        common-events [[:get-clients token]
+                       [:get-projects token]
+                       [:get-tasks token]
+                       [:get-timers token (t-coerce/from-date (:timer-date db))]]
+        admin-events  [[:get-registered-users token]
+                       [:get-invited-users token]]
+        events        (if admin?
+                        (concat common-events admin-events)
+                        common-events)]
+    {:db         (assoc-in db [:user :role] (:role user))
+     :dispatch-n events}))
 
 (defn get-user-details [cofx [_ auth-token]]
   {:http-xhrio {:method          :get
@@ -80,7 +105,8 @@
                   :on-failure      [:project-creation-failed]}}))
 
 (defn user-invited [{:keys [db]}]
-  {:notify-success "User invited successfully."})
+  {:notify-success "User invited successfully."
+   :dispatch [:get-invited-users (get-in db [:user :token])]})
 
 (defn user-invitation-failed
   [{:keys [db]}]
@@ -233,8 +259,10 @@
   (rf/reg-event-fx :get-timers get-timers)
 
   (rf/reg-event-fx :get-registered-users get-registered-users)
+  (rf/reg-event-fx :get-invited-users get-invited-users)
   (rf/reg-event-fx :get-user-details get-user-details)
   (rf/reg-event-fx :invite-user invite-user)
+
   (intr/tt-reg-event-db
    :projects-retrieved
    [intr/db-spec-inspector]
@@ -256,6 +284,11 @@
    registered-users-retrieved)
 
   (intr/tt-reg-event-db
+   :invited-users-retrieved
+   [intr/db-spec-inspector]
+   invited-users-retrieved)
+
+  (intr/tt-reg-event-fx
    :user-details-retrieved
    [intr/db-spec-inspector]
    user-details-retrieved)

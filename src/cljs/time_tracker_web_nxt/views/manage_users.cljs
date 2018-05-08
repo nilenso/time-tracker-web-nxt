@@ -35,11 +35,38 @@
     :registered-users-datatable
     [:registered-users]]])
 
+(defn list-invited-users []
+  (let [registered-users (rf/subscribe [:registered-users])]
+    (fn []
+      [:div
+       [rdt/datatable
+        :invited-users-datatable
+        [:invited-users]
+        [{::rdt/column-key [:email] ::rdt/column-label "Email"}
+         {::rdt/column-key [:invited-by] ::rdt/column-label "Invited by"
+          ::rdt/render-fn  (fn [invited-by]
+                             [:span (->> @registered-users
+                                         (filter #(= (:id %) invited-by))
+                                         first
+                                         :name)])}]
+        {::rdt/pagination {::rdt/enabled? true
+                           ::rdt/per-page 10}}]
+       [rdt-views/default-pagination-controls
+        :invited-users-datatable
+        [:invited-users]]])))
+
 (defn panel []
   [:div.page
    [common/header]
    [:div.panel
-    [invite-user-form]
+
     [:h2 "Registered Users"]
     [:hr]
-    [list-registered-users]]])
+    [list-registered-users]
+    [:hr]
+    [:br]
+    [:h3 "Invite User"]
+    [invite-user-form]
+    [:h2 "Invited Users"]
+    [:hr]
+    [list-invited-users]]])

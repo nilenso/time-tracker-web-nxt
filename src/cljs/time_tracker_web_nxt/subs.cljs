@@ -26,6 +26,7 @@
 (create-subscription :clients)
 (create-subscription :client)
 (create-subscription :registered-users)
+(create-subscription :invited-users)
 
 (rf/reg-sub
  :all-projects
