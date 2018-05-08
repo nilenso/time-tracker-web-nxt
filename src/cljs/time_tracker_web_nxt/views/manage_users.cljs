@@ -18,7 +18,9 @@
                       :on-change (fn [v] (reset! email v))}]
        [:button.btn.btn-primary
         {:type "input"
-         :on-click #(rf/dispatch [:invite-user {:email @email}])}
+         :on-click (fn []
+                     (rf/dispatch [:invite-user {:email @email}])
+                     (reset! email ""))}
         "Invite"]])))
 
 (defn list-registered-users []
