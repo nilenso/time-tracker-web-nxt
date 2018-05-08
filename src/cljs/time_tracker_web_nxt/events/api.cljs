@@ -66,6 +66,27 @@
                   :on-success      [:project-created]
                   :on-failure      [:project-creation-failed]}}))
 
+(defn user-invited [{:keys [db]}]
+  {:notify-success "User invited successfully."})
+
+(defn user-invitation-failed
+  [{:keys [db]}]
+  {:notify-error "Failed to invite user"})
+
+(defn invite-user
+  [{:keys [db] :as cofx} [_ data]]
+  (let [token (get-in db [:user :token])]
+    {:http-xhrio {:method          :post
+                  :uri             "/api/invited-users/"
+                  :headers         {"Authorization"               (str "Bearer " token)
+                                    "Access-Control-Allow-Origin" "*"}
+                  :params          data
+                  :timeout         5000
+                  :format          (ajax/json-request-format)
+                  :response-format (ajax/json-response-format {:keywords? true})
+                  :on-success      [:user-invited]
+                  :on-failure      [:user-invitation-failed]}}))
+
 (defn tasks-retrieved [db [_ tasks]]
   (assoc db :tasks tasks))
 
@@ -193,6 +214,8 @@
   (rf/reg-event-fx :get-projects get-projects)
   (rf/reg-event-fx :create-project create-project)
 
+  (rf/reg-event-fx :invite-user invite-user)
+
   (rf/reg-event-fx :get-tasks get-tasks)
   (rf/reg-event-fx :create-task create-task)
 
@@ -235,6 +258,9 @@
 
   (intr/tt-reg-event-fx :project-created project-created)
   (intr/tt-reg-event-fx :project-creation-failed project-creation-failed)
+
+  (intr/tt-reg-event-fx :user-invited user-invited)
+  (intr/tt-reg-event-fx :user-invitation-failed user-invitation-failed)
 
   (intr/tt-reg-event-fx :task-created task-created)
   (intr/tt-reg-event-fx :task-creation-failed task-creation-failed))

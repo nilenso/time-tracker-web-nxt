@@ -49,12 +49,6 @@
      [:li.user-menu-header (str "Signed in as ")
       [:span.user-menu-username [:strong (:name @user)]]]
      [:li.dropdown-divider]
-     [:a {:href     (routes/url-for :clients)
-          :style    {:display (if (= "admin" (:role @user))
-                                "block"
-                                "none")}
-          :on-click #(rf/dispatch [:get-clients])}
-      [:li.user-menu-link "Manage Clients"]]
      [:a {:href     "javascript:void(0)"
           :on-click (fn [_] (-> (.signOut (auth/auth-instance))
                                 (.then
@@ -62,13 +56,14 @@
       [:li.user-menu-link "Sign out"]]]))
 
 (defn header []
-  (let [active-panel   (rf/subscribe [:active-panel])
-        timers-panel?  (= :timers @active-panel)
-        about-panel?   (= :about @active-panel)
-        clients-panel? (or (= :clients @active-panel)
-                           (= :client @active-panel)
-                           (= :project @active-panel))
-        user           (rf/subscribe [:user])]
+  (let [active-panel        (rf/subscribe [:active-panel])
+        timers-panel?       (= :timers @active-panel)
+        about-panel?        (= :about @active-panel)
+        clients-panel?      (or (= :clients @active-panel)
+                                (= :client @active-panel)
+                                (= :project @active-panel))
+        manage-users-panel? (= :manage-users @active-panel)
+        user                (rf/subscribe [:user])]
     [:div.header.pure-menu.pure-menu-horizontal
      [:p#logo
       {:href "#"} "Time Tracker"]
@@ -89,7 +84,13 @@
           [:a.nav-link
            {:href     (routes/url-for :clients)
             :on-click #(rf/dispatch [:set-active-panel :clients])}
-           "Clients"]])]]
+           "Clients"]])
+       (when (= "admin" (:role @user))
+         [:li.header-link {:class (if manage-users-panel? "active" "")}
+          [:a.nav-link
+           {:href     (routes/url-for :manage-users)
+            :on-click #(rf/dispatch [:set-active-panel :manage-users])}
+           "Manage Users"]])]]
      [:a.user-profile-link
       {:href     "javascript:void(0)"
        :on-click #(rf/dispatch [:toggle-user-menu])}
