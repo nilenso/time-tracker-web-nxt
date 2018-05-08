@@ -11,13 +11,13 @@
     (fn []
       [:div.invite-user-form
        [:label.cclabel "Email: "]
-       [common/input {:type "text"
-                      :name "email"
-                      :value @email
-                      :class "ccinput"
+       [common/input {:type      "text"
+                      :name      "email"
+                      :value     @email
+                      :class     "ccinput"
                       :on-change (fn [v] (reset! email v))}]
        [:button.btn.btn-primary
-        {:type "input"
+        {:type     "input"
          :on-click (fn []
                      (rf/dispatch [:invite-user {:email @email}])
                      (reset! email ""))}

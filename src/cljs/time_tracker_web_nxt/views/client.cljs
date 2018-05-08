@@ -8,14 +8,14 @@
             [time-tracker-web-nxt.views.project :as project]))
 
 (def ^:private empty-client
-  {:name    ""
-   :address ""
-   :gstin   ""
-   :pan     ""
+  {:name              ""
+   :address           ""
+   :gstin             ""
+   :pan               ""
    :points-of-contact {}})
 
 (defn points-of-contact [client]
-  (let [poc (reagent/atom (:points-of-contact @client))
+  (let [poc        (reagent/atom (:points-of-contact @client))
         update-poc (fn [path v]
                      (swap! poc assoc-in path v)
                      (swap! client assoc :points-of-contact @poc))]

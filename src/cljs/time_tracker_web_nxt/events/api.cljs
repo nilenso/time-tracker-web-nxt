@@ -106,7 +106,7 @@
 
 (defn user-invited [{:keys [db]}]
   {:notify-success "User invited successfully."
-   :dispatch [:get-invited-users (get-in db [:user :token])]})
+   :dispatch       [:get-invited-users (get-in db [:user :token])]})
 
 (defn user-invitation-failed
   [{:keys [db]}]
@@ -177,10 +177,10 @@
 (defn clients-retrieved [{:keys [db] :as cofx} [_ clients]]
   (let [transform (fn [{:keys [points-of-contact]}]
                     (zipmap (range) points-of-contact))]
-    {:db       (assoc db
-                      :clients
-                      (map #(assoc % :points-of-contact (transform %))
-                           clients))}))
+    {:db (assoc db
+                :clients
+                (map #(assoc % :points-of-contact (transform %))
+                     clients))}))
 
 (defn get-clients [{:keys [db] :as cofx} [_ auth-token]]
   {:http-xhrio {:method          :get
@@ -232,7 +232,7 @@
                   :on-failure      [:client-update-failed]}}))
 
 (defn client-updated [{:keys [db]}]
-  {:dispatch     [:get-clients (get-in db [:user :token])]
+  {:dispatch       [:get-clients (get-in db [:user :token])]
    :notify-success "Client updated successfully."})
 
 (defn client-update-failed [{:keys [db]}]
