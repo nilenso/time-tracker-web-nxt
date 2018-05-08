@@ -23,7 +23,9 @@
                   [:get-clients token]
                   [:get-projects token]
                   [:get-tasks token]
-                  [:get-timers token (t-coerce/from-date (:timer-date db))]]}))
+                  [:get-timers token (t-coerce/from-date (:timer-date db))]
+                  ;; TODO: Fetch this list only for admins
+                  [:get-registered-users token]]}))
 
 (defn logout
   [{:keys [db] :as cofx} [_ user]]

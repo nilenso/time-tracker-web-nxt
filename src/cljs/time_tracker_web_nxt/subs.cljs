@@ -25,6 +25,7 @@
 (create-subscription :show-task-form?)
 (create-subscription :clients)
 (create-subscription :client)
+(create-subscription :registered-users)
 
 (rf/reg-sub
  :all-projects

@@ -9,6 +9,19 @@
    [time-tracker-web-nxt.utils :as utils]
    [time-tracker-web-nxt.events.ui :as ui-events]))
 
+(defn registered-users-retrieved [db [_ user-list]]
+  (assoc db :registered-users user-list))
+
+(defn get-registered-users [cofx [_ auth-token]]
+  {:http-xhrio {:method          :get
+                :uri             "/api/users/"
+                :timeout         5000
+                :response-format (ajax/json-response-format {:keywords? true})
+                :headers         {"Authorization"               (str "Bearer " auth-token)
+                                  "Access-Control-Allow-Origin" "*"}
+                :on-success      [:registered-users-retrieved]
+                :on-failure      [:request-failed]}})
+
 (defn user-details-retrieved [db [_ user]]
   (assoc-in db [:user :role] (:role user)))
 
@@ -214,14 +227,14 @@
   (rf/reg-event-fx :get-projects get-projects)
   (rf/reg-event-fx :create-project create-project)
 
-  (rf/reg-event-fx :invite-user invite-user)
-
   (rf/reg-event-fx :get-tasks get-tasks)
   (rf/reg-event-fx :create-task create-task)
 
   (rf/reg-event-fx :get-timers get-timers)
-  (rf/reg-event-fx :get-user-details get-user-details)
 
+  (rf/reg-event-fx :get-registered-users get-registered-users)
+  (rf/reg-event-fx :get-user-details get-user-details)
+  (rf/reg-event-fx :invite-user invite-user)
   (intr/tt-reg-event-db
    :projects-retrieved
    [intr/db-spec-inspector]
@@ -236,6 +249,11 @@
    :timers-retrieved
    [intr/db-spec-inspector]
    timers-retrieved)
+
+  (intr/tt-reg-event-db
+   :registered-users-retrieved
+   [intr/db-spec-inspector]
+   registered-users-retrieved)
 
   (intr/tt-reg-event-db
    :user-details-retrieved
