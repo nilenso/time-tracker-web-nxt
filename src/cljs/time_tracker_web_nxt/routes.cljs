@@ -5,15 +5,15 @@
             [taoensso.timbre :as timbre]))
 
 
-(def routes ["/" {""         :timers
-                  "sign-in"  :sign-in
-                  "about"    :about
-                  "manage-users"    :manage-users
-                  "clients/" {""    :clients
-                              "new" :create-client
-                              [:client-id "/"] {"" :client
-                                                "projects/" {"" :client
-                                                             [:project-id] :project}}}}])
+(def routes ["/" {""             :timers
+                  "sign-in"      :sign-in
+                  "about"        :about
+                  "manage-users" :manage-users
+                  "clients/"     {""               :clients
+                                  "new"            :create-client
+                                  [:client-id "/"] {""          :client
+                                                    "projects/" {""            :client
+                                                                 [:project-id] :project}}}}])
 
 (def url-for (partial bidi/path-for routes))
 

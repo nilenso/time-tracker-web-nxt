@@ -67,8 +67,7 @@
                   :on-failure      [:project-creation-failed]}}))
 
 (defn user-invited [{:keys [db]}]
-  {;; :dispatch       [:get-projects (get-in db [:user :token])]
-   :notify-success "User invited successfully."})
+  {:notify-success "User invited successfully."})
 
 (defn user-invitation-failed
   [{:keys [db]}]
@@ -77,17 +76,16 @@
 (defn invite-user
   [{:keys [db] :as cofx} [_ data]]
   (let [token (get-in db [:user :token])]
-    {:http-xhrio {:method :post
-                  :uri "/api/invited-users/"
-                  :headers {"Authorization"               (str "Bearer " token)
-                            "Access-Control-Allow-Origin" "*"}
-                  :params data
-                  :timeout 5000
+    {:http-xhrio {:method          :post
+                  :uri             "/api/invited-users/"
+                  :headers         {"Authorization"               (str "Bearer " token)
+                                    "Access-Control-Allow-Origin" "*"}
+                  :params          data
+                  :timeout         5000
                   :format          (ajax/json-request-format)
                   :response-format (ajax/json-response-format {:keywords? true})
                   :on-success      [:user-invited]
-                  :on-failure      [:user-invitation-failed]
-                  }}))
+                  :on-failure      [:user-invitation-failed]}}))
 
 (defn tasks-retrieved [db [_ tasks]]
   (assoc db :tasks tasks))

@@ -56,14 +56,14 @@
       [:li.user-menu-link "Sign out"]]]))
 
 (defn header []
-  (let [active-panel   (rf/subscribe [:active-panel])
-        timers-panel?  (= :timers @active-panel)
-        about-panel?   (= :about @active-panel)
-        clients-panel? (or (= :clients @active-panel)
-                           (= :client @active-panel)
-                           (= :project @active-panel))
+  (let [active-panel        (rf/subscribe [:active-panel])
+        timers-panel?       (= :timers @active-panel)
+        about-panel?        (= :about @active-panel)
+        clients-panel?      (or (= :clients @active-panel)
+                                (= :client @active-panel)
+                                (= :project @active-panel))
         manage-users-panel? (= :manage-users @active-panel)
-        user           (rf/subscribe [:user])]
+        user                (rf/subscribe [:user])]
     [:div.header.pure-menu.pure-menu-horizontal
      [:p#logo
       {:href "#"} "Time Tracker"]
