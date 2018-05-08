@@ -38,7 +38,7 @@
  :<- [:all-projects]
  :<- [:selected-client]
  (fn [[all-projects selected-client] _]
-   (filter #(= (:client_id %) (:id selected-client)) all-projects)))
+   (filter #(= (:client-id %) (:id selected-client)) all-projects)))
 
 (rf/reg-sub
  :all-tasks
@@ -50,7 +50,7 @@
  :<- [:all-tasks]
  :<- [:selected-project]
  (fn [[all-tasks selected-project] _]
-   (filter #(= (:project_id %) (:id selected-project)) all-tasks)))
+   (filter #(= (:project-id %) (:id selected-project)) all-tasks)))
 
 (rf/reg-sub
  :db-selected-project-id

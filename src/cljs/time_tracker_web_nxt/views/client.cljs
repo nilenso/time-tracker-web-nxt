@@ -54,7 +54,7 @@
                                            :phone     ""
                                            :email     ""
                                            :action    "insert"
-                                           :client_id (:id @client)})
+                                           :client-id (:id @client)})
                        (swap! client assoc :points-of-contact @poc)))}
         [:i.fa.fa-plus-square {:aria-hidden "true"}]
         [:span "Point of Contact"]]))))

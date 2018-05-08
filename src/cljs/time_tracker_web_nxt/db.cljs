@@ -28,14 +28,14 @@
 (s/def ::selected-client-id int?)
 
 ;; Project
-(s/def ::client_id int?)
-(s/def ::project (s/keys :req-un [::id ::name ::client_id]))
+(s/def ::client-id int?)
+(s/def ::project (s/keys :req-un [::id ::name ::client-id]))
 (s/def ::projects (s/coll-of ::project))
 (s/def ::selected-project-id int?)
 
 ;; Task
-(s/def ::project_id int?)
-(s/def ::task (s/keys :req-un [::id ::name ::project_id]))
+(s/def ::project-id int?)
+(s/def ::task (s/keys :req-un [::id ::name ::project-id]))
 (s/def ::tasks (s/coll-of ::task))
 (s/def ::selected-task-id int?)
 
