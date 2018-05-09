@@ -26,9 +26,9 @@
                   name
                   keyword)]
     (case panel
-      :client (rf/dispatch [:select-client (-> matched-route
-                                               (get-in [:route-params :client-id])
-                                               int)])
+      :client  (rf/dispatch [:select-client (-> matched-route
+                                                (get-in [:route-params :client-id])
+                                                int)])
       :project (rf/dispatch [:select-project (-> matched-route
                                                  (get-in [:route-params :project-id])
                                                  int)])

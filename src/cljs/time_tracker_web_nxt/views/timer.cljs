@@ -146,8 +146,8 @@
             tasks         @(rf/subscribe [:all-tasks])
             get-by-id     (fn [p id] (some #(when (= id (:id %)) %) p))
             task          (get-by-id tasks task-id)
-            project       (get-by-id projects (:project_id task))
-            client        (get-by-id clients (:client_id project))
+            project       (get-by-id projects (:project-id task))
+            client        (get-by-id clients (:client-id project))
             timer-options {:id          id
                            :duration    elapsed
                            :client      client

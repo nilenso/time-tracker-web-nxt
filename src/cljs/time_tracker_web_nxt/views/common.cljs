@@ -103,8 +103,8 @@
   [hierarchy]
   (conj (reduce (fn [acc {:keys [href title]}]
                   (conj acc
-                        [:button.btn.btn-secondary
-                         [:a {:href href} title]]
+                        [:a {:href href}
+                         [:button.btn.btn-secondary title]]
                         " > "))
                 [:div]
                 (butlast hierarchy))

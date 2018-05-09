@@ -13,17 +13,8 @@
     (taoensso.timbre/info "login called")
     {:db         (assoc db :user user-profile)
      :dispatch-n [[:create-ws-connection token]
-                  [:fetch-data]
+                  [:get-user-details token]
                   [:goto [:timers]]]}))
-
-(defn fetch-data
-  [{:keys [db]} [_]]
-  (let [token (get-in db [:user :token])]
-    {:dispatch-n [[:get-user-details token]
-                  [:get-clients token]
-                  [:get-projects token]
-                  [:get-tasks token]
-                  [:get-timers token (t-coerce/from-date (:timer-date db))]]}))
 
 (defn logout
   [{:keys [db] :as cofx} [_ user]]
@@ -40,5 +31,4 @@
    [db-spec-inspector ->local-store]
    login)
 
-  (rf/reg-event-fx :log-out logout)
-  (rf/reg-event-fx :fetch-data fetch-data))
+  (rf/reg-event-fx :log-out logout))

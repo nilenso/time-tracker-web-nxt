@@ -8,17 +8,17 @@
             [re-frame-datatable.views :as rdt-views]))
 
 (defn project-form [show?]
-  (let [project-name   (reagent/atom "")
+  (let [project-name    (reagent/atom "")
         selected-client (rf/subscribe [:selected-client])
-        submit {:name "Create"
-                :handler (fn [m]
-                           (rf/dispatch [:create-project m])
-                           (reset! show? false)
-                           (reset! project-name ""))}
-        cancel {:name "Cancel"
-                :handler (fn []
-                           (reset! show? false)
-                           (reset! project-name ""))}]
+        submit          {:name    "Create"
+                         :handler (fn [m]
+                                    (rf/dispatch [:create-project m])
+                                    (reset! show? false)
+                                    (reset! project-name ""))}
+        cancel          {:name    "Cancel"
+                         :handler (fn []
+                                    (reset! show? false)
+                                    (reset! project-name ""))}]
     (fn [show?]
       [:div.create-project-form {:style (if @show? {} {:display "none"})}
        [:h2 "Create a project"]
@@ -40,17 +40,17 @@
 
 
 (defn project-panel []
-  (let [show-task-form?         (rf/subscribe [:show-task-form?])
+  (let [show-task-form?  (rf/subscribe [:show-task-form?])
         selected-project (rf/subscribe [:selected-project])
-        selected-client         (rf/subscribe [:selected-client])]
+        selected-client  (rf/subscribe [:selected-client])]
     (fn []
       [:div.page
        [common/header]
        [:div.panel
-        [:h2 [common/hierarchy-widget [{:href (routes/url-for :clients)
+        [:h2 [common/hierarchy-widget [{:href  (routes/url-for :clients)
                                         :title "All Clients"}
-                                       {:href (routes/url-for :client
-                                                              :client-id (:id @selected-client))
+                                       {:href  (routes/url-for :client
+                                                               :client-id (:id @selected-client))
                                         :title (:name @selected-client)}
                                        {:title (:name @selected-project)}]]]
         [:hr]

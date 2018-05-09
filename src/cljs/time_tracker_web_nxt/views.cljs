@@ -29,13 +29,13 @@
 
 
 (def panels
-  {:timers        timer-views/timers-panel
-   :about         about-panel
-   :sign-in       sign-in-panel
-   :clients       client-views/clients-panel
-   :client        client-views/client-panel
-   :manage-users  manage-users-views/panel
-   :project       project-views/project-panel})
+  {:timers       timer-views/timers-panel
+   :about        about-panel
+   :sign-in      sign-in-panel
+   :clients      client-views/clients-panel
+   :client       client-views/client-panel
+   :manage-users manage-users-views/panel
+   :project      project-views/project-panel})
 
 (defn app []
   (let [active-panel (rf/subscribe [:active-panel])
